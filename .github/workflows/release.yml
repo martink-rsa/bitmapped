@@ -18,15 +18,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: "pnpm"
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
       - run: pnpm install --frozen-lockfile
       - name: Create Release PR or Publish
         id: changesets
         uses: changesets/action@v1
         with:
           publish: pnpm ci:publish
-          commit: "chore: update versions"
-          title: "chore: update versions"
+          commit: 'chore: update versions'
+          title: 'chore: update versions'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          HUSKY: "0"
+          NPM_CONFIG_PROVENANCE: 'true'
+          HUSKY: '0'
