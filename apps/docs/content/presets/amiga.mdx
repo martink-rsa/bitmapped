@@ -1,0 +1,120 @@
+---
+title: Amiga
+---
+
+import { Callout } from 'nextra/components'
+
+# Amiga
+
+| Spec | Value |
+|---|---|
+| Resolution | 320×256 (PAL) / 320×200 (NTSC) |
+| Total colors | 4,096 (OCS/ECS, 12-bit RGB) |
+| Simultaneous | 32 (standard) / 64 (EHB) / 4,096 (HAM) |
+| Constraint | HAM mode / EHB mode |
+| Display | CRT RGB / composite |
+| Year | 1985 |
+| Maker | Commodore |
+
+## Color palette
+
+The Amiga's Original Chip Set (OCS) uses 12-bit RGB — 4 bits per channel — providing a total gamut of 4,096 colors. In standard mode, 5 bitplanes allow up to 32 simultaneously displayed colors chosen freely from that gamut.
+
+This is an RGB bit-depth system rather than a fixed lookup table. Use `enumerateColorSpace()` from `bitmapped/presets` to generate the full 4,096-color palette at runtime:
+
+```typescript
+import { enumerateColorSpace } from 'bitmapped/presets';
+
+// Generate all 4,096 OCS colors (4 bits per channel)
+const fullPalette = enumerateColorSpace({ r: 4, g: 4, b: 4 });
+```
+
+<Callout type="info">
+Because the Amiga palette is defined by bit depth rather than a fixed LUT, each of the three presets uses `colorSpace` with `bitsPerChannel: 4` and varies only in how many simultaneous colors are permitted.
+</Callout>
+
+## The key constraint: three display modes
+
+The Amiga's custom chipset supports three distinct display modes, each with different color capabilities and trade-offs:
+
+### Standard (OCS) — 32 colors
+
+The default 5-bitplane mode. 32 colors are freely chosen from the 4,096-color gamut and can be placed anywhere on screen with no spatial constraint. This is the simplest mode and the one most Amiga games and applications used.
+
+### Extra Half-Brite (EHB) — 64 colors
+
+A 6th bitplane acts as a "half-brightness" flag. When set, the pixel's color is the half-brightness version of the corresponding 5-bitplane color. This gives 64 simultaneous colors — 32 base colors plus 32 automatic copies at 50% brightness — at the cost of one extra bitplane of memory. The half-brightness colors cannot be independently programmed.
+
+### Hold-And-Modify (HAM6) — 4,096 colors
+
+The most distinctive Amiga mode. Each pixel encodes a 2-bit operation code and a 4-bit data value:
+
+- **Set** — select one of 16 base palette colors
+- **Modify R** — keep G and B from the previous pixel, replace R with the 4-bit value
+- **Modify G** — keep R and B from the previous pixel, replace G with the 4-bit value
+- **Modify B** — keep R and G from the previous pixel, replace B with the 4-bit value
+
+This allows every pixel to potentially display any of the 4,096 OCS colors, enabling photorealistic images. However, because each pixel can only change one channel at a time, sharp color transitions produce characteristic horizontal "fringing" artifacts — the algorithm needs multiple pixels to converge on the target color.
+
+bitmapped's HAM constraint solver simulates this per-pixel channel modification, choosing the optimal set-or-modify decision for each pixel to minimize color error while reproducing authentic fringing behavior.
+
+<Callout type="warning">
+HAM mode works best with dithering set to `'none'` — error diffusion dithering can amplify fringing artifacts since each pixel's error propagates through the modify chain.
+</Callout>
+
+## Interactive demo
+
+<LiveDemo
+  defaultPreset="amiga-ham6"
+  showDitheringControls
+  showComparison
+  allowUpload
+/>
+
+## Code example
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset, enumerateColorSpace } from 'bitmapped/presets';
+
+const ham = getPreset('amiga-ham6')!;
+
+const result = process(imageData, {
+  blockSize: 1,
+  palette: enumerateColorSpace({ r: 4, g: 4, b: 4 })
+    .map((color) => ({ color })),
+  distanceAlgorithm: 'ciede2000',
+  dithering: 'none',
+  constraintType: 'ham',
+  hamConfig: {
+    basePaletteSize: 16,
+    modifyBits: 4,
+  },
+});
+```
+
+## Presets
+
+bitmapped includes three Amiga presets:
+
+- **`amiga-ocs`** — Standard 5-bitplane mode, 32 simultaneous colors from 4,096
+- **`amiga-ham6`** — Hold-And-Modify mode, all 4,096 colors with per-pixel channel modification
+- **`amiga-ehb`** — Extra Half-Brite mode, 64 colors (32 base + 32 half-brightness)
+
+<details className="hardware-note">
+<summary>Hardware notes</summary>
+
+The Amiga's custom chipset evolved through three generations:
+
+**OCS (Original Chip Set, 1985)** — The launch chipset in the Amiga 1000, later used in the A500 and A2000. 12-bit palette (4,096 colors), up to 32 simultaneous colors in standard mode, plus HAM6 and EHB special modes. Maximum resolution of 640×512 in interlace.
+
+**ECS (Enhanced Chip Set, 1990)** — Used in the A500+, A600, and A3000. Added productivity modes (640×480, 800×600) and Super Agnus for 2 MB chip RAM, but kept the same 12-bit color system.
+
+**AGA (Advanced Graphics Architecture, 1992)** — Used in the A1200 and A4000. Expanded the palette to 24-bit (16.7 million colors), added 256-color modes (8 bitplanes), and introduced HAM8: 64 base palette colors with 6-bit channel modification, enabling near-photographic quality from the full 16.7M gamut.
+
+The **Copper** coprocessor could change palette registers at precise screen positions synchronized to the video beam, enabling per-scanline color changes without CPU intervention. This was used for color cycling effects, gradient skies, and displaying more colors than the hardware technically allowed in a single frame.
+
+**Interlace mode** doubled vertical resolution by alternating between even and odd scanlines on successive frames (e.g., 320×512 PAL), at the cost of visible flicker on CRT displays.
+
+The Amiga's **blitter** — a dedicated hardware block-transfer unit — could combine up to three source bitplanes using any logical operation, enabling fast compositing, scrolling, and drawing that made the system particularly capable for graphics-intensive applications.
+</details>

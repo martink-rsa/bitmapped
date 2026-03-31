@@ -1,0 +1,250 @@
+---
+title: Preprocessing
+---
+
+import { Callout } from 'nextra/components'
+
+# Preprocessing
+
+CSS-style image filters applied before pixelation, allowing brightness, contrast, saturation, and other adjustments. All exports are available from `bitmapped/preprocess`.
+
+```typescript
+import {
+  applyFilters,
+  buildFilterString,
+  hasActiveFilters,
+  FILTER_DEFAULTS,
+} from 'bitmapped/preprocess';
+```
+
+Filters run as the first stage of the `process()` pipeline. They use the browser's native CSS filter implementation via Canvas, so results match what you see with CSS `filter` in a stylesheet.
+
+## `applyFilters`
+
+```typescript
+function applyFilters(imageData: ImageData, filters: FilterOptions): ImageData
+```
+
+Applies CSS filters to pixel data by drawing onto an `OffscreenCanvas` (or `HTMLCanvasElement` fallback) with `ctx.filter` set, then reading back the result. Returns a **new** `ImageData` -- the input is never modified.
+
+When no filters are active (all values at defaults), a fast path copies the pixel data without creating a canvas.
+
+**Parameters**
+
+| Parameter | Type | Description |
+|---|---|---|
+| `imageData` | `ImageData` | Source image pixel data. |
+| `filters` | `FilterOptions` | Filter values to apply. |
+
+**Returns** `ImageData` -- a new ImageData with filters baked into the pixel values.
+
+<Callout type="warning">
+Requires a browser environment with Canvas support (DOM or Web Worker with `OffscreenCanvas`). Throws an error in environments without canvas (e.g., Node.js without a polyfill).
+</Callout>
+
+### Example
+
+```typescript
+import { applyFilters } from 'bitmapped/preprocess';
+
+// Boost brightness and reduce saturation before processing
+const adjusted = applyFilters(imageData, {
+  brightness: 1.3,
+  saturate: 0.7,
+});
+
+// Use the adjusted image data in the pipeline
+const result = process(adjusted, {
+  blockSize: 4,
+  palette: preset.palette!,
+});
+```
+
+## `buildFilterString`
+
+```typescript
+function buildFilterString(filters: FilterOptions): string
+```
+
+Generates a CSS `filter` property value string from a `FilterOptions` object. Only includes filter functions whose values differ from their defaults. Returns an empty string when all filters are at their default values.
+
+Useful for applying filters to a `<canvas>` element or CSS element directly, without baking them into pixel data.
+
+**Parameters**
+
+| Parameter | Type | Description |
+|---|---|---|
+| `filters` | `FilterOptions` | Filter values to convert. |
+
+**Returns** `string` -- a space-separated CSS filter string, e.g. `"brightness(1.3) contrast(1.2)"`.
+
+### Example
+
+```typescript
+import { buildFilterString } from 'bitmapped/preprocess';
+
+const filterStr = buildFilterString({
+  brightness: 1.3,
+  contrast: 1.2,
+  hueRotate: 90,
+});
+// => "brightness(1.3) contrast(1.2) hue-rotate(90deg)"
+
+// Apply to a canvas context
+ctx.filter = filterStr;
+ctx.drawImage(sourceCanvas, 0, 0);
+
+// Or apply to a CSS element
+element.style.filter = filterStr;
+```
+
+### Filter function order
+
+The string is built in a fixed order matching CSS filter compositing:
+
+1. `brightness()`
+2. `contrast()`
+3. `grayscale()`
+4. `sepia()`
+5. `invert()`
+6. `saturate()`
+7. `hue-rotate()`
+8. `blur()`
+
+Only non-default values appear in the output.
+
+## `hasActiveFilters`
+
+```typescript
+function hasActiveFilters(filters: FilterOptions): boolean
+```
+
+Returns `true` if any filter value differs from its default. Useful for skip-logic to avoid unnecessary canvas work or UI indicators.
+
+**Parameters**
+
+| Parameter | Type | Description |
+|---|---|---|
+| `filters` | `FilterOptions` | Filter values to check. |
+
+**Returns** `boolean` -- `true` if at least one filter is non-default.
+
+### Example
+
+```typescript
+import { hasActiveFilters } from 'bitmapped/preprocess';
+
+const filters = { brightness: 1, contrast: 1 };
+hasActiveFilters(filters); // => false (all defaults)
+
+const activeFilters = { brightness: 1.2 };
+hasActiveFilters(activeFilters); // => true
+```
+
+## `FILTER_DEFAULTS`
+
+```typescript
+const FILTER_DEFAULTS: Required<FilterOptions>
+```
+
+A frozen object containing the default (no-op) value for every filter property. Useful as a starting point when building filter objects or resetting to defaults.
+
+```typescript
+import { FILTER_DEFAULTS } from 'bitmapped/preprocess';
+
+// {
+//   brightness: 1,
+//   contrast: 1,
+//   grayscale: 0,
+//   sepia: 0,
+//   invert: 0,
+//   saturate: 1,
+//   hueRotate: 0,
+//   blur: 0,
+// }
+```
+
+### Example
+
+```typescript
+import { FILTER_DEFAULTS } from 'bitmapped/preprocess';
+
+// Reset a single filter to default
+const filters = { brightness: 1.5, contrast: 1.3 };
+filters.contrast = FILTER_DEFAULTS.contrast; // back to 1
+
+// Spread defaults and override specific values
+const custom = { ...FILTER_DEFAULTS, brightness: 1.2, sepia: 0.5 };
+```
+
+## `FilterOptions` Type
+
+```typescript
+interface FilterOptions {
+  brightness?: number;
+  contrast?: number;
+  grayscale?: number;
+  sepia?: number;
+  invert?: number;
+  saturate?: number;
+  hueRotate?: number;
+  blur?: number;
+}
+```
+
+All properties are optional. Omitted properties are treated as their default (no-op) values.
+
+| Property | Type | Default | Range | CSS function |
+|---|---|---|---|---|
+| `brightness` | `number` | `1` | 0 = black, 1 = unchanged, 2 = double | `brightness()` |
+| `contrast` | `number` | `1` | 0 = flat grey, 1 = unchanged, 2 = high | `contrast()` |
+| `grayscale` | `number` | `0` | 0 = full color, 1 = fully grey | `grayscale()` |
+| `sepia` | `number` | `0` | 0 = none, 1 = full warm tone | `sepia()` |
+| `invert` | `number` | `0` | 0 = normal, 1 = fully inverted | `invert()` |
+| `saturate` | `number` | `1` | 0 = desaturated, 1 = unchanged, 3 = vivid | `saturate()` |
+| `hueRotate` | `number` | `0` | 0--360 degrees | `hue-rotate()` |
+| `blur` | `number` | `0` | Radius in pixels, 0 = no blur | `blur()` |
+
+<Callout type="info">
+Values beyond the documented ranges are valid -- for example, `brightness: 3` triples brightness and `saturate: 5` produces extreme saturation. The ranges above reflect typical usage.
+</Callout>
+
+### Using with `process()`
+
+Filters are most commonly passed via the `filters` option on `process()`, which calls `applyFilters` internally as the first pipeline stage:
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset } from 'bitmapped/presets';
+
+const c64 = getPreset('c64-pepto')!;
+const result = process(imageData, {
+  blockSize: 4,
+  palette: c64.palette!,
+  dithering: 'floyd-steinberg',
+  filters: {
+    brightness: 1.1,
+    contrast: 1.3,
+    saturate: 0.8,
+  },
+});
+```
+
+### Standalone preprocessing
+
+You can also use the preprocessing functions independently, outside the `process()` pipeline:
+
+```typescript
+import { applyFilters, buildFilterString } from 'bitmapped/preprocess';
+
+// Bake filters into pixel data for manual processing
+const filtered = applyFilters(imageData, {
+  grayscale: 1,
+  contrast: 1.5,
+});
+
+// Or generate a CSS string for live preview
+const preview = buildFilterString({ grayscale: 1, contrast: 1.5 });
+// => "grayscale(1) contrast(1.5)"
+canvas.style.filter = preview;
+```

@@ -1,0 +1,206 @@
+---
+title: HAM Mode
+---
+
+import { Callout } from 'nextra/components'
+
+# HAM Mode
+
+Hold-And-Modify is the Amiga's unique display mode that can show thousands of colors simultaneously by modifying one RGB channel of the previous pixel. bitmapped implements a solver that finds the optimal HAM encoding for any image.
+
+## What Is Hold-And-Modify?
+
+Standard indexed-color modes limit each pixel to one of a small fixed palette. HAM breaks this limitation with a clever encoding: each pixel performs one of four operations.
+
+1. **Set** — Use one of the base palette colors directly (16 colors in HAM6, 64 in HAM8).
+2. **Modify Red** — Keep the previous pixel's green and blue channels, replace the red channel with a new value.
+3. **Modify Green** — Keep the previous pixel's red and blue channels, replace the green channel with a new value.
+4. **Modify Blue** — Keep the previous pixel's red and green channels, replace the blue channel with a new value.
+
+Because a modify operation can target any value within its channel's bit depth, each pixel has access to the *entire* color gamut of the hardware — 4,096 colors on OCS/ECS, or 16.7 million on AGA. The tradeoff is that reaching a distant color requires multiple consecutive modify operations, one channel at a time.
+
+<Callout type="info">
+The two control bits that select the operation (set, modify-R, modify-G, modify-B) come from the extra bitplanes. A standard 4-bitplane Amiga display shows 16 colors. HAM adds two more bitplanes — the extra bits encode the operation, while the remaining bits encode either a palette index or a channel value.
+</Callout>
+
+## The Pixel Chain
+
+HAM processing is strictly **left-to-right, one scanline at a time**. The first pixel of each scanline always starts from the background color — typically the first entry in the base palette. Every subsequent pixel inherits the RGB value of the pixel immediately to its left and either replaces it with a palette color or modifies one of its channels.
+
+This creates a cascading dependency chain: each pixel's output color depends on every pixel that came before it on the same scanline. That dependency is the source of both HAM's power and its characteristic artifacts.
+
+```
+Scanline start → [bg color] → [mod R] → [mod G] → [mod B] → [palette] → [mod R] → ...
+                   pixel 0      pixel 1    pixel 2    pixel 3    pixel 4    pixel 5
+```
+
+Because each scanline starts fresh from the background color, vertical transitions are clean — neighboring scanlines have no dependency on each other. Horizontal transitions, however, must propagate through the chain, which is why HAM artifacts appear as horizontal fringing rather than vertical.
+
+## HAM6 vs HAM8
+
+The Amiga shipped two generations of HAM, corresponding to its two chipset families.
+
+### HAM6 (OCS / ECS)
+
+The Original Chip Set and Enhanced Chip Set use 6 bitplanes in HAM mode:
+
+- **2 control bits** select the operation (set / modify-R / modify-G / modify-B).
+- **4 data bits** are either a palette index (for set) or a channel value (for modify).
+- **Base palette:** 16 colors, freely chosen from the 12-bit OCS color space.
+- **Modify resolution:** 4 bits per channel. The modify operation replaces the **top 4 bits** of the target channel, preserving the low 4 bits from the previous pixel's value.
+- **Total gamut:** 4,096 colors (12-bit RGB, 4 bits per channel).
+
+The bit masking works as follows. Given a previous pixel channel value `prev` and a target value `target`:
+
+```
+modMask  = 0xF0   (top 4 bits)
+keepMask = 0x0F   (bottom 4 bits)
+result   = (target & modMask) | (prev & keepMask)
+```
+
+This means a modify operation can change a channel in steps of 16 (0x10), with the low nibble carried over from the previous pixel. The carried bits cause a small quantization error, but in practice the visual impact is minimal.
+
+### HAM8 (AGA)
+
+The Advanced Graphics Architecture doubled the bitplane count to 8:
+
+- **2 control bits** for the operation.
+- **6 data bits** for palette index or channel value.
+- **Base palette:** 64 colors, from the full 24-bit AGA color space.
+- **Modify resolution:** 6 bits per channel. The modify operation replaces the **top 6 bits**, preserving only the bottom 2 bits from the previous pixel.
+- **Total gamut:** 16,777,216 colors (full 24-bit RGB).
+
+```
+modMask  = 0xFC   (top 6 bits)
+keepMask = 0x03   (bottom 2 bits)
+result   = (target & modMask) | (prev & keepMask)
+```
+
+With 64 base palette colors and near-full-precision channel modification, HAM8 produces significantly cleaner images than HAM6. The fringing artifacts are reduced because the larger base palette provides more "anchor points" and the finer modify resolution needs fewer steps to reach a target color.
+
+<Callout type="warning">
+bitmapped currently includes a HAM6 preset (`amiga-ham6`) but not a HAM8 preset. The solver algorithm is the same for both — only the `basePaletteSize` and `modifyBits` configuration values differ. You can use HAM8 by passing a custom `hamConfig` with `basePaletteSize: 64` and `modifyBits: 6`.
+</Callout>
+
+## Color Fringing
+
+The most recognizable artifact in HAM images is **horizontal color fringing** — rainbow-colored halos at sharp color transitions. Understanding why this happens is straightforward once you understand the pixel chain.
+
+Suppose the previous pixel is pure red `(255, 0, 0)` and the target pixel is pure blue `(0, 0, 255)`. The solver must change all three channels, but it can only change one per pixel:
+
+| Pixel | Operation | Result | Looks like |
+|---|---|---|---|
+| Previous | — | `(255, 0, 0)` | Red |
+| Current | Modify B → 255 | `(255, 0, 255)` | Magenta |
+| Next | Modify R → 0 | `(0, 0, 255)` | Blue (target reached) |
+
+That intermediate magenta pixel is the fringe. In the worst case — transitioning between two colors that differ in all three channels — the solver needs up to three pixels to converge, producing two pixels of visible fringing. In practice, the base palette provides shortcuts: if a base palette color is close to the target, the solver can jump directly to it in a single set operation, resetting the chain.
+
+Vertical transitions do not produce fringing because each scanline processes independently. A sharp horizontal edge across many scanlines will look clean vertically but jagged horizontally.
+
+<Callout type="info">
+You can reduce fringing by choosing base palette colors that cover the image's most common sharp transitions. The original Amiga paint programs like Deluxe Paint allowed artists to hand-pick the 16 base palette colors for exactly this reason.
+</Callout>
+
+## The Solver Algorithm
+
+bitmapped's `solveHAM` function uses a **greedy per-pixel** approach, processing each scanline independently from left to right.
+
+### Per-scanline procedure
+
+1. **Initialize** the previous color to the first base palette entry (the background color).
+2. **For each pixel** on the scanline, evaluate all possible operations:
+   - **Set options:** Compute the color distance between the target pixel and every base palette color. There are `basePaletteSize` candidates (16 for HAM6, 64 for HAM8).
+   - **Modify-R:** Take the previous pixel's color, replace its red channel using `modifyChannel()`, and compute the distance to the target.
+   - **Modify-G:** Same, but replace the green channel.
+   - **Modify-B:** Same, but replace the blue channel.
+3. **Choose** the option with the minimum distance to the target color.
+4. **Update** the previous color to the chosen result for the next pixel.
+
+```typescript
+// Simplified from the actual solver
+for (let y = 0; y < height; y++) {
+  let prev = basePalette[0].color; // background color
+
+  for (let x = 0; x < width; x++) {
+    const target = getPixel(x, y);
+    let bestDist = Infinity;
+    let bestColor = prev;
+
+    // Option A: Direct palette color
+    for (const entry of basePalette) {
+      const d = distFn(target, entry.color);
+      if (d < bestDist) { bestDist = d; bestColor = entry.color; }
+    }
+
+    // Option B: Modify red
+    const modR = { r: modify(prev.r, target.r), g: prev.g, b: prev.b };
+    if (distFn(target, modR) < bestDist) { bestDist = distFn(target, modR); bestColor = modR; }
+
+    // Option C: Modify green
+    const modG = { r: prev.r, g: modify(prev.g, target.g), b: prev.b };
+    if (distFn(target, modG) < bestDist) { bestDist = distFn(target, modG); bestColor = modG; }
+
+    // Option D: Modify blue
+    const modB = { r: prev.r, g: prev.g, b: modify(prev.b, target.b) };
+    if (distFn(target, modB) < bestDist) { bestDist = distFn(target, modB); bestColor = modB; }
+
+    output[x][y] = bestColor;
+    prev = bestColor;
+  }
+}
+```
+
+The solver evaluates `basePaletteSize + 3` candidates per pixel. For HAM6, that is 19 distance computations per pixel — fast enough to run in real time at typical retro resolutions.
+
+<Callout type="info">
+The solver defaults to the `redmean` distance algorithm, which provides a good balance between speed and perceptual accuracy. For maximum quality, use `ciede2000` — the Amiga HAM6 preset recommends this setting.
+</Callout>
+
+## Try it
+
+Upload an image below to see HAM6 in action. Notice how smooth gradients look nearly perfect while sharp edges show characteristic horizontal fringing.
+
+<LiveDemo defaultPreset="amiga-ham6" showDitheringControls showComparison allowUpload />
+
+## Usage
+
+To process an image with HAM constraints programmatically:
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset, enumerateColorSpace } from 'bitmapped/presets';
+
+const preset = getPreset('amiga-ham6')!;
+
+// HAM presets use RGB bit-depth palettes — enumerate the full color space
+const palette = enumerateColorSpace(preset.colorSpace!).map((c) => ({
+  color: c,
+}));
+
+const result = process(imageData, {
+  blockSize: Math.floor(imageData.width / preset.resolution.width),
+  palette,
+  dithering: 'none',
+  distanceAlgorithm: 'ciede2000',
+  constraintType: 'ham',
+  hamConfig: { basePaletteSize: 16, modifyBits: 4 },
+});
+```
+
+The `hamConfig` object controls the HAM variant:
+
+| Property | HAM6 | HAM8 |
+|---|---|---|
+| `basePaletteSize` | 16 | 64 |
+| `modifyBits` | 4 | 6 |
+
+<Callout type="warning">
+Dithering is generally not recommended with HAM mode. Error diffusion distributes quantization error to neighboring pixels, but HAM's pixel chain already has cascading dependencies — combining the two can amplify fringing rather than reduce it. The Amiga HAM6 preset defaults to `dithering: 'none'`.
+</Callout>
+
+## Further reading
+
+- [Amiga presets](/presets/amiga) — OCS, EHB, and HAM6 preset configurations
+- [Constraints API](/api/constraints) — Full reference for `solveHAM` and other constraint solvers
+- [How It Works](/concepts/how-it-works) — The complete processing pipeline, including where constraints fit in

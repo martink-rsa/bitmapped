@@ -1,0 +1,150 @@
+---
+title: Quick Start
+---
+
+import { Callout } from 'nextra/components'
+
+# Quick Start: Drag-and-Drop Pixel Art Converter
+
+Build a minimal web page that converts any dropped image to NES-style pixel art. You'll have a working app in under 50 lines of JavaScript.
+
+## The complete example
+
+```html
+<!doctype html>
+<html>
+  <head>
+    <title>bitmapped quick start</title>
+    <style>
+      body {
+        background: #1a1a1a;
+        color: #fff;
+        font-family: monospace;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 2rem;
+      }
+      #drop-zone {
+        width: 512px;
+        height: 384px;
+        border: 2px dashed #555;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        margin: 1rem 0;
+      }
+      #drop-zone.dragover {
+        border-color: #50c878;
+        background: rgba(80, 200, 120, 0.1);
+      }
+      canvas {
+        image-rendering: pixelated;
+        max-width: 512px;
+        height: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>NES Pixel Art Converter</h1>
+    <div id="drop-zone">Drop an image here</div>
+    <canvas id="output"></canvas>
+
+    <script type="module">
+      import { process } from 'https://esm.sh/bitmapped';
+      import { getPreset } from 'https://esm.sh/bitmapped/presets';
+
+      const dropZone = document.getElementById('drop-zone');
+      const output = document.getElementById('output');
+      const preset = getPreset('nes-ntsc');
+
+      function processImage(imageData) {
+        const result = process(imageData, {
+          blockSize: Math.max(1, Math.floor(imageData.width / 256)),
+          palette: preset.palette,
+          dithering: 'floyd-steinberg',
+          distanceAlgorithm: 'redmean',
+          constraintType: 'attribute-block',
+          attributeBlockConfig: {
+            width: 16,
+            height: 16,
+            maxColors: 4,
+          },
+        });
+
+        output.width = result.imageData.width;
+        output.height = result.imageData.height;
+        output.getContext('2d').putImageData(result.imageData, 0, 0);
+      }
+
+      function handleFile(file) {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          processImage(ctx.getImageData(0, 0, img.width, img.height));
+          URL.revokeObjectURL(img.src);
+        };
+        img.src = URL.createObjectURL(file);
+      }
+
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+      });
+      dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+      });
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file?.type.startsWith('image/')) handleFile(file);
+      });
+      dropZone.addEventListener('click', () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = () => input.files[0] && handleFile(input.files[0]);
+        input.click();
+      });
+    </script>
+  </body>
+</html>
+```
+
+## How it works
+
+1. **Load the image** into an `ImageData` object via a temporary canvas.
+2. **Call `process()`** with the NES preset palette, Floyd-Steinberg dithering, and attribute-block constraints.
+3. **Render the result** to a canvas with `image-rendering: pixelated` for crisp pixel display.
+
+The `blockSize` is calculated dynamically — `Math.floor(width / 256)` targets the NES native resolution of 256 pixels wide.
+
+## Try it yourself
+
+Upload your own image and experiment with different presets:
+
+<LiveDemo
+  defaultPreset="nes-ntsc"
+  showPresetSelector
+  showDitheringControls
+  showConstraintToggle
+  allowUpload
+  showComparison
+/>
+
+<Callout type="info">
+For production use, run `process()` in a [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API) to keep the UI responsive. The demo app in the bitmapped repo shows this pattern.
+</Callout>
+
+## Next steps
+
+- [Choosing a Preset](/guides/choosing-a-preset) — Pick the right system for your aesthetic
+- [Dithering algorithms](/guides/dithering) — Learn when to use Floyd-Steinberg vs Bayer vs Atkinson
+- [Hardware Constraints](/guides/hardware-constraints) — Understand why constraint enforcement matters

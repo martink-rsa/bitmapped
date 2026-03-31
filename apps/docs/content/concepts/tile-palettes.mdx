@@ -1,0 +1,191 @@
+---
+title: Tile Palettes
+---
+
+import { Callout } from 'nextra/components'
+
+# Tile Palettes
+
+Many 16-bit era consoles divide a large master palette into small subpalettes, then let each 8x8 tile independently choose which subpalette it uses. This per-tile-palette system gives artists far more color flexibility than attribute clash while still fitting within the tight memory and bandwidth budgets of the era. bitmapped's tile palette solver reproduces this constraint automatically.
+
+## How tile-based palettes work
+
+The idea is straightforward. The hardware defines a master palette — all the colors the system can display at once. That master palette is subdivided into a fixed number of subpalettes, each containing a small number of colors (typically 4 or 16). The screen is divided into an 8x8 tile grid, and each tile independently selects one subpalette.
+
+```
+Master Palette (e.g. 256 colors)
+├── Subpalette 0:  [color 0 … color 15]   ← Tile at (0,0) uses this
+├── Subpalette 1:  [color 16 … color 31]  ← Tile at (1,0) uses this
+├── Subpalette 2:  [color 32 … color 47]  ← Tile at (2,0) uses this
+│   …
+└── Subpalette 7:  [color 112 … color 127]
+```
+
+This is more flexible than attribute clash (used by the ZX Spectrum and NES backgrounds), where large rectangular blocks are locked to a shared color set. With per-tile palettes, each 8x8 tile makes its own choice — so color boundaries can shift at a much finer granularity.
+
+On many systems, color 0 of each subpalette is shared and treated as transparent. This means each subpalette effectively provides N-1 unique colors plus the shared backdrop color.
+
+<Callout type="info">
+The per-tile-palette constraint is the most common spatial color rule in 16-bit hardware. The SNES, Genesis, Master System, Game Boy Color, Neo Geo, and Capcom CPS arcade boards all use variations of this scheme.
+</Callout>
+
+## SNES / Super Famicom
+
+| Spec | Value |
+|---|---|
+| Color depth | 15-bit RGB (5 bits per channel, BGR555) |
+| Total colors | 32,768 |
+| Simultaneous | 256 |
+| Subpalettes | 8 palettes of 16 colors each (Mode 1) |
+| Shared slot | Color 0 shared as transparent across all subpalettes |
+| Tile size | 8x8 |
+
+The SNES PPU stores its 256-color palette in CGRAM (Color Generator RAM). In the most common background mode (Mode 1), this is organized as 8 subpalettes of 16 colors. Each 8x8 tile's tilemap entry includes a 3-bit palette index that selects which subpalette it uses.
+
+Color 0 of every subpalette is the shared backdrop color, so each subpalette provides 15 unique colors plus the transparent slot — giving a maximum of 121 unique background colors (8 x 15 + 1 backdrop) in practice, though the full 256-entry CGRAM is addressable.
+
+The 15-bit color depth (32,768 possible colors) means artists could pick nearly any color they wanted for each slot. This wide gamut combined with the flexible subpalette system is what gives SNES games their characteristically rich, painterly look.
+
+## Genesis / Mega Drive
+
+| Spec | Value |
+|---|---|
+| Color depth | 9-bit RGB (3 bits per channel) with nonlinear DAC |
+| Total colors | 512 |
+| Simultaneous | 61 |
+| Subpalettes | 4 palettes of 16 colors each |
+| Shared slot | Color 0 of each palette is transparent |
+| Tile size | 8x8 |
+
+The Genesis VDP holds 4 palettes of 16 colors in CRAM (Color RAM). Each tile's nametable entry includes a 2-bit palette index. Color 0 of each palette is transparent, so each palette provides 15 unique opaque colors. With 4 palettes at 15 unique colors each plus the shared transparent, the effective maximum is 61 simultaneous colors.
+
+The 9-bit color space uses a nonlinear DAC — the voltage steps between levels are not evenly spaced. bitmapped models this with a custom quantize function that maps 8-bit RGB values through the same nonlinear curve, producing the slightly warm, saturated tones characteristic of Genesis output.
+
+<Callout type="info">
+The Genesis has fewer subpalettes than the SNES (4 vs 8), which means tiles have less color variety to choose from. Game artists worked around this by carefully planning which tiles share palette assignments — a constraint that bitmapped's solver handles automatically.
+</Callout>
+
+## Master System
+
+| Spec | Value |
+|---|---|
+| Color depth | 6-bit RGB (2 bits per channel, BGR222) |
+| Total colors | 64 |
+| Simultaneous | 32 |
+| Palettes | 1 background palette (16 colors) + 1 sprite palette (16 colors) |
+| Tile size | 8x8 |
+
+The Master System's VDP is simpler than its successors. It provides two fixed 16-color palettes: one for background tiles and one for sprites. All background tiles share the same 16-color palette — there is no per-tile palette selection for backgrounds.
+
+This makes the SMS closer to an attribute clash system than a true per-tile-palette system, but bitmapped still handles it through the tile palette solver. The 6-bit color space (2 bits per channel) gives only 64 possible colors, and with 16 selected for backgrounds and 16 for sprites, 32 can appear simultaneously.
+
+The limited color depth gives the Master System a distinctive muted look compared to the Genesis. With only 4 levels per channel (0, 85, 170, 255 in 8-bit terms), smooth gradients are difficult — which is why SMS games tend to use bold, flat color areas.
+
+## Game Boy Color
+
+| Spec | Value |
+|---|---|
+| Color depth | 15-bit RGB (5 bits per channel, BGR555) |
+| Total colors | 32,768 |
+| Simultaneous | 56 |
+| Subpalettes | 8 background palettes of 4 colors + 8 sprite palettes of 4 colors |
+| Tile size | 8x8 |
+
+The GBC extends the original Game Boy's 4-shade display to full color. It provides 8 background palettes and 8 sprite palettes, each containing 4 colors. Each 8x8 tile selects one of the 8 background palettes via an attribute byte in VRAM Bank 1.
+
+With 8 palettes of 4 colors, the maximum simultaneous background colors is 32 (8 x 4), though in practice some colors are shared across palettes. Combined with sprite palettes, the system can display up to 56 unique colors at once.
+
+The 4-colors-per-palette limit is severe compared to the SNES or Genesis, but the 8-palette choice per tile keeps things flexible. GBC games use careful palette assignment to get the most out of the limited color slots — a technique that bitmapped's solver replicates by selecting the 4 most important colors for each tile region.
+
+## The optimization algorithm
+
+bitmapped's `solveTilePalette` function enforces the per-tile-palette constraint in four steps:
+
+1. **Divide into tiles.** The image is split into tiles of the configured size (typically 8x8). Edge tiles that don't fill the full tile dimensions are handled correctly.
+
+2. **Build a histogram.** For each tile, every pixel is matched to its nearest color in the master palette using the selected distance algorithm. The solver counts how many pixels in the tile map to each palette entry, producing a frequency histogram.
+
+3. **Select the subpalette.** The top N most-used palette colors become the tile's subpalette. When `sharedTransparent` is true, slot 0 is reserved for the first palette entry (the shared transparent/backdrop color), and only N-1 additional colors are selected from usage frequency.
+
+4. **Re-map pixels.** Every pixel in the tile is re-matched to the nearest color within the tile's subpalette — not the full master palette. This enforces the constraint that each tile can only display colors from its chosen subpalette.
+
+```
+For each 8×8 tile:
+┌──────────────────┐     ┌───────────────────┐     ┌──────────────────┐
+│  Match pixels to │────▶│  Select top N      │────▶│  Re-map pixels   │
+│  master palette  │     │  as subpalette     │     │  to subpalette   │
+└──────────────────┘     └───────────────────┘     └──────────────────┘
+```
+
+This is a per-tile independent approach: each tile gets its own optimal subpalette rather than sharing subpalettes across tiles. For image conversion this produces good results without the more complex global subpalette allocation that ROM-level tooling would require.
+
+<Callout type="warning">
+When the master palette has fewer colors than the subpalette size, there is no constraint to enforce. In that case, the solver falls through to a simple nearest-color map against the full palette.
+</Callout>
+
+## Code example
+
+Using the SNES preset with per-tile-palette constraints:
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset, enumerateColorSpace } from 'bitmapped/presets';
+
+const snes = getPreset('snes')!;
+
+// SNES uses RGB bit-depth, so enumerate the full color space
+const palette = snes.colorSpace
+  ? enumerateColorSpace(snes.colorSpace).map((c) => ({ color: c }))
+  : snes.palette!;
+
+const result = process(imageData, {
+  blockSize: Math.floor(imageData.width / snes.resolution.width),
+  palette,
+  dithering: 'floyd-steinberg',
+  distanceAlgorithm: 'redmean',
+  constraintType: 'per-tile-palette',
+  tilePaletteConfig: {
+    tileWidth: 8,
+    tileHeight: 8,
+    colorsPerSubpalette: 16,
+    sharedTransparent: true,
+  },
+});
+```
+
+The `tilePaletteConfig` fields map directly to the hardware:
+
+- **`tileWidth` / `tileHeight`** — Tile dimensions in pixels (8x8 for all systems covered here)
+- **`colorsPerSubpalette`** — Colors per subpalette (16 for SNES/Genesis, 4 for GBC)
+- **`sharedTransparent`** — Whether color 0 is shared across subpalettes as transparent
+
+For presets that define `paletteLayout` and `tileSize`, you can construct the config directly from the preset:
+
+```typescript
+const tilePaletteConfig = preset.paletteLayout && preset.tileSize
+  ? {
+      tileWidth: preset.tileSize.width,
+      tileHeight: preset.tileSize.height,
+      colorsPerSubpalette: preset.paletteLayout.colorsPerSubpalette,
+      sharedTransparent: preset.paletteLayout.sharedTransparent,
+    }
+  : undefined;
+```
+
+## Interactive demo
+
+<LiveDemo
+  defaultPreset="snes"
+  showDitheringControls
+  showConstraintToggle
+  showComparison
+  allowUpload
+/>
+
+## Further reading
+
+- [SNES preset](/presets/snes) — Full SNES hardware profile and color palette
+- [Genesis preset](/presets/genesis) — Genesis/Mega Drive hardware profile with nonlinear DAC
+- [Master System preset](/presets/master-system) — SMS hardware profile and 6-bit color space
+- [Game Boy preset](/presets/gameboy) — Game Boy family including GBC
+- [Constraints API](/api/constraints) — API reference for all constraint solvers

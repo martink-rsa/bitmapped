@@ -1,0 +1,670 @@
+---
+title: Type Definitions
+---
+
+import { Callout } from 'nextra/components'
+
+# Type Definitions
+
+Every TypeScript type and interface exported by bitmapped, organized by category.
+
+```typescript
+import type {
+  RGB, RGBA, OklabColor, LabColor,
+  PaletteColor, Palette, PixelGrid, PixelateResult, ThresholdMatrix,
+  DistanceAlgorithm, DitheringAlgorithm, OrderedDitherPattern,
+  FilterOptions, ProcessOptions, ProcessResult, ConstraintType,
+  HardwarePreset, PixelAspectRatio, DisplayType, DisplayEffects,
+  ColorBitDepth, PaletteType,
+} from 'bitmapped';
+
+import type {
+  AttributeBlockConfig, TilePaletteConfig, HAMConfig, ConstraintResult,
+} from 'bitmapped';
+```
+
+---
+
+## Core Types
+
+### RGB
+
+An RGB color with channels in the 0--255 range.
+
+```typescript
+interface RGB {
+  r: number;
+  g: number;
+  b: number;
+}
+```
+
+### RGBA
+
+An RGBA color. Channels 0--255, alpha 0--1.
+
+```typescript
+interface RGBA extends RGB {
+  a: number;
+}
+```
+
+### OklabColor
+
+A color in the Oklab perceptual color space. Used internally by the `oklab` distance algorithm.
+
+```typescript
+interface OklabColor {
+  L: number;
+  a: number;
+  b: number;
+}
+```
+
+### LabColor
+
+A color in the CIE L\*a\*b\* color space. Used internally by `cie76` and `ciede2000` distance algorithms.
+
+```typescript
+interface LabColor {
+  L: number;
+  a: number;
+  b: number;
+}
+```
+
+### PaletteColor
+
+A single palette entry with an optional human-readable name.
+
+```typescript
+interface PaletteColor {
+  color: RGB;
+  name?: string;
+}
+```
+
+### Palette
+
+An array of palette colors. This is what you pass to `ProcessOptions.palette`.
+
+```typescript
+type Palette = PaletteColor[];
+```
+
+### PixelGrid
+
+A 2D grid of RGB values representing the pixelated output. `grid[y][x]` gives the color of block at row `y`, column `x`.
+
+```typescript
+type PixelGrid = RGB[][];
+```
+
+### PixelateResult
+
+Result of a pixelation operation (block-average or resample), before palette matching.
+
+```typescript
+interface PixelateResult {
+  /** 2D grid of averaged block colors */
+  grid: PixelGrid;
+  /** Flat list of all block colors (row-major order) */
+  colors: RGB[];
+  /** Grid width in blocks */
+  width: number;
+  /** Grid height in blocks */
+  height: number;
+  /** Block size used */
+  blockSize: number;
+}
+```
+
+### ThresholdMatrix
+
+A 2D array of normalized values in the 0--1 range, used as an ordered dither threshold map. Pass a custom matrix via `ProcessOptions.ditherMatrix` when `dithering` is `'custom'`.
+
+```typescript
+type ThresholdMatrix = number[][];
+```
+
+---
+
+## Algorithm Types
+
+### DistanceAlgorithm
+
+Selects the color distance metric used for palette matching.
+
+```typescript
+type DistanceAlgorithm =
+  | 'euclidean'  // Fast, poor perceptual accuracy
+  | 'redmean'    // Fast, good perceptual accuracy (recommended default)
+  | 'cie76'      // Moderate, CIE L*a*b* space
+  | 'ciede2000'  // Slow, gold standard accuracy
+  | 'oklab';     // Moderate, excellent accuracy/speed ratio
+```
+
+| Value | Speed | Accuracy | Notes |
+|---|---|---|---|
+| `'euclidean'` | Fastest | Low | Simple RGB distance; poor for greens/blues |
+| `'redmean'` | Fast | Good | Weighted RGB; best speed/quality tradeoff |
+| `'cie76'` | Moderate | Good | CIE L\*a\*b\* Euclidean; perceptually uniform |
+| `'ciede2000'` | Slow | Best | Gold standard; handles edge cases in blue/gray |
+| `'oklab'` | Moderate | Very good | Modern perceptual space; excellent all-round |
+
+### DitheringAlgorithm
+
+Selects the dithering algorithm applied during palette quantization.
+
+```typescript
+type DitheringAlgorithm =
+  | 'none'             // No dithering
+  | 'floyd-steinberg'  // Error diffusion, smooth gradients
+  | 'atkinson'         // Error diffusion, high contrast (75% error)
+  | 'bayer'            // Ordered, classic crosshatch pattern
+  | 'clustered-dot'    // Ordered, halftone-like
+  | 'horizontal-line'  // Ordered, scanline pattern
+  | 'vertical-line'    // Ordered, vertical bands
+  | 'diagonal-line'    // Ordered, diagonal pattern
+  | 'checkerboard'     // Ordered, 2x2 checkerboard
+  | 'blue-noise'       // Ordered, stochastic (best quality)
+  | 'ps1-ordered'      // PS1 GPU's asymmetric 4x4
+  | 'custom';          // User-provided ditherMatrix
+```
+
+<Callout type="info">
+When using `'custom'`, you must also provide a `ditherMatrix` (a `ThresholdMatrix`) in `ProcessOptions`.
+</Callout>
+
+### OrderedDitherPattern
+
+The subset of dithering algorithms that are ordered (threshold-based). These support `ditherStrength` and `ditherMatrixSize` tuning.
+
+```typescript
+type OrderedDitherPattern =
+  | 'bayer'
+  | 'clustered-dot'
+  | 'horizontal-line'
+  | 'vertical-line'
+  | 'diagonal-line'
+  | 'checkerboard'
+  | 'blue-noise';
+```
+
+---
+
+## Pipeline Types
+
+### FilterOptions
+
+CSS-style image filters applied to the source before pixelation. All values default to their "no effect" state when omitted.
+
+```typescript
+interface FilterOptions {
+  /** Brightness multiplier. 0 = black, 1 = unchanged, 2 = double. Default: 1 */
+  brightness?: number;
+  /** Contrast multiplier. 0 = flat gray, 1 = unchanged, 2 = high. Default: 1 */
+  contrast?: number;
+  /** Grayscale amount. 0 = full color, 1 = fully gray. Default: 0 */
+  grayscale?: number;
+  /** Sepia amount. 0 = no effect, 1 = full warm tone. Default: 0 */
+  sepia?: number;
+  /** Invert amount. 0 = normal, 1 = fully inverted. Default: 0 */
+  invert?: number;
+  /** Saturation multiplier. 0 = desaturated, 1 = unchanged, 3 = vivid. Default: 1 */
+  saturate?: number;
+  /** Hue rotation in degrees. 0-360. Default: 0 */
+  hueRotate?: number;
+  /** Gaussian blur radius in pixels. 0 = no blur. Default: 0 */
+  blur?: number;
+}
+```
+
+### ProcessOptions
+
+The full set of options accepted by the [`process()`](/api/process) pipeline function.
+
+```typescript
+interface ProcessOptions {
+  /** Pixelation block size. Each NxN block becomes one output pixel. Required. */
+  blockSize: number;
+  /** Color palette to quantize to. Required. */
+  palette: Palette;
+
+  // --- Dithering ---
+  /** Dithering algorithm. Default: 'none' */
+  dithering?: DitheringAlgorithm;
+  /** Custom threshold matrix; required when dithering is 'custom' */
+  ditherMatrix?: ThresholdMatrix;
+  /** Dither intensity for ordered patterns: 0 = none, 1 = full. Default: 1 */
+  ditherStrength?: number;
+  /** Matrix size for built-in ordered patterns. Default: 8 (2 for checkerboard, 64 for blue-noise) */
+  ditherMatrixSize?: number;
+
+  // --- Color matching ---
+  /** Color distance metric for palette matching. Default: 'euclidean' */
+  distanceAlgorithm?: DistanceAlgorithm;
+
+  // --- Resize ---
+  /** Resize the image before processing */
+  targetResolution?: { width: number; height: number };
+  /** How to fit image to target resolution. Default: 'contain' */
+  resizeFit?: 'contain' | 'cover' | 'stretch';
+  /** Resize interpolation method. Default: 'bilinear' */
+  resizeMethod?: 'nearest' | 'bilinear';
+
+  // --- Preprocessing ---
+  /** CSS-style filters applied before pixelation */
+  filters?: FilterOptions;
+
+  // --- Constraints ---
+  /** Hardware constraint to enforce */
+  constraintType?: ConstraintType;
+  /** HAM config; required when constraintType is 'ham' */
+  hamConfig?: { basePaletteSize: number; modifyBits: number };
+  /** Attribute block config; required when constraintType is 'attribute-block' */
+  attributeBlockConfig?: {
+    width: number;
+    height: number;
+    maxColors: number;
+    brightLocked?: boolean;
+    globalBackground?: number;
+  };
+  /** Tile palette config; required when constraintType is 'per-tile-palette' */
+  tilePaletteConfig?: {
+    tileWidth: number;
+    tileHeight: number;
+    subpaletteCount?: number;
+    colorsPerSubpalette: number;
+    sharedTransparent: boolean;
+  };
+  /** Per-row-in-tile config; required when constraintType is 'per-row-in-tile' */
+  perRowInTileConfig?: {
+    tileWidth: number;
+    tileHeight: number;
+  };
+  /** Scanline config; required when constraintType is 'per-scanline' */
+  scanlineConfig?: { maxColorsPerLine: number };
+  /** Apple II artifact config; required when constraintType is 'artifact-color' */
+  artifactConfig?: {
+    pixelsPerGroup: number;
+    paletteSets: readonly (readonly string[])[];
+  };
+}
+```
+
+<Callout type="info">
+Only `blockSize` and `palette` are required. Everything else has sensible defaults. See the [`process()` reference](/api/process) for usage examples.
+</Callout>
+
+### ProcessResult
+
+The return value of the `process()` pipeline.
+
+```typescript
+interface ProcessResult {
+  /** Processed output at the same dimensions as the input */
+  imageData: ImageData;
+  /** 2D array of RGB values representing the pixelated blocks */
+  grid: PixelGrid;
+  /** Grid width (number of blocks horizontally) */
+  width: number;
+  /** Grid height (number of blocks vertically) */
+  height: number;
+  /** Dimensions after resize, if targetResolution was used */
+  effectiveResolution?: { width: number; height: number };
+}
+```
+
+### ConstraintType
+
+Selects the hardware constraint solver applied after palette matching and dithering.
+
+```typescript
+type ConstraintType =
+  | 'attribute-block'    // ZX Spectrum, C64 multicolor block color limits
+  | 'per-tile-palette'   // NES, SNES, Genesis tile palette selection
+  | 'per-scanline'       // Atari 2600 scanline color limits
+  | 'ham'                // Amiga Hold-And-Modify
+  | 'artifact-color'     // Apple II NTSC artifact colors
+  | 'sub-palette-lock'   // CGA fixed sub-palette
+  | 'per-row-in-tile'    // ColecoVision/MSX TMS9918A
+  | 'monochrome-global'  // Single global palette (Game Boy)
+  | 'none';              // No spatial constraint
+```
+
+---
+
+## Hardware Types
+
+### HardwarePreset
+
+The full definition of a hardware system preset. Presets contain everything needed to reproduce a system's color behavior: palette, resolution, display characteristics, and constraint configuration.
+
+```typescript
+interface HardwarePreset {
+  /** Unique preset identifier, e.g. 'gameboy-dmg' */
+  id: string;
+  /** Human-readable name, e.g. 'Game Boy (DMG)' */
+  name: string;
+  /** System category */
+  category:
+    | 'computer'
+    | 'nintendo'
+    | 'sega'
+    | 'other'
+    | 'arcade'
+    | 'ibm-pc'
+    | 'fantasy';
+  /** Parent system name, e.g. 'Game Boy' */
+  system: string;
+  /** TV standard region */
+  region?: 'ntsc' | 'pal' | 'both';
+
+  // --- Palette ---
+  /** Fixed palette (for fixed-LUT systems like Game Boy, NES, C64) */
+  palette?: Palette;
+  /** RGB bit-depth descriptor (for programmable-palette systems like Genesis, Amiga) */
+  colorSpace?: ColorBitDepth;
+
+  // --- Resolution & display ---
+  /** Native resolution */
+  resolution: {
+    width: number;
+    height: number;
+    alternativeModes?: Array<{
+      width: number;
+      height: number;
+      label: string;
+    }>;
+  };
+  /** Pixel aspect ratio (width:height of a single pixel) */
+  par: PixelAspectRatio;
+  /** Display technology and default effects */
+  display: {
+    type: DisplayType;
+    defaultEffects: DisplayEffects;
+  };
+
+  /** Free-form notes about the system */
+  notes?: string;
+
+  // --- Hardware profile ---
+  /** How the palette is organized */
+  paletteType?: PaletteType;
+  /** Master palette as hex strings (for systems with a fixed master palette) */
+  masterPalette?: readonly string[];
+  /** Total colors the hardware can represent */
+  totalColors?: number;
+  /** Maximum simultaneous on-screen colors */
+  simultaneousColors?: number;
+  /** Per-channel bit depth */
+  bitsPerChannel?: {
+    readonly r: number;
+    readonly g: number;
+    readonly b: number;
+  };
+
+  /** Sub-palette layout (NES, SNES, Genesis) */
+  paletteLayout?: {
+    readonly subpaletteCount: number;
+    readonly colorsPerSubpalette: number;
+    readonly sharedTransparent: boolean;
+    readonly sharedBackdrop?: boolean;
+  };
+
+  // --- Constraints ---
+  /** Hardware constraint type governing color selection rules */
+  constraintType?: ConstraintType;
+
+  /** Attribute block dimensions and limits (ZX Spectrum, C64) */
+  attributeBlock?: {
+    readonly width: number;
+    readonly height: number;
+    readonly maxColors: number;
+    readonly brightLocked?: boolean;
+    readonly globalBackground?: number;
+  };
+
+  /** Tile dimensions (NES, SNES, Genesis) */
+  tileSize?: { readonly width: number; readonly height: number };
+
+  /** HAM mode config (Amiga) */
+  hamConfig?: {
+    readonly basePaletteSize: number;
+    readonly modifyBits: number;
+  };
+
+  /** Apple II artifact color config */
+  artifactConfig?: {
+    readonly pixelsPerGroup: number;
+    readonly paletteSets: readonly (readonly string[])[];
+  };
+
+  /** Per-scanline color/sprite limits (Atari 2600, etc.) */
+  scanlineLimits?: {
+    readonly maxColors?: number;
+    readonly maxSprites?: number;
+  };
+
+  // --- Display characteristics ---
+  /** Physical display behavior hints */
+  displayCharacteristics?: {
+    readonly crtScanlines?: boolean;
+    readonly compositeBlending?: boolean;
+    readonly colorTint?: {
+      readonly r: number;
+      readonly g: number;
+      readonly b: number;
+    };
+    readonly orderedDither?: boolean;
+    readonly doubleWidePixels?: boolean;
+    readonly nonlinearDAC?: boolean;
+  };
+
+  // --- Recommendations ---
+  /** Suggested dithering algorithm for best results */
+  recommendedDithering?: DitheringAlgorithm;
+  /** Suggested distance algorithm for best results */
+  recommendedDistance?: DistanceAlgorithm;
+  /** Named palette variant, e.g. 'pepto' or 'colodore' */
+  paletteVariant?: string;
+}
+```
+
+<Callout type="info">
+Presets use one of two palette modes. **Fixed-LUT** systems (Game Boy, NES, C64, PICO-8) provide a `palette` array directly. **Programmable-palette** systems (Genesis, Amiga, VGA) provide a `colorSpace` descriptor instead -- use `enumerateColorSpace()` from `bitmapped/presets` to generate the full palette at runtime.
+</Callout>
+
+### PixelAspectRatio
+
+The width-to-height ratio of a single pixel. Most systems use `{ x: 1, y: 1 }` (square pixels), but CRT-era systems often have non-square pixels.
+
+```typescript
+interface PixelAspectRatio {
+  x: number;
+  y: number;
+}
+```
+
+### DisplayType
+
+The physical display technology of the target hardware.
+
+```typescript
+type DisplayType =
+  | 'crt-rf'        // RF modulator (NES, Atari 2600)
+  | 'crt-composite' // Composite video (C64, Apple II)
+  | 'crt-svideo'    // S-Video
+  | 'crt-rgb'       // RGB monitor (Amiga, arcade)
+  | 'lcd-stn'       // STN LCD (Game Boy)
+  | 'lcd-tft'       // TFT LCD (GBA, Game Gear)
+  | 'lcd-backlit';  // Backlit LCD (Game Boy Color/Advance)
+```
+
+### DisplayEffects
+
+Configuration for simulated display effects. Each sub-object has an `enabled` flag so effects can be toggled independently.
+
+```typescript
+interface DisplayEffects {
+  scanlines?: {
+    enabled: boolean;
+    /** Darkness of scanline gaps. 0 = invisible, 1 = black. */
+    intensity: number;
+    /** Vertical gap between scanlines in pixels */
+    gap: number;
+  };
+  crtBloom?: {
+    enabled: boolean;
+    /** Bloom spread radius in pixels */
+    radius: number;
+    /** Bloom brightness. 0 = none, 1 = full. */
+    intensity: number;
+  };
+  compositeDither?: {
+    enabled: boolean;
+    /** Radius of composite color blending */
+    blendRadius: number;
+  };
+  lcdGhosting?: {
+    enabled: boolean;
+    /** Ghost trail opacity. 0 = none, 1 = full. */
+    opacity: number;
+  };
+  lcdGrid?: {
+    enabled: boolean;
+    /** Grid line opacity */
+    gridOpacity: number;
+    /** Grid line color */
+    gridColor: RGB;
+  };
+  colorFringe?: {
+    enabled: boolean;
+    /** TV standard (affects fringe pattern) */
+    type: 'ntsc' | 'pal';
+  };
+}
+```
+
+### ColorBitDepth
+
+Describes the color space of a programmable-palette system. Used by presets that do not ship with a fixed palette.
+
+```typescript
+interface ColorBitDepth {
+  /** 'fixed' for fixed-LUT, 'programmable' for bit-depth-based */
+  type: 'fixed' | 'programmable';
+  /** Bits per R/G/B channel (e.g. 3 for Genesis 9-bit color) */
+  bitsPerChannel: number;
+  /** Total color bits (e.g. 9 for Genesis, 12 for Amiga OCS) */
+  totalBits: number;
+  /** Human-readable format string, e.g. 'RGB333' or 'RGB444' */
+  format: string;
+  /** Maximum simultaneous on-screen colors */
+  maxSimultaneous: number;
+  /** Optional quantization function to snap arbitrary RGB to valid hardware color */
+  quantize?: (r: number, g: number, b: number) => RGB;
+}
+```
+
+### PaletteType
+
+Classifies how a system's palette is organized.
+
+```typescript
+type PaletteType =
+  | 'fixed-lut'           // Hardwired color table (NES, C64)
+  | 'rgb-bitdepth'        // Programmable via bit-depth (Genesis, Amiga)
+  | 'composite-artifact'  // Colors generated by NTSC artifacts (Apple II)
+  | 'monochrome-shades'   // Shades of one hue (Game Boy)
+  | 'three-level';        // Three voltage levels per channel (Amstrad CPC)
+```
+
+---
+
+## Constraint Config Types
+
+These types are used by the constraint solvers. They are also re-exported from the main `bitmapped` entry point.
+
+### AttributeBlockConfig
+
+Configuration for attribute-block constraint solving (ZX Spectrum, C64 multicolor).
+
+```typescript
+interface AttributeBlockConfig {
+  /** Block width in pixels */
+  width: number;
+  /** Block height in pixels */
+  height: number;
+  /** Maximum colors allowed per block */
+  maxColors: number;
+  /** Whether bright and non-bright colors cannot mix (ZX Spectrum) */
+  brightLocked?: boolean;
+  /** Index of a globally-shared background color slot (C64 multicolor) */
+  globalBackground?: number;
+}
+```
+
+### TilePaletteConfig
+
+Configuration for tile-palette constraint solving (NES, SNES, Genesis).
+
+```typescript
+interface TilePaletteConfig {
+  /** Tile width in pixels */
+  tileWidth: number;
+  /** Tile height in pixels */
+  tileHeight: number;
+  /** Number of subpalettes available */
+  subpaletteCount?: number;
+  /** Colors per subpalette */
+  colorsPerSubpalette: number;
+  /** Whether the first color in each subpalette is shared/transparent */
+  sharedTransparent: boolean;
+}
+```
+
+### HAMConfig
+
+Configuration for Amiga Hold-And-Modify constraint solving.
+
+```typescript
+interface HAMConfig {
+  /** Number of base palette colors (e.g. 16 for HAM6, 64 for HAM8) */
+  basePaletteSize: number;
+  /** Number of bits for channel modification (e.g. 4 for HAM6, 6 for HAM8) */
+  modifyBits: number;
+}
+```
+
+### ConstraintResult
+
+The return value from all constraint solver functions.
+
+```typescript
+interface ConstraintResult {
+  /** The constrained image data */
+  imageData: ImageData;
+  /** Optional grid representation of the constrained output */
+  grid?: RGB[][];
+}
+```
+
+### DistanceFn
+
+A color distance function signature, used internally by constraint solvers.
+
+```typescript
+type DistanceFn = (a: RGB, b: RGB) => number;
+```
+
+---
+
+## See also
+
+- [`process()`](/api/process) -- main pipeline function reference
+- [Color](/api/color) -- distance functions and palette matching
+- [Dithering](/api/dither) -- dithering algorithms
+- [Constraints](/api/constraints) -- constraint solver functions
+- [How It Works](/concepts/how-it-works) -- detailed pipeline walkthrough

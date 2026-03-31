@@ -1,0 +1,96 @@
+---
+title: API Reference
+---
+
+import { Callout } from 'nextra/components'
+
+# API Reference
+
+bitmapped exposes its functionality through a main entry point and six subpath exports, each focused on a specific concern. You can import only the modules you need, keeping your bundle size minimal.
+
+## Installation
+
+```bash
+npm install bitmapped
+# or
+pnpm add bitmapped
+# or
+yarn add bitmapped
+```
+
+<Callout type="info">
+bitmapped supports subpath imports so you can pull in individual modules directly.
+Import from `'bitmapped'` for the core pipeline, or from a subpath like
+`'bitmapped/color'`, `'bitmapped/dither'`, etc. for targeted functionality.
+All subpath exports are also re-exported from the main entry point.
+</Callout>
+
+## Main Entry Point (`bitmapped`)
+
+The primary export is the [`process()`](/api/process) function, which runs the full image-processing pipeline: filters, resize, pixelate, palette match, dither, and hardware constraints. It accepts an `ImageData` and a `ProcessOptions` object and returns a `ProcessResult` containing the processed image, a 2D pixel grid, and resolution metadata. The main entry point also re-exports everything from the subpath modules below.
+
+```typescript
+import { process } from 'bitmapped';
+```
+
+See [process()](/api/process) for the full signature, options table, and usage examples.
+
+## Color Utilities (`bitmapped/color`)
+
+Five distance algorithms for comparing colors: `euclideanDistance`, `redmeanDistance`, `cie76Distance`, `ciede2000Distance`, and `oklabDistance`. Use `getDistanceFunction()` to select one by name at runtime. Palette matching is handled by `findNearestColor`, `createPaletteMatcher` (with caching), and `mapImageToPalette` (whole-image batch). Color conversion helpers include `rgbToLab` and `rgbToOklab`. Quantization utilities such as `quantizeBits`, `quantizeGenesis`, and `quantizeCPC` map colors to hardware-accurate levels.
+
+```typescript
+import { getDistanceFunction, createPaletteMatcher } from 'bitmapped/color';
+```
+
+See [Color Utilities](/api/color) for the full API.
+
+## Palette Parsing (`bitmapped/palette`)
+
+Three parsers for common palette formats: `parseHex` (hex color strings), `parseGPL` (GIMP palette files), and `parseASE` (Adobe Swatch Exchange). Each returns a `Palette` array ready to pass into `process()`. The `extractPalette` function performs median-cut color extraction from an existing `ImageData`, useful for deriving a palette from a reference image.
+
+```typescript
+import { parseHex, extractPalette } from 'bitmapped/palette';
+```
+
+See [Palette Parsing](/api/palette) for format details and examples.
+
+## Dithering (`bitmapped/dither`)
+
+Error diffusion algorithms (`floydSteinberg`, `atkinsonDither`) and ordered dithering (`bayerDither`, `orderedDither`, `applyPS1Dither`). The `generateBayerMatrix` function creates Bayer matrices at any power-of-two size, and the `matrices` export provides pre-built threshold matrices for all built-in ordered patterns (clustered-dot, line variants, checkerboard, blue noise). Custom matrices are supported via the `'custom'` dithering mode.
+
+```typescript
+import { floydSteinberg, bayerDither } from 'bitmapped/dither';
+```
+
+See [Dithering](/api/dither) for algorithm descriptions and matrix configuration.
+
+## Export (`bitmapped/export`)
+
+Blob generation and browser download helpers for PNG (`toPNGBlob`, `downloadPNG`), JPEG (`toJPEGBlob`, `downloadJPEG`), and WebP (`toWebPBlob`, `downloadWebP`). The `imageDataToSVG` function renders the pixel grid as an SVG element with one `<rect>` per pixel, and `toSVGBlob` / `downloadSVG` wrap it for saving. A generic `imageDataToBlob` helper is also available for custom MIME types.
+
+```typescript
+import { downloadPNG, imageDataToSVG } from 'bitmapped/export';
+```
+
+See [Export](/api/export) for the full API and usage examples.
+
+## Hardware Presets (`bitmapped/presets`)
+
+54 built-in hardware presets spanning 7 categories (Nintendo, Sega, computers, IBM PC, arcade, other, fantasy). Use `getPreset(id)` to fetch a single preset by ID, `listPresets()` to get all presets, or `listPresetsByCategory(category)` to filter by category. Presets with RGB bit-depth color spaces (Genesis, Amiga, VGA, etc.) use `enumerateColorSpace` and `sampleColorSpace` to generate their full palettes at runtime rather than storing every color in a lookup table.
+
+```typescript
+import { getPreset, listPresetsByCategory } from 'bitmapped/presets';
+```
+
+See [Presets overview](/presets) for the full catalog and per-system details.
+
+## Preprocessing (`bitmapped/preprocess`)
+
+CSS-style image filters applied before pixelation. `applyFilters` takes an `ImageData` and a `FilterOptions` object (brightness, contrast, saturate, grayscale, sepia, invert, hue-rotate, blur) and returns a new `ImageData`. `buildFilterString` converts filter options to a CSS `filter` string for canvas use. `hasActiveFilters` checks whether any option differs from the defaults in `FILTER_DEFAULTS`.
+
+```typescript
+import { applyFilters, FILTER_DEFAULTS } from 'bitmapped/preprocess';
+```
+
+See [Preprocessing](/api/preprocess) for the filter options reference.

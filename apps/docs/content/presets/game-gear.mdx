@@ -1,0 +1,107 @@
+---
+title: Sega Game Gear
+---
+
+import { Callout } from 'nextra/components'
+
+# Sega Game Gear
+
+| Spec | Value |
+|---|---|
+| Resolution | 160x144 |
+| Total colors | 4,096 (12-bit RGB) |
+| Simultaneous | 32 |
+| Constraint | Per-tile palette |
+| Display | Backlit TFT LCD |
+| Year | 1990 |
+| Maker | Sega |
+
+## Color palette
+
+The Game Gear uses 12-bit RGB color (4 bits per channel), quadrupling the Master System's 6-bit palette from 64 to 4,096 possible colors. Internally the VDP stores colors in BGR444 format across two CRAM (Color RAM) palettes of 16 entries each: one for background tiles and one for sprites, giving 32 simultaneous on-screen colors.
+
+Since the Game Gear's palette is defined by RGB bit-depth rather than a fixed lookup table, bitmapped generates the full 4,096-color gamut at runtime using `enumerateColorSpace()`:
+
+```typescript
+import { enumerateColorSpace } from 'bitmapped/presets';
+
+const ggColorSpace = {
+  type: 'programmable',
+  bitsPerChannel: 4,
+  totalBits: 12,
+  format: 'BGR444',
+  maxSimultaneous: 32,
+};
+
+// All 4,096 possible Game Gear colors
+const fullPalette = enumerateColorSpace(ggColorSpace);
+```
+
+Each 4-bit channel maps to 16 intensity levels (0-15), expanded to 8-bit values via bit replication (e.g., `0x7` becomes `0x77`). This gives a smooth, evenly spaced gamut across all three channels.
+
+## The key constraint: per-tile palette
+
+The Game Gear inherits the Master System's tile-based VDP (Video Display Processor). The background layer is composed of 8x8 pixel tiles, and each tile references one of the two 16-color palettes stored in CRAM. Sprites similarly draw from the second 16-color palette.
+
+This means each 8x8 tile on screen is limited to 16 colors from its assigned palette. While the 12-bit gamut allows far more vibrant and varied color choices than the SMS, the fundamental constraint remains: only 32 colors can appear simultaneously, and each tile must commit to one palette.
+
+bitmapped's per-tile-palette constraint solver handles this by analyzing each 8x8 tile region and selecting the optimal subpalette assignment to minimize color error across the image:
+
+<Callout type="info">
+The per-tile-palette constraint divides the image into 8x8 blocks and assigns each block to one of two 16-color subpalettes. This reproduces the tile-based color restrictions of the Game Gear's VDP.
+</Callout>
+
+## Interactive demo
+
+<LiveDemo
+  defaultPreset="game-gear"
+  showDitheringControls
+  showComparison
+  allowUpload
+/>
+
+## Code example
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset, enumerateColorSpace } from 'bitmapped/presets';
+
+const gg = getPreset('game-gear')!;
+
+// Enumerate the full 4,096-color gamut from the color space definition
+const fullPalette = enumerateColorSpace(gg.colorSpace!).map(
+  (color) => ({ color })
+);
+
+const result = process(imageData, {
+  blockSize: 4,
+  palette: fullPalette,
+  dithering: 'bayer',
+  distanceAlgorithm: 'redmean',
+  constraintType: 'per-tile-palette',
+  tilePaletteConfig: {
+    tileWidth: 8,
+    tileHeight: 8,
+    subpaletteCount: 2,
+    colorsPerSubpalette: 16,
+  },
+});
+```
+
+## Presets
+
+bitmapped includes one Game Gear preset:
+
+- **`game-gear`** -- 160x144, 12-bit BGR444 color space, backlit LCD display emulation
+
+<details className="hardware-note">
+<summary>Hardware notes</summary>
+
+The Sega Game Gear (1990) is essentially a portable Master System with an upgraded color subsystem. It shares the same Z80 CPU and a near-identical VDP (based on the SMS2's 315-5246), but replaces the 6-bit CRAM with 12-bit entries, expanding the palette from 64 to 4,096 colors. An official adapter (the Master Gear Converter) allows it to run SMS cartridges directly.
+
+The 160x144 resolution matches Nintendo's Game Boy, but the Game Gear's 4,096-color gamut and 32 simultaneous colors were a significant leap over the Game Boy's 4 shades of green. The landscape-oriented form factor and wider screen also set it apart visually.
+
+Its backlit TFT LCD was a standout feature for 1990 -- the original Game Boy had no backlight, making the Game Gear far easier to play in dim conditions. However, the backlight came at a steep cost: the system consumed 6 AA batteries in roughly 3-5 hours, compared to the Game Boy's 30+ hours on 4 AAs. This battery drain was the Game Gear's most significant practical drawback and a major factor in its market performance against Nintendo.
+
+The VDP outputs to the LCD at its native 160x144 resolution with square pixels (1:1 PAR). Since the display is an LCD rather than a CRT, there are no scanline artifacts or composite color bleeding -- the image is clean and grid-like, which bitmapped emulates with a subtle LCD grid overlay effect.
+</details>

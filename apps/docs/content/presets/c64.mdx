@@ -1,0 +1,141 @@
+---
+title: Commodore 64
+---
+
+import { Callout } from 'nextra/components'
+
+# Commodore 64
+
+| Spec | Value |
+|---|---|
+| Resolution | 320x200 (hires) / 160x200 (multicolor) |
+| Total colors | 16 (fixed palette) |
+| Simultaneous | 16 |
+| Constraint | Hires: 2 colors per 8x8 cell; Multicolor: 4 per 4x8 cell |
+| Display | CRT composite |
+| Year | 1982 |
+| Maker | Commodore |
+
+## Color palette
+
+The C64's VIC-II chip has a fixed palette of 16 colors. These are not RGB values but are generated internally by the chip's luma/chroma circuitry, which means the exact colors vary between VIC-II revisions (6567, 6569, 8562, 8565) and between NTSC and PAL systems.
+
+The **Pepto** palette (Philip "Pepto" Timmermann, 2001) is the most widely accepted set of measurements and has become the de facto standard in the C64 community:
+
+<PaletteDisplay
+  colors={[
+    '#000000','#FFFFFF','#68372B','#70A4B2','#6F3D86','#588D43','#352879','#B8C76F',
+    '#6F4F25','#433900','#9A6759','#444444','#6C6C6C','#9AD284','#6C5EB5','#959595',
+  ]}
+  labels={[
+    'Black','White','Red','Cyan','Purple','Green','Blue','Yellow',
+    'Orange','Brown','Light Red','Dark Grey','Grey','Light Green','Light Blue','Light Grey',
+  ]}
+  columns={8}
+  swatchSize={36}
+  showHex
+  groupLabel="Pepto palette (16 colors)"
+/>
+
+<Callout type="info">
+The **Colodore** palette (2017) is Pepto's updated model using improved measurement techniques and is recommended for PAL accuracy. Both variants are available as presets — use `c64-pepto` for the classic standard or `c64-colodore` for the revised measurements.
+</Callout>
+
+## The key constraint: per-cell color limits
+
+The C64's VIC-II chip supports two bitmap graphics modes, each with different color constraints:
+
+### Hires mode (320x200)
+
+Each 8x8 character cell can use only **2 colors** — one foreground and one background, both chosen freely from the 16-color palette. This gives the full 320x200 resolution but severely limits color variety within each cell. When color boundaries don't align to the 8x8 grid, the constraint solver must choose which pair of colors best represents each cell, producing the characteristic "attribute clash" artifacts familiar to anyone who used a C64 or ZX Spectrum.
+
+### Multicolor mode (160x200)
+
+Each 4x8 cell can use up to **4 colors**:
+
+- **1 shared background color** (global, the same for every cell on screen)
+- **1 shared auxiliary color** (also global across the screen)
+- **2 cell-specific colors** (unique per 4x8 cell)
+
+The tradeoff is horizontal resolution: pixels are double-wide (160 logical pixels stretched to fill the 320-pixel display width), giving a chunkier look but significantly more color variety per cell. Most C64 game graphics used multicolor mode for this reason.
+
+<Callout type="warning">
+In multicolor mode, the global background color (index 0, typically Black) is shared across the entire screen. Changing it affects every cell simultaneously. This is why many C64 games have a black background.
+</Callout>
+
+## Interactive demo
+
+<LiveDemo
+  defaultPreset="c64-pepto"
+  showDitheringControls
+  showConstraintToggle
+  showComparison
+  allowUpload
+/>
+
+## Code example
+
+### Basic usage with the Pepto palette
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset } from 'bitmapped/presets';
+
+const c64 = getPreset('c64-pepto')!;
+
+const result = process(imageData, {
+  blockSize: 1,
+  palette: c64.palette!,
+  dithering: 'floyd-steinberg',
+  distanceAlgorithm: 'redmean',
+});
+```
+
+### Multicolor mode with constraints
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset } from 'bitmapped/presets';
+
+const c64mc = getPreset('c64-multicolor')!;
+
+const result = process(imageData, {
+  blockSize: 1,
+  palette: c64mc.palette!,
+  dithering: 'none',
+  distanceAlgorithm: 'redmean',
+  targetResolution: { width: 160, height: 200 },
+  constraintType: 'attribute-block',
+  attributeBlockConfig: {
+    width: 4,
+    height: 8,
+    maxColors: 4,
+    globalBackground: 0,
+  },
+});
+```
+
+Note `globalBackground: 0` — this tells the constraint solver that palette index 0 (Black) is the shared background color and must appear in every cell.
+
+## Available presets
+
+| Preset ID | Description |
+|---|---|
+| `c64-pepto` | Pepto 2001 palette — the most widely accepted C64 color measurements |
+| `c64-colodore` | Colodore 2017 palette — Pepto's updated model for improved PAL accuracy |
+| `c64-hires` | Hires bitmap mode — 320x200, 2 colors per 8x8 cell, with attribute-block constraint |
+| `c64-multicolor` | Multicolor bitmap mode — 160x200 (double-wide pixels), 4 colors per 4x8 cell, with attribute-block constraint |
+
+<details className="hardware-note">
+<summary>Hardware notes</summary>
+
+The C64's graphics are driven by the **VIC-II** (Video Interface Chip II), designated MOS 6569 for PAL systems and MOS 6567 for NTSC. Later revisions (8562 PAL, 8565 NTSC) are functionally identical but produce slightly different analog color output due to die-shrink manufacturing changes.
+
+The 16 colors are generated internally by the VIC-II using a combination of luma (brightness) and chroma (color) signals, not by storing RGB values in a lookup table. The chip produces 9 distinct luma levels shared across the 16 color entries, and 4 chroma phases for the chromatic colors. This is why measuring the "true" C64 palette requires careful analog capture from the video output — and why different chip revisions and different measurement methodologies (Pepto, Colodore, VICE) produce slightly different RGB approximations.
+
+**FLI (Flexible Line Interpretation)** is an advanced technique that exploits VIC-II timing by rapidly switching character pointers every scanline, effectively allowing a different color RAM value per scanline within each 8-pixel-wide column. This dramatically increases the number of usable colors on screen, at the cost of a 3-character-wide blank strip on the left edge (24 pixels lost to the timing trick). FLI is not a hardware mode but a software exploit of the VIC-II's bus timing.
+
+**AFLI (Advanced FLI)** combines FLI with hires bitmap mode, achieving per-scanline foreground and background color changes at full 320x200 resolution. This allows near-photographic color images on the C64 but requires extremely precise cycle-exact code.
+
+Neither FLI nor AFLI are modeled by the presets — they represent software tricks beyond the VIC-II's documented hardware modes.
+</details>

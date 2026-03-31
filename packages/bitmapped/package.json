@@ -1,0 +1,155 @@
+{
+  "name": "bitmapped",
+  "version": "0.0.1",
+  "description": "Palette-aware image pixelation library for pixel artists and game developers",
+  "type": "module",
+  "sideEffects": false,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/martink-rsa/bitmapped",
+    "directory": "packages/bitmapped"
+  },
+  "keywords": [
+    "pixel-art",
+    "pixelation",
+    "palette",
+    "dithering",
+    "canvas",
+    "color-quantization",
+    "game-dev",
+    "image-processing"
+  ],
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./color": {
+      "import": {
+        "types": "./dist/color/index.d.ts",
+        "default": "./dist/color/index.js"
+      },
+      "require": {
+        "types": "./dist/color/index.d.cts",
+        "default": "./dist/color/index.cjs"
+      }
+    },
+    "./palette": {
+      "import": {
+        "types": "./dist/palette/index.d.ts",
+        "default": "./dist/palette/index.js"
+      },
+      "require": {
+        "types": "./dist/palette/index.d.cts",
+        "default": "./dist/palette/index.cjs"
+      }
+    },
+    "./dither": {
+      "import": {
+        "types": "./dist/dither/index.d.ts",
+        "default": "./dist/dither/index.js"
+      },
+      "require": {
+        "types": "./dist/dither/index.d.cts",
+        "default": "./dist/dither/index.cjs"
+      }
+    },
+    "./export": {
+      "import": {
+        "types": "./dist/export/index.d.ts",
+        "default": "./dist/export/index.js"
+      },
+      "require": {
+        "types": "./dist/export/index.d.cts",
+        "default": "./dist/export/index.cjs"
+      }
+    },
+    "./presets": {
+      "import": {
+        "types": "./dist/presets/index.d.ts",
+        "default": "./dist/presets/index.js"
+      },
+      "require": {
+        "types": "./dist/presets/index.d.cts",
+        "default": "./dist/presets/index.cjs"
+      }
+    },
+    "./preprocess": {
+      "import": {
+        "types": "./dist/preprocess/index.d.ts",
+        "default": "./dist/preprocess/index.js"
+      },
+      "require": {
+        "types": "./dist/preprocess/index.d.cts",
+        "default": "./dist/preprocess/index.cjs"
+      }
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "color": [
+        "./dist/color/index.d.ts"
+      ],
+      "palette": [
+        "./dist/palette/index.d.ts"
+      ],
+      "dither": [
+        "./dist/dither/index.d.ts"
+      ],
+      "export": [
+        "./dist/export/index.d.ts"
+      ],
+      "presets": [
+        "./dist/presets/index.d.ts"
+      ],
+      "preprocess": [
+        "./dist/preprocess/index.d.ts"
+      ]
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:browser": "vitest run --project browser",
+    "test:coverage": "vitest run --coverage",
+    "test:report": "VISUAL_REPORT=1 vitest run --reporter=verbose",
+    "test:update-snapshots": "UPDATE_SNAPSHOTS=true vitest run src/presets/preset-snapshots.test.ts",
+    "test:snapshot-report": "vitest run src/presets/snapshot-report.test.ts",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.18.0",
+    "@types/node": "^25.5.0",
+    "@types/pngjs": "^6.0.5",
+    "@vitest/browser-playwright": "^4.1.2",
+    "@vitest/coverage-v8": "^4.0.0",
+    "eslint": "^10.0.0",
+    "pdf-lib": "^1.17.1",
+    "pixelmatch": "^7.1.0",
+    "playwright": "^1.58.2",
+    "pngjs": "^7.0.0",
+    "publint": "^0.3.0",
+    "tsup": "^8.4.0",
+    "typescript-eslint": "^8.57.2",
+    "vitest": "^4.0.0"
+  }
+}

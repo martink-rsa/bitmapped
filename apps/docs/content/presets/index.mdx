@@ -1,0 +1,216 @@
+---
+title: System Presets
+---
+
+import { Callout } from 'nextra/components'
+
+# System Presets
+
+bitmapped ships with 54 hardware presets that faithfully reproduce the color palettes, resolutions, and rendering constraints of classic systems. Each preset configures the full processing pipeline — palette, dithering defaults, constraint solver, and display aspect ratio — so you can pixelate any image as if it were running on real hardware.
+
+## Categories
+
+### Nintendo (8)
+
+Game Boy (DMG, Pocket, Color), NES (NTSC, PAL), SNES, GBA, Virtual Boy
+
+### Sega (4)
+
+Master System, Genesis (NTSC, PAL), Game Gear
+
+### Home Computers (20)
+
+C64 (Pepto, Colodore, Hires, Multicolor), ZX Spectrum, Apple II (Lo-Res, Hi-Res), Amiga (OCS, HAM6, EHB), VIC-20, Amstrad CPC (Mode 0, Mode 1), BBC Micro Mode 2, MSX, MSX2, Atari ST, Atari STE, Thomson MO5, Macintosh
+
+### IBM PC (8)
+
+CGA (4 Mode 4 variants + Composite), Tandy 1000, EGA, VGA (Mode 13h, Mode 12h)
+
+### Arcade (5)
+
+CPS-1, CPS-2, CPS-3, Sega System 16, Namco Galaxian
+
+### Other (5)
+
+Atari 2600 (NTSC, PAL), PlayStation 1, Neo Geo, ColecoVision
+
+### Fantasy (3)
+
+PICO-8, TIC-80, Picotron
+
+## Featured presets
+
+<div className="system-grid">
+  <SystemCard
+    name="NES"
+    id="nes-ntsc"
+    resolution="256x240"
+    totalColors={54}
+    simultaneousColors={25}
+    constraintType="16x16 attribute blocks"
+    href="/presets/nes"
+  />
+  <SystemCard
+    name="Game Boy"
+    id="gameboy-dmg"
+    resolution="160x144"
+    totalColors={4}
+    simultaneousColors={4}
+    constraintType="4 green shades"
+    href="/presets/gameboy"
+  />
+  <SystemCard
+    name="SNES"
+    id="snes"
+    resolution="256x224"
+    totalColors={32768}
+    simultaneousColors={256}
+    constraintType="Per-tile palette"
+    href="/presets/snes"
+  />
+  <SystemCard
+    name="GBA"
+    id="gba"
+    resolution="240x160"
+    totalColors={32768}
+    simultaneousColors={32768}
+    constraintType="15-bit RGB direct"
+    href="/presets/gba"
+  />
+  <SystemCard
+    name="Genesis"
+    id="genesis"
+    resolution="320x224"
+    totalColors={512}
+    simultaneousColors={61}
+    constraintType="9-bit RGB, nonlinear DAC"
+    href="/presets/genesis"
+  />
+  <SystemCard
+    name="Master System"
+    id="master-system"
+    resolution="256x192"
+    totalColors={64}
+    simultaneousColors={32}
+    constraintType="Per-tile palette"
+    href="/presets/master-system"
+  />
+  <SystemCard
+    name="Game Gear"
+    id="game-gear"
+    resolution="160x144"
+    totalColors={4096}
+    simultaneousColors={32}
+    constraintType="12-bit RGB"
+    href="/presets/game-gear"
+  />
+  <SystemCard
+    name="Commodore 64"
+    id="c64-pepto"
+    resolution="320x200"
+    totalColors={16}
+    simultaneousColors={16}
+    constraintType="Hires / multicolor modes"
+    href="/presets/c64"
+  />
+  <SystemCard
+    name="ZX Spectrum"
+    id="zx-spectrum"
+    resolution="256x192"
+    totalColors={15}
+    simultaneousColors={15}
+    constraintType="8x8 attribute clash"
+    href="/presets/zx-spectrum"
+  />
+  <SystemCard
+    name="Apple II"
+    id="apple2-hires"
+    resolution="280x192"
+    totalColors={6}
+    simultaneousColors={6}
+    constraintType="NTSC artifact colors"
+    href="/presets/apple2"
+  />
+  <SystemCard
+    name="Amiga"
+    id="amiga-ham"
+    resolution="320x256"
+    totalColors={4096}
+    simultaneousColors={4096}
+    constraintType="Hold-And-Modify"
+    href="/presets/amiga"
+  />
+  <SystemCard
+    name="Atari 2600"
+    id="atari-2600-ntsc"
+    resolution="160x192"
+    totalColors={128}
+    simultaneousColors={4}
+    constraintType="4 colors per scanline"
+    href="/presets/atari2600"
+  />
+  <SystemCard
+    name="PlayStation 1"
+    id="ps1"
+    resolution="320x240"
+    totalColors={32768}
+    simultaneousColors={32768}
+    constraintType="15-bit + ordered dither"
+    href="/presets/ps1"
+  />
+  <SystemCard
+    name="Neo Geo"
+    id="neo-geo"
+    resolution="320x224"
+    totalColors={65536}
+    simultaneousColors={4096}
+    constraintType="16-bit color, 256 palettes"
+    href="/presets/neo-geo"
+  />
+</div>
+
+## Palette modes
+
+Presets use one of two palette modes:
+
+- **Fixed-LUT** — The preset contains a literal color table (NES, Game Boy, C64, CGA, PICO-8, etc.). The `preset.palette` property holds the full array of colors.
+- **RGB bit-depth** — The preset defines bits-per-channel via `preset.colorSpace`. Call `enumerateColorSpace()` from `bitmapped/presets` to generate the full palette at runtime (Genesis, Amiga, VGA, etc.).
+
+```typescript
+import { getPreset, enumerateColorSpace } from 'bitmapped/presets';
+
+// Fixed-LUT: palette is already available
+const nes = getPreset('nes-ntsc');
+console.log(nes.palette.length); // 54 colors
+
+// RGB bit-depth: generate the palette from colorSpace
+const genesis = getPreset('genesis');
+const palette = enumerateColorSpace(genesis.colorSpace);
+console.log(palette.length); // 512 colors (9-bit RGB)
+```
+
+<Callout type="info">
+  Most presets with large color spaces (512+ colors) use RGB bit-depth mode.
+  Presets with small, fixed palettes (4-256 colors) typically use Fixed-LUT mode.
+</Callout>
+
+## All preset pages
+
+- [NES](/presets/nes) — Nintendo Entertainment System (NTSC and PAL)
+- [Game Boy](/presets/gameboy) — Game Boy DMG, Pocket, and Color
+- [SNES](/presets/snes) — Super Nintendo Entertainment System
+- [GBA](/presets/gba) — Game Boy Advance
+- [Genesis](/presets/genesis) — Sega Genesis / Mega Drive (NTSC and PAL)
+- [Master System](/presets/master-system) — Sega Master System
+- [Game Gear](/presets/game-gear) — Sega Game Gear
+- [ZX Spectrum](/presets/zx-spectrum) — Sinclair ZX Spectrum
+- [Commodore 64](/presets/c64) — C64 with Pepto, Colodore, Hires, and Multicolor variants
+- [Apple II](/presets/apple2) — Apple II Lo-Res and Hi-Res
+- [Amiga](/presets/amiga) — Commodore Amiga OCS, HAM6, and EHB
+- [Atari 2600](/presets/atari2600) — Atari 2600 (NTSC and PAL)
+- [PlayStation 1](/presets/ps1) — Sony PlayStation 1
+- [Neo Geo](/presets/neo-geo) — SNK Neo Geo
+
+## Interactive demos
+
+Every preset page includes an interactive demo where you can upload your own image and see it processed with that system's exact color constraints. Toggle dithering, compare before/after, and experiment with different distance algorithms.

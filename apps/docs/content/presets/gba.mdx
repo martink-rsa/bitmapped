@@ -1,0 +1,93 @@
+---
+title: Game Boy Advance
+---
+
+import { Callout } from 'nextra/components'
+
+# Game Boy Advance
+
+| Spec | Value |
+|---|---|
+| Resolution | 240×160 |
+| Total colors | 32,768 (15-bit RGB) |
+| Simultaneous | 32,768 (bitmap modes) |
+| Constraint | None (bitmap modes) |
+| Display | TFT LCD |
+| Year | 2001 |
+| Maker | Nintendo |
+
+## Color palette
+
+The GBA uses 15-bit RGB color in BGR555 format — identical to the SNES color space, with 5 bits per channel yielding 32,768 possible colors. In bitmap modes (modes 3–5), any of those 32,768 colors can appear in any pixel. There is no palette indirection: the framebuffer stores raw 15-bit color values directly.
+
+In tiled modes (modes 0–2), the system uses palette-based rendering similar to the SNES. Background and sprite palettes are stored in a dedicated 1 KB palette RAM, divided into 16 palettes of 16 colors each (or 256-color mode with a single 256-entry palette).
+
+<Callout type="info">
+Because the GBA color space is 15-bit (5 bits per channel), bitmapped uses `enumerateColorSpace()` to generate the full 32,768-color palette at runtime rather than storing it as a static lookup table. The preset ships with a representative 64-color sample for quick previews.
+</Callout>
+
+## The key constraint: none at all (in bitmap modes)
+
+In bitmap modes, the GBA has no palette constraint, no tile-based color restriction, and no attribute clash — it is a direct 15-bit framebuffer where every pixel is independently addressable. This makes it one of the simplest systems to emulate visually: the only real limitations are the 240×160 resolution and the characteristics of the TFT LCD display.
+
+The lack of constraints means dithering is less critical than on palette-limited systems. With 32,768 colors available, most natural images can be represented with reasonable fidelity. Dithering still helps with smooth gradients, but you won't see the dramatic banding that systems like the Game Boy or NES produce.
+
+In tiled modes, per-tile palette selection applies (similar to the SNES), but bitmapped's GBA preset targets the bitmap modes where the system's full color range is available.
+
+## Interactive demo
+
+<LiveDemo
+  defaultPreset="gba"
+  showDitheringControls
+  showComparison
+  allowUpload
+/>
+
+## Code example
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset, enumerateColorSpace } from 'bitmapped/presets';
+
+const gba = getPreset('gba')!;
+
+// Generate the full 32,768-color palette from the 15-bit color space
+const fullPalette = enumerateColorSpace(gba.colorSpace!).map((color) => ({
+  color,
+}));
+
+const result = process(imageData, {
+  blockSize: 2,
+  palette: fullPalette,
+  dithering: 'none',
+  distanceAlgorithm: 'oklab',
+});
+```
+
+<Callout type="info">
+With 32,768 colors, you can often skip dithering entirely and still get good results. If you do want dithering for smoother gradients, try Floyd-Steinberg at a low strength (0.3–0.5) — it adds subtle smoothing without the heavy patterning needed on more constrained systems.
+</Callout>
+
+## Presets
+
+bitmapped includes one Game Boy Advance preset:
+
+- **`gba`** — Bitmap mode, 240×160, 15-bit RGB (32,768 colors)
+
+<details className="hardware-note">
+<summary>Hardware notes</summary>
+
+The GBA supports six display modes, each with different trade-offs:
+
+**Bitmap modes (direct framebuffer):**
+- **Mode 3** — 240×160, 15-bit color, single buffer. Full resolution and color depth, but no double buffering means potential tearing during updates.
+- **Mode 4** — 240×160, 8-bit indexed color (256 colors from the 15-bit palette), double buffered. Half the color depth but smooth animation via page flipping.
+- **Mode 5** — 160×128, 15-bit color, double buffered. Full color depth with smooth animation, but reduced resolution (displayed centered or scaled on the 240×160 screen).
+
+**Tiled modes (palette-based):**
+- **Modes 0–2** — Traditional tile-based rendering with SNES-like palette architecture. Mode 0 supports four regular tile layers. Mode 1 supports two regular and one affine (rotation/scaling) layer. Mode 2 supports two affine layers.
+
+The original GBA (AGB-001) shipped without a backlight — the TFT LCD relied entirely on external light sources, making it notoriously difficult to see in anything but direct lighting. The GBA SP (AGS-001, 2003) added a front-light, and the later SP revision (AGS-101, 2005) finally included a true backlight with dramatically improved visibility.
+
+Because the GBA LCD has different gamma and color reproduction characteristics than a CRT, game developers often adjusted their color palettes to compensate. Colors that look correct on the LCD may appear overly saturated or bright on an emulator displaying raw RGB values. This "GBA color correction" is a well-known issue in the emulation community, and various gamma correction algorithms exist to approximate the original LCD appearance.
+</details>

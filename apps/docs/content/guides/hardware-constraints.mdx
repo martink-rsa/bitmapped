@@ -1,0 +1,372 @@
+---
+title: Hardware Constraints
+---
+
+import { Callout } from 'nextra/components'
+
+# Hardware Constraints
+
+Real retro hardware did not just limit palettes -- it imposed spatial rules on how colors could appear. bitmapped's constraint solvers reproduce these rules to give images an authentic period look.
+
+## The three constraint layers
+
+Every retro system enforces color limitations at three distinct levels. Understanding these layers is essential for getting accurate output from bitmapped.
+
+### Palette constraints
+
+The most fundamental layer: which colors are available at all.
+
+**Fixed LUT** systems have a hardwired color table burned into the hardware. The software cannot define arbitrary colors -- it selects from the master list. These presets store the full palette in `preset.palette`.
+
+```typescript
+import { getPreset } from 'bitmapped/presets';
+
+// Fixed-LUT systems: palette is ready to use directly
+const nes = getPreset('nes-ntsc');
+const palette = nes.palette; // 64 entries (54 unique colors)
+
+const gameBoy = getPreset('gameboy-dmg');
+const gbPalette = gameBoy.palette; // 4 shades of green
+
+const c64 = getPreset('c64-colodore');
+const c64Palette = c64.palette; // 16 fixed colors
+```
+
+**RGB bit-depth** systems have a programmable palette -- the software can set each palette entry to any color within the hardware's bit depth. These presets define a `colorSpace` instead of (or in addition to) a fixed palette. Use `enumerateColorSpace()` to generate every valid color at runtime.
+
+```typescript
+import { getPreset, enumerateColorSpace } from 'bitmapped/presets';
+
+// Genesis: 9-bit color (3 bits/channel, 512 colors)
+const genesis = getPreset('genesis');
+const allGenesisColors = enumerateColorSpace(genesis.colorSpace)
+  .map((color) => ({ color }));
+// 512 entries -- every color the hardware can produce
+
+// SNES: 15-bit color (5 bits/channel, 32768 colors)
+const snes = getPreset('snes');
+const allSNESColors = enumerateColorSpace(snes.colorSpace)
+  .map((color) => ({ color }));
+
+// Amiga OCS: 12-bit color (4 bits/channel, 4096 colors)
+const amiga = getPreset('amiga-ham6');
+const allAmigaColors = enumerateColorSpace(amiga.colorSpace)
+  .map((color) => ({ color }));
+```
+
+### Spatial constraints
+
+Rules about which colors can appear where. This is the layer that produces the characteristic visual artifacts of each system.
+
+- **Attribute blocks** -- The ZX Spectrum divides the screen into 8x8 pixel cells; each cell can use only 2 colors (one foreground, one background), and mixing bright and non-bright colors within a cell is forbidden. The NES uses 16x16 pixel attribute blocks with 4 colors each. The C64 in hires mode allows 2 colors per 8x8 cell, while multicolor mode allows 4 colors per 4x8 cell (3 unique + 1 shared background).
+
+- **Tile palettes** -- The SNES, Genesis, Master System, and Game Boy Color organize colors into subpalettes. Each 8x8 tile independently selects one subpalette. The SNES has 8 subpalettes of 16 colors each (with a shared transparent color), giving more flexibility than attribute blocks because the constraint applies per-tile rather than per-block.
+
+- **Scanline limits** -- The Atari 2600's TIA chip can only display 4 colors per horizontal scanline. The solver picks the best 4 colors from the 128-color palette for each row independently.
+
+- **Per-row-in-tile** -- The TMS9918A chip (used in ColecoVision and MSX) constrains color at an unusually fine granularity: each 8-pixel horizontal row within an 8x8 tile independently selects just 2 colors. This is more flexible than full attribute blocks but still produces visible color bleeding at row boundaries.
+
+### Display constraints
+
+Some systems derive colors through signal-level tricks rather than palette lookup.
+
+- **HAM (Hold-And-Modify)** -- The Amiga's HAM6 mode starts each scanline with a base palette of 16 colors. Each subsequent pixel can either select a palette entry directly or modify one RGB channel of the previous pixel's color. This allows all 4096 OCS colors on screen simultaneously but creates characteristic color fringing on sharp horizontal edges.
+
+- **Artifact color** -- The Apple II Hi-Res mode produces color through NTSC signal timing artifacts. Pixels are grouped, and each group is constrained to one of two fixed color sets (green/violet or orange/blue) depending on bit position. The "colors" exist only in the composite signal, not in the hardware.
+
+- **CGA sub-palette lock** -- IBM CGA Mode 4 locks the entire screen to one of several fixed 4-color sub-palettes (e.g., black/cyan/magenta/white or black/green/red/brown). The software chooses the sub-palette once; it cannot vary across the screen.
+
+## Why constraints matter
+
+Without spatial constraints, palette reduction is generic -- you get a nicely dithered image in 15 colors, but it does not look like a ZX Spectrum image. It looks like a modern image with a small palette.
+
+Constraints add the spatial artifacts that **define** each system's visual identity:
+
+- **NES without attribute blocks** looks like generic 54-color dithering. With attribute blocks, you get the telltale color grid where colors shift at 16x16 boundaries -- the look every NES game has.
+- **ZX Spectrum without attribute clash** is just a clean 15-color image. With it, you get the infamous color bleeding where bright and dark colors fight for dominance in each 8x8 cell.
+- **Amiga without HAM** is ordinary palette-matched output. With HAM enabled, you get the smooth gradients and horizontal color fringing that made Amiga graphics instantly recognizable.
+- **Apple II without artifact color** is a 6-color dithered image. With it, you get the characteristic alternating color fringes that every Apple II user remembers.
+
+The constraint stage runs after dithering, so the solver works with already-dithered pixel data and enforces the hardware rules as a final pass.
+
+## Constraint types overview
+
+| Type | Systems | How it works |
+|---|---|---|
+| `attribute-block` | ZX Spectrum, NES, C64 (hires/multicolor) | Divides the image into rectangular blocks. Each block selects the optimal N colors from the palette. Colors outside the selection are remapped to the nearest allowed color. |
+| `per-tile-palette` | SNES, Genesis, Master System, Game Boy Color | Each 8x8 tile independently selects a subpalette. More flexible than attribute blocks because tiles are smaller and subpalettes can overlap. |
+| `per-scanline` | Atari 2600 | Each horizontal scanline independently selects the best N colors. Creates visible color banding between rows but allows full-screen color coverage. |
+| `ham` | Amiga (HAM6) | Each pixel is either a direct palette lookup or a modification of the previous pixel's RGB value. Produces smooth gradients but causes horizontal fringing on edges. |
+| `artifact-color` | Apple II (Hi-Res) | Pixels are grouped, and each group is locked to one of two NTSC artifact color sets. Color depends on pixel position within the group. |
+| `per-row-in-tile` | ColecoVision, MSX | Each 8-pixel row within an 8x8 tile independently selects 2 colors. Finer than attribute blocks, coarser than per-pixel. |
+| `sub-palette-lock` | CGA Mode 4 | The entire screen is locked to a single fixed sub-palette. No per-tile or per-block variation. |
+| `monochrome-global` | Macintosh, Virtual Boy | The entire image uses a single global palette with no spatial subdivision. Primarily for monochrome or very low color count systems. |
+| `none` | (default) | No spatial constraint applied. Pure palette matching + dithering only. |
+
+<LiveDemo
+  defaultPreset="zx-spectrum"
+  showDitheringControls
+  showConstraintToggle
+  showComparison
+  allowUpload
+/>
+
+<Callout type="info">
+Toggle constraints on and off in the demo above to see the difference they make. With constraints disabled, the image uses the same palette but loses the system-specific spatial artifacts.
+</Callout>
+
+## Using constraints in process()
+
+Constraints are configured through `ProcessOptions` by setting `constraintType` and the matching config object. Each constraint type requires its own configuration.
+
+### ZX Spectrum (attribute-block with brightLocked)
+
+The ZX Spectrum's attribute system is the most restrictive: 2 colors per 8x8 cell, and bright/non-bright colors cannot mix.
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset } from 'bitmapped/presets';
+
+const preset = getPreset('zx-spectrum');
+
+const result = process(imageData, {
+  blockSize: Math.floor(imageData.width / 256),
+  palette: preset.palette,
+  dithering: 'floyd-steinberg',
+  distanceAlgorithm: 'redmean',
+  constraintType: 'attribute-block',
+  attributeBlockConfig: {
+    width: 8,
+    height: 8,
+    maxColors: 2,
+    brightLocked: true,  // Bright and non-bright cannot mix
+  },
+});
+```
+
+### C64 Multicolor (attribute-block with globalBackground)
+
+C64 multicolor mode allows 4 colors per 4x8 cell, but one color slot is shared globally across all cells.
+
+```typescript
+const result = process(imageData, {
+  blockSize: Math.floor(imageData.width / 160),
+  palette: preset.palette,
+  dithering: 'none',
+  distanceAlgorithm: 'redmean',
+  constraintType: 'attribute-block',
+  attributeBlockConfig: {
+    width: 4,
+    height: 8,
+    maxColors: 4,
+    globalBackground: 1,  // Index of the shared background color
+  },
+});
+```
+
+### SNES (per-tile-palette)
+
+The SNES organizes colors into subpalettes. Each 8x8 tile selects one subpalette independently.
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset, enumerateColorSpace } from 'bitmapped/presets';
+
+const preset = getPreset('snes');
+const palette = enumerateColorSpace(preset.colorSpace)
+  .map((c) => ({ color: c }));
+
+const result = process(imageData, {
+  blockSize: Math.floor(imageData.width / 256),
+  palette,
+  dithering: 'floyd-steinberg',
+  distanceAlgorithm: 'redmean',
+  constraintType: 'per-tile-palette',
+  tilePaletteConfig: {
+    tileWidth: 8,
+    tileHeight: 8,
+    colorsPerSubpalette: 16,
+    sharedTransparent: true,  // First color shared across subpalettes
+  },
+});
+```
+
+### Atari 2600 (per-scanline)
+
+The Atari 2600 TIA chip limits each scanline to 4 simultaneous colors from its 128-color palette.
+
+```typescript
+const preset = getPreset('atari-2600-ntsc');
+
+const result = process(imageData, {
+  blockSize: Math.floor(imageData.width / 160),
+  palette: preset.palette,
+  dithering: 'bayer',
+  distanceAlgorithm: 'redmean',
+  constraintType: 'per-scanline',
+  scanlineConfig: {
+    maxColorsPerLine: 4,
+  },
+});
+```
+
+### Amiga HAM6 (ham)
+
+HAM mode needs a base palette size and the bit depth for channel modification.
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset, enumerateColorSpace } from 'bitmapped/presets';
+
+const preset = getPreset('amiga-ham6');
+const palette = enumerateColorSpace(preset.colorSpace)
+  .map((c) => ({ color: c }));
+
+const result = process(imageData, {
+  blockSize: Math.floor(imageData.width / 320),
+  palette,
+  dithering: 'none',         // HAM works best without dithering
+  distanceAlgorithm: 'ciede2000',
+  constraintType: 'ham',
+  hamConfig: {
+    basePaletteSize: 16,     // 16 directly-addressable palette entries
+    modifyBits: 4,           // 4 bits per channel modification
+  },
+});
+```
+
+### ColecoVision / MSX (per-row-in-tile)
+
+The TMS9918A chip allows 2 colors per 8-pixel row within each 8x8 tile.
+
+```typescript
+const preset = getPreset('colecovision');
+
+const result = process(imageData, {
+  blockSize: Math.floor(imageData.width / 256),
+  palette: preset.palette,
+  dithering: 'floyd-steinberg',
+  distanceAlgorithm: 'redmean',
+  constraintType: 'per-row-in-tile',
+  perRowInTileConfig: {
+    tileWidth: 8,
+    tileHeight: 8,
+  },
+});
+```
+
+### Disabling constraints
+
+To disable constraints, simply omit `constraintType` (or set it to `'none'`). The pipeline will skip the constraint stage entirely and return the dithered output as-is.
+
+```typescript
+const result = process(imageData, {
+  blockSize: 4,
+  palette: preset.palette,
+  dithering: 'floyd-steinberg',
+  distanceAlgorithm: 'redmean',
+  // No constraintType -- pure palette matching + dithering
+});
+```
+
+## Using preset constraint configs
+
+Rather than hardcoding constraint parameters, you can extract them directly from a preset. This is the recommended pattern -- it keeps your code in sync with the hardware profile as presets are updated.
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset, enumerateColorSpace } from 'bitmapped/presets';
+
+function processWithPreset(imageData: ImageData, presetId: string) {
+  const preset = getPreset(presetId);
+  if (!preset) throw new Error(`Unknown preset: ${presetId}`);
+
+  // Resolve palette: use colorSpace if available, else fixed palette
+  const palette = preset.colorSpace
+    ? enumerateColorSpace(preset.colorSpace).map((c) => ({ color: c }))
+    : preset.palette!;
+
+  return process(imageData, {
+    blockSize: Math.max(
+      1,
+      Math.floor(imageData.width / preset.resolution.width),
+    ),
+    palette,
+    dithering: preset.recommendedDithering ?? 'floyd-steinberg',
+    distanceAlgorithm: preset.recommendedDistance ?? 'redmean',
+
+    // Constraint config extracted from the preset
+    constraintType: preset.constraintType,
+
+    // Attribute block (ZX Spectrum, NES, C64)
+    attributeBlockConfig: preset.attributeBlock
+      ? {
+          width: preset.attributeBlock.width,
+          height: preset.attributeBlock.height,
+          maxColors: preset.attributeBlock.maxColors,
+          brightLocked: preset.attributeBlock.brightLocked,
+          globalBackground: preset.attributeBlock.globalBackground,
+        }
+      : undefined,
+
+    // Tile palette (SNES, Genesis, Master System, GBC)
+    tilePaletteConfig: preset.paletteLayout
+      ? {
+          tileWidth: preset.tileSize!.width,
+          tileHeight: preset.tileSize!.height,
+          colorsPerSubpalette:
+            preset.paletteLayout.colorsPerSubpalette,
+          sharedTransparent:
+            preset.paletteLayout.sharedTransparent,
+        }
+      : undefined,
+
+    // Per-row-in-tile (ColecoVision, MSX)
+    perRowInTileConfig: preset.tileSize &&
+      preset.constraintType === 'per-row-in-tile'
+      ? {
+          tileWidth: preset.tileSize.width,
+          tileHeight: preset.tileSize.height,
+        }
+      : undefined,
+
+    // Scanline (Atari 2600)
+    scanlineConfig: preset.scanlineLimits?.maxColors
+      ? { maxColorsPerLine: preset.scanlineLimits.maxColors }
+      : undefined,
+
+    // HAM (Amiga)
+    hamConfig: preset.hamConfig
+      ? {
+          basePaletteSize: preset.hamConfig.basePaletteSize,
+          modifyBits: preset.hamConfig.modifyBits,
+        }
+      : undefined,
+
+    // Artifact color (Apple II)
+    artifactConfig: preset.artifactConfig
+      ? {
+          pixelsPerGroup: preset.artifactConfig.pixelsPerGroup,
+          paletteSets: preset.artifactConfig.paletteSets,
+        }
+      : undefined,
+  });
+}
+
+// Works with any preset -- constraints are applied automatically
+processWithPreset(imageData, 'zx-spectrum');
+processWithPreset(imageData, 'snes');
+processWithPreset(imageData, 'atari-2600-ntsc');
+processWithPreset(imageData, 'amiga-ham6');
+processWithPreset(imageData, 'colecovision');
+```
+
+This pattern reads the constraint type and its configuration from the preset's hardware profile fields (`constraintType`, `attributeBlock`, `paletteLayout`, `tileSize`, `hamConfig`, `scanlineLimits`, `artifactConfig`), so you never need to duplicate hardware-specific numbers in your application code.
+
+## Further reading
+
+- [Attribute Clash](/concepts/attribute-clash) -- Deep dive into ZX Spectrum and C64 attribute systems
+- [Tile Palettes](/concepts/tile-palettes) -- How SNES, Genesis, and GBC organize color by tile
+- [HAM Mode](/concepts/ham-mode) -- How Hold-And-Modify works on the Amiga
+- [Artifact Colors](/concepts/artifact-colors) -- NTSC artifact color on the Apple II
+- [Constraints API](/api/constraints) -- Full API reference for all constraint solvers

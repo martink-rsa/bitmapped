@@ -1,0 +1,619 @@
+---
+title: Constraints
+---
+
+import { Callout } from 'nextra/components'
+
+# Constraints
+
+Constraint solvers that reproduce the actual color limitations of retro hardware. These enforce per-tile, per-scanline, and per-byte palette restrictions after initial palette mapping.
+
+```typescript
+import {
+  solveAttributeClash,
+  solveTilePalette,
+  solveHAM,
+  solveScanline,
+  solveApple2Artifact,
+  solvePerRowInTile,
+  solveCGASubpalette,
+  decodeNeoGeoColor,
+  encodeNeoGeoColor,
+} from 'bitmapped';
+
+// Types
+import type {
+  AttributeBlockConfig,
+  TilePaletteConfig,
+  HAMConfig,
+  ConstraintResult,
+} from 'bitmapped';
+```
+
+<Callout type="info">
+These solvers are called internally by [`process()`](/api/process) when you set the `constraintType` option. You only need to call them directly for advanced workflows where you want full control over the processing pipeline.
+</Callout>
+
+For background on how these constraints map to real hardware, see the [Hardware Constraints guide](/guides/hardware-constraints).
+
+## `ConstraintResult`
+
+All constraint solvers that return image data follow this shape:
+
+```typescript
+interface ConstraintResult {
+  imageData: ImageData;
+  grid?: RGB[][];
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `imageData` | `ImageData` | The constrained output image. |
+| `grid` | `RGB[][]` | Optional 2D array of RGB values representing the pixel grid. |
+
+<Callout type="warning">
+The individual solver functions documented below return `ImageData` directly, not `ConstraintResult`. The `ConstraintResult` type is used by the internal pipeline orchestrator to wrap solver output with optional grid data.
+</Callout>
+
+---
+
+## `solveAttributeClash`
+
+Enforces per-block color limits, the way the ZX Spectrum, NES, and C64 restrict how many colors can appear within a character cell.
+
+For each block of pixels, the solver selects the optimal color subset from the palette and remaps every pixel to its nearest match within that subset.
+
+```typescript
+function solveAttributeClash(
+  imageData: ImageData,
+  palette: Palette,
+  config: AttributeBlockConfig,
+  distanceAlgorithm?: DistanceAlgorithm,
+): ImageData;
+```
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `imageData` | `ImageData` | **required** | Source image data. |
+| `palette` | `Palette` | **required** | Available palette colors (must have at least 2 entries). |
+| `config` | `AttributeBlockConfig` | **required** | Block dimensions and color constraints. |
+| `distanceAlgorithm` | `DistanceAlgorithm` | `'euclidean'` | Color distance metric. |
+
+### `AttributeBlockConfig`
+
+```typescript
+interface AttributeBlockConfig {
+  width: number;
+  height: number;
+  maxColors: number;
+  brightLocked?: boolean;
+  globalBackground?: number;
+}
+```
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `width` | `number` | **required** | Block width in pixels. |
+| `height` | `number` | **required** | Block height in pixels. |
+| `maxColors` | `number` | **required** | Maximum colors allowed per block. |
+| `brightLocked` | `boolean` | `false` | When `true`, bright (indices 8--15) and non-bright (indices 0--7) colors cannot mix within the same block. ZX Spectrum mode. |
+| `globalBackground` | `number` | — | Palette index of a globally shared background color that is always included in every block's subset. Used by C64 multicolor mode. |
+
+### Solving strategies
+
+The solver automatically picks the best algorithm depending on the configuration:
+
+- **ZX Spectrum** (`brightLocked: true`) -- Tests all valid ink/paper pairs within each brightness group (56 candidates per block).
+- **Exhaustive pairs** (`maxColors === 2`, palette size 64 or fewer) -- Tests all C(n, 2) palette pairs per block.
+- **Greedy selection** (`maxColors > 2`) -- Seeds with the most popular palette color, then iteratively adds the color that reduces total error the most.
+
+### Systems
+
+| System | Block size | Max colors | Options |
+|---|---|---|---|
+| ZX Spectrum | 8 x 8 | 2 | `brightLocked: true` |
+| C64 Multicolor | 4 x 8 | 4 | `globalBackground: 0` |
+| NES | 16 x 16 | 4 | — |
+
+### Example
+
+```typescript
+import { solveAttributeClash } from 'bitmapped';
+import { getPreset } from 'bitmapped/presets';
+
+const zx = getPreset('zx-spectrum')!;
+
+const constrained = solveAttributeClash(
+  imageData,
+  zx.palette!,
+  {
+    width: 8,
+    height: 8,
+    maxColors: 2,
+    brightLocked: true,
+  },
+  'redmean',
+);
+```
+
+---
+
+## `solveTilePalette`
+
+Assigns an optimal subpalette to each tile, the way tile-based systems like the SNES, Genesis, and Master System select from a small set of color groups per tile.
+
+For each tile, the solver counts which master-palette colors appear most often, picks the top N as the tile's subpalette, and remaps every pixel to its nearest match within that subpalette.
+
+```typescript
+function solveTilePalette(
+  imageData: ImageData,
+  palette: Palette,
+  config: TilePaletteConfig,
+  distanceAlgorithm?: DistanceAlgorithm,
+): ImageData;
+```
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `imageData` | `ImageData` | **required** | Source image data (already palette-quantized or raw). |
+| `palette` | `Palette` | **required** | The full master palette available to the system. |
+| `config` | `TilePaletteConfig` | **required** | Tile size and subpalette parameters. |
+| `distanceAlgorithm` | `DistanceAlgorithm` | `'redmean'` | Color distance metric. |
+
+### `TilePaletteConfig`
+
+```typescript
+interface TilePaletteConfig {
+  tileWidth: number;
+  tileHeight: number;
+  subpaletteCount?: number;
+  colorsPerSubpalette: number;
+  sharedTransparent: boolean;
+}
+```
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `tileWidth` | `number` | **required** | Tile width in pixels. |
+| `tileHeight` | `number` | **required** | Tile height in pixels. |
+| `subpaletteCount` | `number` | — | Number of subpalettes available. Reserved for future use; not currently used by the solver. |
+| `colorsPerSubpalette` | `number` | **required** | Number of colors in each tile's subpalette. |
+| `sharedTransparent` | `boolean` | **required** | When `true`, the first palette entry is always included in every tile's subpalette (occupying one slot). Used for shared transparent/background color. |
+
+### Systems
+
+| System | Tile size | Colors per subpalette | Shared transparent |
+|---|---|---|---|
+| SNES | 8 x 8 | 16 | `true` (color 0) |
+| Genesis / Mega Drive | 8 x 8 | 16 | `false` |
+| Master System | 8 x 8 | 16 | `false` |
+| Game Gear | 8 x 8 | 16 | `false` |
+| Game Boy Color | 8 x 8 | 4 | `false` |
+
+### Example
+
+```typescript
+import { solveTilePalette } from 'bitmapped';
+import { getPreset, enumerateColorSpace } from 'bitmapped/presets';
+
+const genesis = getPreset('genesis-ntsc')!;
+const palette = enumerateColorSpace(genesis.colorSpace!);
+
+const constrained = solveTilePalette(
+  imageData,
+  palette,
+  {
+    tileWidth: 8,
+    tileHeight: 8,
+    colorsPerSubpalette: 16,
+    sharedTransparent: false,
+  },
+  'redmean',
+);
+```
+
+---
+
+## `solveHAM`
+
+Implements Amiga Hold-And-Modify mode. Each pixel is encoded as either a direct base palette lookup or a single-channel modification of the previous pixel's color. This allows near-true-color images from a 16-color base palette, at the cost of fringing artifacts on sharp horizontal edges.
+
+```typescript
+function solveHAM(
+  imageData: ImageData,
+  basePalette: Palette,
+  config: HAMConfig,
+  distanceAlgorithm?: DistanceAlgorithm,
+): ImageData;
+```
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `imageData` | `ImageData` | **required** | Source image data. |
+| `basePalette` | `Palette` | **required** | The base palette (typically 16 colors for HAM6, 64 for HAM8). |
+| `config` | `HAMConfig` | **required** | HAM configuration. |
+| `distanceAlgorithm` | `DistanceAlgorithm` | `'redmean'` | Color distance metric. |
+
+### `HAMConfig`
+
+```typescript
+interface HAMConfig {
+  basePaletteSize: number;
+  modifyBits: number;
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `basePaletteSize` | `number` | Number of base palette colors to use. |
+| `modifyBits` | `number` | Number of bits for channel modification. Determines quantization resolution of the modify operations. |
+
+### How HAM encoding works
+
+For each pixel (processed left-to-right per scanline), the solver picks the option with the lowest error:
+
+1. **Direct palette** -- Use one of the base palette colors.
+2. **Modify R** -- Replace the top bits of the red channel of the previous pixel's color.
+3. **Modify G** -- Replace the top bits of the green channel.
+4. **Modify B** -- Replace the top bits of the blue channel.
+
+Each scanline starts with the first palette color as the initial "previous" value.
+
+### HAM variants
+
+| Variant | Base palette | Modify bits | System |
+|---|---|---|---|
+| HAM6 | 16 colors | 4 | Amiga OCS/ECS |
+| HAM8 | 64 colors | 6 | Amiga AGA |
+
+### Example
+
+```typescript
+import { solveHAM } from 'bitmapped';
+
+const constrained = solveHAM(
+  imageData,
+  basePalette,
+  {
+    basePaletteSize: 16,
+    modifyBits: 4,
+  },
+  'redmean',
+);
+```
+
+---
+
+## `solveScanline`
+
+Limits each horizontal scanline to at most N unique colors from the palette. Colors are selected per row using frequency-weighted scoring to minimize overall error.
+
+```typescript
+function solveScanline(
+  imageData: ImageData,
+  palette: Palette,
+  maxColorsPerLine: number,
+  distanceAlgorithm?: DistanceAlgorithm,
+): ImageData;
+```
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `imageData` | `ImageData` | **required** | Source image data. |
+| `palette` | `Palette` | **required** | Available palette colors. |
+| `maxColorsPerLine` | `number` | **required** | Maximum number of palette colors allowed per scanline. |
+| `distanceAlgorithm` | `DistanceAlgorithm` | `'redmean'` | Color distance metric. |
+
+### Algorithm
+
+For each scanline row:
+
+1. Find the nearest palette color for every pixel in the row.
+2. Rank palette colors by how many pixels they are the nearest match for.
+3. Select the top N colors by frequency.
+4. Remap every pixel in the row to the nearest of those N colors.
+
+If the palette already has fewer colors than the scanline limit, the solver performs a simple nearest-color map with no additional constraint.
+
+### Systems
+
+| System | Max colors per line |
+|---|---|
+| Atari 2600 (NTSC) | 4 |
+| Atari 2600 (PAL) | 4 |
+
+### Example
+
+```typescript
+import { solveScanline } from 'bitmapped';
+import { getPreset } from 'bitmapped/presets';
+
+const atari = getPreset('atari-2600-ntsc')!;
+
+const constrained = solveScanline(
+  imageData,
+  atari.palette!,
+  4,
+  'redmean',
+);
+```
+
+---
+
+## `solveApple2Artifact`
+
+Reproduces Apple II Hi-Res NTSC artifact color generation. In this mode, each byte controls 7 pixels, and a high bit selects between two color groups. The solver tests both groups for each pixel group and picks the one with the lowest total error.
+
+```typescript
+function solveApple2Artifact(
+  imageData: ImageData,
+  paletteSets: readonly (readonly string[])[],
+  pixelsPerGroup: number,
+  distanceAlgorithm?: DistanceAlgorithm,
+): ImageData;
+```
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `imageData` | `ImageData` | **required** | Source image data. |
+| `paletteSets` | `readonly (readonly string[])[]` | **required** | Array of color groups, each an array of hex color strings (`#RRGGBB` or `RRGGBB`). |
+| `pixelsPerGroup` | `number` | **required** | Number of pixels per group (typically 7). |
+| `distanceAlgorithm` | `DistanceAlgorithm` | `'redmean'` | Color distance metric. |
+
+### Apple II color groups
+
+The standard Apple II Hi-Res palette sets are:
+
+| Group | MSB | Colors |
+|---|---|---|
+| Group 1 | 0 | Black, Purple, Green, White |
+| Group 2 | 1 | Black, Blue, Orange, White |
+
+Within a 7-pixel group, all pixels share the same color group. The solver tests both groups and picks the one that produces the lowest mapping error.
+
+### Example
+
+```typescript
+import { solveApple2Artifact } from 'bitmapped';
+
+const paletteSets = [
+  ['#000000', '#FF00FF', '#00FF00', '#FFFFFF'], // Group 1
+  ['#000000', '#0000FF', '#FF8000', '#FFFFFF'], // Group 2
+];
+
+const constrained = solveApple2Artifact(
+  imageData,
+  paletteSets,
+  7,         // 7 pixels per byte group
+  'redmean',
+);
+```
+
+<Callout type="warning">
+Throws an error if `paletteSets` is empty or if any palette set contains an empty array.
+</Callout>
+
+---
+
+## `solvePerRowInTile`
+
+Enforces per-row color limits within each tile, as used by the TMS9918A video display processor. Each row of pixels within an 8x8 tile independently selects a foreground and background color from the full palette. This is more flexible than the ZX Spectrum's per-cell constraint but still heavily limited.
+
+```typescript
+function solvePerRowInTile(
+  imageData: ImageData,
+  palette: Palette,
+  tileWidth: number,
+  tileHeight: number,
+  distanceAlgorithm?: DistanceAlgorithm,
+): ImageData;
+```
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `imageData` | `ImageData` | **required** | Source image data. |
+| `palette` | `Palette` | **required** | Available palette colors. |
+| `tileWidth` | `number` | **required** | Tile width in pixels (typically 8). |
+| `tileHeight` | `number` | **required** | Tile height in pixels (typically 8). |
+| `distanceAlgorithm` | `DistanceAlgorithm` | `'redmean'` | Color distance metric. |
+
+### Algorithm
+
+For each tile, for each of its rows:
+
+1. Try all C(paletteSize, 2) color pairs from the palette.
+2. Select the pair with the lowest total error for that row.
+3. Assign each pixel to the closer of the two colors.
+
+This means an 8x8 tile can use up to 16 distinct colors (2 per row x 8 rows), but each individual row is limited to exactly 2.
+
+### Systems
+
+| System | Tile size | Colors per row |
+|---|---|---|
+| ColecoVision | 8 x 8 | 2 |
+| MSX1 | 8 x 8 | 2 |
+| SG-1000 | 8 x 8 | 2 |
+| Thomson MO5 | 8 x 8 | 2 |
+
+### Example
+
+```typescript
+import { solvePerRowInTile } from 'bitmapped';
+import { getPreset } from 'bitmapped/presets';
+
+const coleco = getPreset('colecovision')!;
+
+const constrained = solvePerRowInTile(
+  imageData,
+  coleco.palette!,
+  8,  // tileWidth
+  8,  // tileHeight
+  'redmean',
+);
+```
+
+---
+
+## `solveCGASubpalette`
+
+Maps every pixel to the nearest color in the provided CGA subpalette. In CGA Mode 4, only 4 colors are available (1 background + 3 from a fixed subpalette).
+
+This is the simplest constraint solver -- it performs the same operation as a standard nearest-color palette map. It exists for consistency with the constraint system so that all hardware constraint types have a corresponding solver.
+
+```typescript
+function solveCGASubpalette(
+  imageData: ImageData,
+  palette: Palette,
+  distanceAlgorithm?: DistanceAlgorithm,
+): ImageData;
+```
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `imageData` | `ImageData` | **required** | Source image data. |
+| `palette` | `Palette` | **required** | The CGA subpalette (typically 4 colors). |
+| `distanceAlgorithm` | `DistanceAlgorithm` | `'redmean'` | Color distance metric. |
+
+### CGA Mode 4 subpalettes
+
+| Palette | Colors |
+|---|---|
+| Palette 0, low intensity | Black, Dark Green, Dark Red, Dark Yellow |
+| Palette 0, high intensity | Black, Green, Red, Yellow |
+| Palette 1, low intensity | Black, Dark Cyan, Dark Magenta, Dark White |
+| Palette 1, high intensity | Black, Cyan, Magenta, White |
+
+### Example
+
+```typescript
+import { solveCGASubpalette } from 'bitmapped';
+import { getPreset } from 'bitmapped/presets';
+
+const cga = getPreset('cga-mode4-pal1-high')!;
+
+const constrained = solveCGASubpalette(
+  imageData,
+  cga.palette!,
+  'redmean',
+);
+```
+
+---
+
+## Neo Geo color utilities
+
+The Neo Geo uses a unique 16-bit color word format with a non-standard bit layout. These utility functions encode and decode between standard RGB and the Neo Geo's native format.
+
+### `decodeNeoGeoColor`
+
+Decodes a Neo Geo 16-bit color word into an RGB color.
+
+```typescript
+function decodeNeoGeoColor(word: number): RGB;
+```
+
+| Parameter | Type | Description |
+|---|---|---|
+| `word` | `number` | The 16-bit Neo Geo color word. |
+
+**Returns:** An `RGB` object with channels in the 0--255 range.
+
+### `encodeNeoGeoColor`
+
+Encodes an RGB color into a Neo Geo 16-bit color word.
+
+```typescript
+function encodeNeoGeoColor(r: number, g: number, b: number): number;
+```
+
+| Parameter | Type | Description |
+|---|---|---|
+| `r` | `number` | Red channel (0--255). |
+| `g` | `number` | Green channel (0--255). |
+| `b` | `number` | Blue channel (0--255). |
+
+**Returns:** A 16-bit integer representing the Neo Geo color word.
+
+### Bit layout
+
+The Neo Geo 16-bit color word uses this layout:
+
+```
+Bit:  15  14  13  12  11  10   9   8   7   6   5   4   3   2   1   0
+      D   R0  G0  B0  R4  R3  R2  R1  G4  G3  G2  G1  B4  B3  B2  B1
+```
+
+- **D** -- "Dark" bit (shadow bit) that provides an extra shade level.
+- **R0, G0, B0** -- Least significant bits of each channel's 5-bit value.
+- **R4-R1, G4-G1, B4-B1** -- Upper 4 bits of each channel.
+
+Each channel is effectively 6-bit (5 explicit bits + dark bit), expanded to 8-bit by replicating the top bits. The dark bit in `encodeNeoGeoColor` is determined by majority vote of the three channels' LSBs.
+
+### Example
+
+```typescript
+import { decodeNeoGeoColor, encodeNeoGeoColor } from 'bitmapped';
+
+// Decode a color word from ROM data
+const rgb = decodeNeoGeoColor(0xffff);
+// => { r: 255, g: 255, b: 255 }
+
+// Encode an RGB color for Neo Geo hardware
+const word = encodeNeoGeoColor(255, 0, 0);
+// word is a 16-bit integer
+
+// Round-trip (with minor quantization error from 8-bit to 6-bit)
+const original = { r: 128, g: 64, b: 200 };
+const encoded = encodeNeoGeoColor(original.r, original.g, original.b);
+const decoded = decodeNeoGeoColor(encoded);
+// decoded is close to original (within ~8 per channel)
+```
+
+<Callout type="info">
+Round-tripping through `encodeNeoGeoColor` and `decodeNeoGeoColor` may introduce small quantization errors (up to ~8 per channel) because the Neo Geo uses 6-bit color depth while RGB uses 8-bit.
+</Callout>
+
+---
+
+## Using constraints via `process()`
+
+In most cases, you do not need to call these solvers directly. Set the `constraintType` option on [`process()`](/api/process) and it will invoke the appropriate solver after palette mapping and dithering.
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset } from 'bitmapped/presets';
+
+const zx = getPreset('zx-spectrum')!;
+
+const result = process(imageData, {
+  blockSize: 1,
+  palette: zx.palette!,
+  dithering: 'floyd-steinberg',
+  distanceAlgorithm: 'redmean',
+  constraintType: 'attribute-block',
+  attributeBlockConfig: {
+    width: 8,
+    height: 8,
+    maxColors: 2,
+    brightLocked: true,
+  },
+});
+```
+
+The mapping from `constraintType` to solver function:
+
+| `constraintType` | Solver | Config option |
+|---|---|---|
+| `'attribute-block'` | `solveAttributeClash` | `attributeBlockConfig` |
+| `'per-tile-palette'` | `solveTilePalette` | `tilePaletteConfig` |
+| `'ham'` | `solveHAM` | `hamConfig` |
+| `'per-scanline'` | `solveScanline` | `scanlineConfig` |
+| `'artifact-color'` | `solveApple2Artifact` | `artifactConfig` |
+| `'per-row-in-tile'` | `solvePerRowInTile` | `perRowInTileConfig` |
+| `'sub-palette-lock'` | `solveCGASubpalette` | — (uses main palette) |
+| `'none'` | — | — |
+| `'monochrome-global'` | — | — (no spatial constraint) |
+
+See [How It Works](/concepts/how-it-works) for where constraints fit in the full processing pipeline.

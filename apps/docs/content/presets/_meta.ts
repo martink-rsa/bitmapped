@@ -1,0 +1,17 @@
+export default {
+  index: 'Overview',
+  nes: 'NES',
+  gameboy: 'Game Boy',
+  snes: 'SNES',
+  gba: 'GBA',
+  genesis: 'Genesis',
+  'master-system': 'Master System',
+  'game-gear': 'Game Gear',
+  'zx-spectrum': 'ZX Spectrum',
+  c64: 'Commodore 64',
+  apple2: 'Apple II',
+  amiga: 'Amiga',
+  atari2600: 'Atari 2600',
+  ps1: 'PlayStation 1',
+  'neo-geo': 'Neo Geo',
+};

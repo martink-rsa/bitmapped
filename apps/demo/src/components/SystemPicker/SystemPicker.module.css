@@ -1,0 +1,153 @@
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tab {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+  white-space: nowrap;
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tabActive {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.tabCount {
+  margin-left: 3px;
+  color: var(--text-dim);
+  font-size: 10px;
+}
+
+/* Search */
+.search {
+  width: 100%;
+  padding: 6px 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+  transition: border-color var(--transition-fast);
+}
+
+.search::placeholder {
+  color: var(--text-dim);
+}
+
+.search:focus {
+  border-bottom-color: var(--accent);
+}
+
+/* Grid */
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+/* Card */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+  text-align: left;
+  width: 100%;
+}
+
+.card:hover {
+  border-color: var(--accent-dim);
+  box-shadow: var(--shadow-glow);
+  transform: scale(1.005);
+}
+
+.cardActive {
+  border-left: 3px solid var(--accent);
+  background: var(--accent-dim);
+}
+
+.cardHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cardName {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--text);
+}
+
+.cardYear {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+
+.cardMeta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.cardConstraint {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+/* Palette swatch strip */
+.swatchStrip {
+  display: flex;
+  gap: 1px;
+  height: 8px;
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.swatch {
+  flex: 1;
+  min-width: 4px;
+  max-width: 12px;
+}
+
+.noResults {
+  padding: 12px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-dim);
+}

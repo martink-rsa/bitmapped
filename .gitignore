@@ -1,0 +1,21 @@
+# Cache
+node_modules
+dist
+.turbo
+*.tsbuildinfo
+
+# npm
+.npmrc
+
+# env vars
+.env
+!.env.template
+
+# OS-related 
+.DS_Store
+
+# AI
+documentation/ai/* 
+
+# Tests
+coverage/*

@@ -1,0 +1,128 @@
+.uploadZone {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 40px;
+  width: 100%;
+}
+
+.dropZone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 480px;
+  padding: 48px 32px;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: border-color var(--transition-normal),
+    background var(--transition-normal);
+}
+
+.dropZone:hover,
+.dragging {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.dropIcon {
+  color: var(--text-muted);
+  transition: color var(--transition-normal);
+}
+
+.dropZone:hover .dropIcon,
+.dragging .dropIcon {
+  color: var(--accent);
+}
+
+.dropTitle {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.dropHint {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.dropFormats {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 480px;
+}
+
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.dividerText {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Sample Grid */
+.sampleGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  width: 100%;
+  max-width: 480px;
+}
+
+.sampleCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.sampleCard:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-glow);
+}
+
+.sampleCanvas {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
+.sampleLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+@media (max-width: 480px) {
+  .sampleGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

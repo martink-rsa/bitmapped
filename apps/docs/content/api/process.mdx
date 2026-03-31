@@ -1,0 +1,193 @@
+---
+title: process()
+---
+
+import { Callout } from 'nextra/components'
+
+# process()
+
+The main pipeline function. Takes an `ImageData` and processing options, returns the processed result.
+
+```typescript
+import { process } from 'bitmapped';
+
+function process(imageData: ImageData, options: ProcessOptions): ProcessResult;
+```
+
+## ProcessOptions
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `blockSize` | `number` | **required** | Pixelation block size. Each N×N block of source pixels becomes one output pixel. |
+| `palette` | `Palette` | **required** | Color palette to quantize to. Array of `{ color: RGB, name?: string }`. |
+| `dithering` | `DitheringAlgorithm` | `'none'` | Dithering algorithm to apply. |
+| `ditherMatrix` | `ThresholdMatrix` | — | Custom threshold matrix. Required when `dithering` is `'custom'`. |
+| `ditherStrength` | `number` | `1` | Dither intensity for ordered patterns (0–1). |
+| `ditherMatrixSize` | `number` | `8` | Matrix size for built-in ordered patterns. Default: 8 (2 for checkerboard, 64 for blue-noise). |
+| `distanceAlgorithm` | `DistanceAlgorithm` | `'euclidean'` | Color distance metric for palette matching. |
+| `targetResolution` | `{ width, height }` | — | Resize the image before processing. |
+| `resizeFit` | `'contain' \| 'cover' \| 'stretch'` | `'contain'` | How to fit image to target resolution. |
+| `resizeMethod` | `'nearest' \| 'bilinear'` | `'bilinear'` | Resize interpolation method. |
+| `filters` | `FilterOptions` | — | CSS-style filters applied before pixelation. |
+| `constraintType` | `ConstraintType` | — | Hardware constraint to enforce. |
+| `hamConfig` | `object` | — | HAM mode config (Amiga). |
+| `attributeBlockConfig` | `object` | — | Attribute block config (ZX Spectrum, NES). |
+| `tilePaletteConfig` | `object` | — | Tile palette config (SNES, Genesis). |
+| `perRowInTileConfig` | `object` | — | Per-row-in-tile config (ColecoVision, MSX). |
+| `scanlineConfig` | `object` | — | Scanline constraint config (Atari 2600). |
+| `artifactConfig` | `object` | — | Apple II artifact color config. |
+
+## ProcessResult
+
+| Field | Type | Description |
+|---|---|---|
+| `imageData` | `ImageData` | The processed output at the same dimensions as the input. |
+| `grid` | `PixelGrid` | 2D array of RGB values representing the pixelated blocks. |
+| `width` | `number` | Grid width (number of blocks horizontally). |
+| `height` | `number` | Grid height (number of blocks vertically). |
+| `effectiveResolution` | `{ width, height }` | Dimensions after resize, if `targetResolution` was used. |
+
+## DitheringAlgorithm
+
+```typescript
+type DitheringAlgorithm =
+  | 'none'
+  | 'floyd-steinberg'   // Error diffusion, smooth gradients
+  | 'atkinson'          // Error diffusion, high contrast (75% error)
+  | 'bayer'             // Ordered, classic crosshatch pattern
+  | 'clustered-dot'     // Ordered, halftone-like
+  | 'horizontal-line'   // Ordered, scanline pattern
+  | 'vertical-line'     // Ordered, vertical bands
+  | 'diagonal-line'     // Ordered, diagonal pattern
+  | 'checkerboard'      // Ordered, 2×2 checkerboard
+  | 'blue-noise'        // Ordered, stochastic (best quality)
+  | 'ps1-ordered'       // PS1 GPU's asymmetric 4×4
+  | 'custom';           // User-provided ditherMatrix
+```
+
+## DistanceAlgorithm
+
+```typescript
+type DistanceAlgorithm =
+  | 'euclidean'  // Fast, poor perceptual accuracy
+  | 'redmean'    // Fast, good perceptual accuracy (recommended default)
+  | 'cie76'      // Moderate, CIE L*a*b* space
+  | 'ciede2000'  // Slow, gold standard accuracy
+  | 'oklab';     // Moderate, excellent accuracy/speed ratio
+```
+
+## ConstraintType
+
+```typescript
+type ConstraintType =
+  | 'attribute-block'    // ZX Spectrum, NES-style block color limits
+  | 'per-tile-palette'   // SNES, Genesis-style tile palette selection
+  | 'per-scanline'       // Atari 2600-style scanline color limits
+  | 'ham'                // Amiga Hold-And-Modify
+  | 'artifact-color'     // Apple II NTSC artifact colors
+  | 'sub-palette-lock'   // CGA fixed sub-palette
+  | 'per-row-in-tile'    // ColecoVision/MSX TMS9918A
+  | 'none'               // No spatial constraint
+  | 'monochrome-global'; // Single global palette (Game Boy)
+```
+
+## Examples
+
+### Basic usage
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset } from 'bitmapped/presets';
+
+const gb = getPreset('gameboy-dmg')!;
+const result = process(imageData, {
+  blockSize: 4,
+  palette: gb.palette!,
+});
+```
+
+### With dithering
+
+```typescript
+const result = process(imageData, {
+  blockSize: 4,
+  palette: preset.palette!,
+  dithering: 'floyd-steinberg',
+  distanceAlgorithm: 'redmean',
+});
+```
+
+### With hardware constraints
+
+```typescript
+const result = process(imageData, {
+  blockSize: 1,
+  palette: zxPreset.palette!,
+  dithering: 'floyd-steinberg',
+  constraintType: 'attribute-block',
+  attributeBlockConfig: {
+    width: 8,
+    height: 8,
+    maxColors: 2,
+    brightLocked: true,
+  },
+});
+```
+
+### With preprocessing filters
+
+```typescript
+const result = process(imageData, {
+  blockSize: 4,
+  palette: preset.palette!,
+  filters: {
+    brightness: 1.1,
+    contrast: 1.2,
+    saturate: 0.8,
+  },
+});
+```
+
+### With target resolution
+
+```typescript
+const result = process(imageData, {
+  blockSize: 1,
+  palette: preset.palette!,
+  targetResolution: { width: 256, height: 240 },
+  resizeFit: 'contain',
+  resizeMethod: 'bilinear',
+});
+```
+
+### HAM mode (Amiga)
+
+```typescript
+const result = process(imageData, {
+  blockSize: 2,
+  palette: [], // HAM extracts its own base palette
+  constraintType: 'ham',
+  hamConfig: {
+    basePaletteSize: 16,
+    modifyBits: 4,
+  },
+});
+```
+
+<Callout type="info">
+For large images, run `process()` in a Web Worker to avoid blocking the UI thread. See the [quick start guide](/guides/quick-start) for a complete example.
+</Callout>
+
+## Pipeline order
+
+The processing pipeline runs in this order:
+
+1. **Filters** — Apply CSS-style preprocessing (brightness, contrast, etc.)
+2. **Resize** — Scale to `targetResolution` if specified
+3. **Pixelate** — Block-average downsample
+4. **Quantize + Match** — Map each pixel to nearest palette color
+5. **Dither** — Apply dithering algorithm (modifies step 4)
+6. **Constraints** — Enforce hardware spatial constraints
+7. **Output** — Return `ProcessResult` with `imageData` at original dimensions
+
+See [How It Works](/concepts/how-it-works) for a detailed explanation of each stage.

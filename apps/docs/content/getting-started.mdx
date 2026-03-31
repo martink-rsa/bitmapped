@@ -1,0 +1,118 @@
+---
+title: Getting Started
+---
+
+import { Callout, Steps } from 'nextra/components'
+
+# Getting Started
+
+Install bitmapped and convert your first image in under 5 minutes.
+
+<Steps>
+
+### Install
+
+```bash
+npm install bitmapped
+```
+
+Or with pnpm / yarn:
+
+```bash
+pnpm add bitmapped
+# or
+yarn add bitmapped
+```
+
+### Load an image
+
+You need an `ImageData` object. Here's how to get one:
+
+**In the browser (from a canvas):**
+
+```typescript
+const img = new Image();
+img.src = 'photo.jpg';
+img.onload = () => {
+  const canvas = document.createElement('canvas');
+  canvas.width = img.width;
+  canvas.height = img.height;
+  const ctx = canvas.getContext('2d')!;
+  ctx.drawImage(img, 0, 0);
+  const imageData = ctx.getImageData(0, 0, img.width, img.height);
+  // Now use imageData with bitmapped
+};
+```
+
+**In Node.js (using `@napi-rs/canvas` or `canvas`):**
+
+```typescript
+import { createCanvas, loadImage } from '@napi-rs/canvas';
+
+const img = await loadImage('photo.jpg');
+const canvas = createCanvas(img.width, img.height);
+const ctx = canvas.getContext('2d');
+ctx.drawImage(img, 0, 0);
+const imageData = ctx.getImageData(0, 0, img.width, img.height);
+```
+
+### Process the image
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset } from 'bitmapped/presets';
+
+const preset = getPreset('gameboy-dmg')!;
+
+const result = process(imageData, {
+  blockSize: 4,
+  palette: preset.palette!,
+  dithering: 'floyd-steinberg',
+});
+```
+
+The `blockSize` controls how many source pixels map to one output pixel. A value of `4` means every 4×4 block of source pixels becomes one pixel in the output.
+
+### Render the result
+
+**Draw to canvas:**
+
+```typescript
+const outputCanvas = document.getElementById('output') as HTMLCanvasElement;
+outputCanvas.width = result.imageData.width;
+outputCanvas.height = result.imageData.height;
+const outputCtx = outputCanvas.getContext('2d')!;
+outputCtx.putImageData(result.imageData, 0, 0);
+```
+
+<Callout type="info">
+Apply `image-rendering: pixelated` CSS to your canvas so upscaled pixel art renders crisp, not blurry.
+</Callout>
+
+### Export as PNG
+
+```typescript
+import { downloadPNG } from 'bitmapped/export';
+
+// From a canvas element
+await downloadPNG(outputCanvas, 'my-pixel-art.png');
+```
+
+</Steps>
+
+## Live example
+
+<LiveDemo
+  defaultPreset="gameboy-dmg"
+  showPresetSelector
+  showDitheringControls
+  showComparison
+  allowUpload
+/>
+
+## What's next?
+
+- [Quick Start Guide](/guides/quick-start) — Build a drag-and-drop pixel art converter
+- [Choosing a Preset](/guides/choosing-a-preset) — Find the right system for your aesthetic
+- [Dithering](/guides/dithering) — Understand the dithering algorithms
+- [API Reference](/api/process) — Full `process()` documentation

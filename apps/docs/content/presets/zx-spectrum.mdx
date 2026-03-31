@@ -1,0 +1,105 @@
+---
+title: ZX Spectrum
+---
+
+import { Callout } from 'nextra/components'
+
+# ZX Spectrum
+
+| Spec | Value |
+|---|---|
+| Resolution | 256×192 |
+| Total colors | 15 unique |
+| Simultaneous | 15 |
+| Constraint | 8×8 attribute clash (brightness-locked ink/paper) |
+| Display | CRT RF |
+| Year | 1982 |
+| Maker | Sinclair |
+
+## Color palette
+
+The Spectrum has two brightness levels with 8 colors each. Black is shared between both levels, giving 15 unique colors.
+
+Non-bright colors use a hardware voltage ratio of `255 × 0.85 = 216 (0xD8)`. Bright colors use full voltage (0xFF).
+
+<PaletteDisplay
+  colors={[
+    '#000000','#0000D8','#D80000','#D800D8','#00D800','#00D8D8','#D8D800','#D8D8D8',
+  ]}
+  columns={8}
+  swatchSize={36}
+  showHex
+  groupLabel="Normal brightness (0xD8)"
+/>
+
+<PaletteDisplay
+  colors={[
+    '#000000','#0000FF','#FF0000','#FF00FF','#00FF00','#00FFFF','#FFFF00','#FFFFFF',
+  ]}
+  columns={8}
+  swatchSize={36}
+  showHex
+  groupLabel="Bright (0xFF)"
+/>
+
+<Callout type="info">
+Some emulators (FUSE) use 0xD7 instead of 0xD8. The difference is invisible on real hardware CRT displays but matters for pixel-accurate comparisons.
+</Callout>
+
+## The key constraint: attribute clash
+
+Every 8×8 pixel cell has a single attribute byte encoding:
+
+- **INK** (foreground color): 3 bits → one of 8 colors
+- **PAPER** (background color): 3 bits → one of 8 colors
+- **BRIGHT**: 1 bit → applies to BOTH ink and paper
+- **FLASH**: 1 bit → alternates ink/paper
+
+The critical limitation: **the BRIGHT bit applies to the entire cell**. You can't mix bright and non-bright colors within a single 8×8 block. This "attribute clash" is the defining visual characteristic of Spectrum graphics.
+
+When an image has color boundaries that don't align to the 8×8 grid, the constraint solver must choose which pair of colors best represents each cell — creating the distinctive color bleeding artifacts.
+
+## Interactive demo
+
+<LiveDemo
+  defaultPreset="zx-spectrum"
+  showDitheringControls
+  showConstraintToggle
+  showComparison
+  allowUpload
+/>
+
+## Code example
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset } from 'bitmapped/presets';
+
+const zx = getPreset('zx-spectrum')!;
+
+const result = process(imageData, {
+  blockSize: 1,
+  palette: zx.palette!,
+  dithering: 'floyd-steinberg',
+  distanceAlgorithm: 'redmean',
+  constraintType: 'attribute-block',
+  attributeBlockConfig: {
+    width: 8,
+    height: 8,
+    maxColors: 2,
+    brightLocked: true,
+  },
+});
+```
+
+Note `brightLocked: true` — this tells the constraint solver that colors within a block must all come from the same brightness level.
+
+<details className="hardware-note">
+<summary>Hardware notes</summary>
+
+The ZX Spectrum's ULA chip reads the display file from two separate memory regions: a bitmap area (6144 bytes at 0x4000) storing 1-bit-per-pixel data, and an attribute area (768 bytes at 0x5800) storing one byte per 8×8 cell.
+
+The color bleeding artifact known as "attribute clash" was the bane of Spectrum game artists. Many games worked around it by using monochrome graphics (single ink color on black paper) or carefully designing levels so color boundaries aligned to the 8×8 grid.
+
+Some later games used advanced techniques like rendering at the attribute boundary to minimize visible clash, or using the FLASH bit for simple animation effects.
+</details>

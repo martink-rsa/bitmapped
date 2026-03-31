@@ -1,0 +1,222 @@
+---
+title: bitmapped — Hardware-Accurate Retro Pixel Art
+---
+
+import { Callout } from 'nextra/components'
+
+# Turn any image into hardware-accurate retro pixel art
+
+bitmapped doesn't just swap palettes — it reproduces the actual color limitations of real hardware. Palette quantization, spatial constraints, and display characteristics, all in a zero-dependency TypeScript library.
+
+```typescript
+import { process } from 'bitmapped';
+
+const result = process(imageData, {
+  blockSize: 4,
+  palette: preset.palette,
+  dithering: 'floyd-steinberg',
+});
+
+ctx.putImageData(result.imageData, 0, 0);
+```
+
+## Try it live
+
+Pick a system preset and see the output update in real time:
+
+<LiveDemo
+  showPresetSelector
+  showDitheringControls
+  showComparison
+  displayWidth={640}
+/>
+
+## Why bitmapped?
+
+<div className="feature-cards">
+  <div className="feature-card">
+    ### Not just palette swapping
+
+    Real retro hardware doesn't let you use any color anywhere. The NES forces colors into 16×16 blocks. The ZX Spectrum locks brightness per 8×8 cell. bitmapped enforces these spatial constraints — that's what makes the output look authentic.
+  </div>
+
+  <div className="feature-card">
+    ### 54 real hardware presets
+
+    From the 4-shade Game Boy to the 32,768-color SNES, from Atari 2600 scanline limits to Amiga HAM mode. Each preset includes the correct palette, resolution, constraint type, and display characteristics.
+  </div>
+
+  <div className="feature-card">
+    ### Zero dependencies
+
+    Pure TypeScript, no native modules, no WASM. Works in browsers, Node.js, Deno, and web workers. Every algorithm — color distance, dithering, constraint solving — implemented from scratch.
+  </div>
+</div>
+
+## Quick example
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset, enumerateColorSpace } from 'bitmapped/presets';
+
+// Load a preset
+const nes = getPreset('nes-ntsc');
+
+// Process your image
+const result = process(imageData, {
+  blockSize: 4,
+  palette: nes.palette,
+  dithering: 'floyd-steinberg',
+  distanceAlgorithm: 'redmean',
+  constraintType: nes.constraintType,
+  attributeBlockConfig: {
+    width: 16,
+    height: 16,
+    maxColors: 4,
+  },
+});
+
+// Render the result
+ctx.putImageData(result.imageData, 0, 0);
+```
+
+## System presets
+
+<div className="system-grid">
+  <SystemCard
+    name="NES"
+    id="nes-ntsc"
+    resolution="256×240"
+    totalColors={54}
+    simultaneousColors={25}
+    constraintType="16×16 attribute blocks"
+    href="/presets/nes"
+  />
+  <SystemCard
+    name="Game Boy"
+    id="gameboy-dmg"
+    resolution="160×144"
+    totalColors={4}
+    simultaneousColors={4}
+    constraintType="4 green shades"
+    href="/presets/gameboy"
+  />
+  <SystemCard
+    name="ZX Spectrum"
+    id="zx-spectrum"
+    resolution="256×192"
+    totalColors={15}
+    simultaneousColors={15}
+    constraintType="8×8 attribute clash"
+    href="/presets/zx-spectrum"
+  />
+  <SystemCard
+    name="SNES"
+    id="snes"
+    resolution="256×224"
+    totalColors={32768}
+    simultaneousColors={256}
+    constraintType="Per-tile palette"
+    href="/presets/snes"
+  />
+  <SystemCard
+    name="Genesis"
+    id="genesis"
+    resolution="320×224"
+    totalColors={512}
+    simultaneousColors={61}
+    constraintType="9-bit RGB, nonlinear DAC"
+    href="/presets/genesis"
+  />
+  <SystemCard
+    name="Commodore 64"
+    id="c64-pepto"
+    resolution="320×200"
+    totalColors={16}
+    simultaneousColors={16}
+    constraintType="Hires / multicolor modes"
+    href="/presets/c64"
+  />
+  <SystemCard
+    name="Apple II"
+    id="apple2-hires"
+    resolution="280×192"
+    totalColors={6}
+    simultaneousColors={6}
+    constraintType="NTSC artifact colors"
+    href="/presets/apple2"
+  />
+  <SystemCard
+    name="Amiga"
+    id="amiga-ham"
+    resolution="320×256"
+    totalColors={4096}
+    simultaneousColors={4096}
+    constraintType="Hold-And-Modify"
+    href="/presets/amiga"
+  />
+  <SystemCard
+    name="PlayStation 1"
+    id="ps1"
+    resolution="320×240"
+    totalColors={32768}
+    simultaneousColors={32768}
+    constraintType="15-bit + ordered dither"
+    href="/presets/ps1"
+  />
+  <SystemCard
+    name="Atari 2600"
+    id="atari-2600-ntsc"
+    resolution="160×192"
+    totalColors={128}
+    simultaneousColors={4}
+    constraintType="4 colors per scanline"
+    href="/presets/atari2600"
+  />
+  <SystemCard
+    name="GBA"
+    id="gba"
+    resolution="240×160"
+    totalColors={32768}
+    simultaneousColors={32768}
+    constraintType="15-bit RGB direct"
+    href="/presets/gba"
+  />
+  <SystemCard
+    name="Master System"
+    id="master-system"
+    resolution="256×192"
+    totalColors={64}
+    simultaneousColors={32}
+    constraintType="Per-tile palette"
+    href="/presets/master-system"
+  />
+  <SystemCard
+    name="Neo Geo"
+    id="neo-geo"
+    resolution="320×224"
+    totalColors={65536}
+    simultaneousColors={4096}
+    constraintType="16-bit color, 256 palettes"
+    href="/presets/neo-geo"
+  />
+  <SystemCard
+    name="Game Gear"
+    id="game-gear"
+    resolution="160×144"
+    totalColors={4096}
+    simultaneousColors={32}
+    constraintType="12-bit RGB"
+    href="/presets/game-gear"
+  />
+</div>
+
+## Get started
+
+Install bitmapped and convert your first image in under 5 minutes.
+
+```bash
+npm install bitmapped
+```
+
+[Read the getting started guide →](/getting-started)

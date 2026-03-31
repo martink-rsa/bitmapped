@@ -1,0 +1,101 @@
+---
+title: SNES / Super Famicom
+---
+
+import { Callout } from 'nextra/components'
+
+# SNES / Super Famicom
+
+| Spec | Value |
+|---|---|
+| Resolution | 256×224 |
+| Total colors | 32,768 (15-bit RGB) |
+| Simultaneous | 256 |
+| Constraint | Per-tile palette |
+| Display | CRT composite / S-Video / RGB |
+| Year | 1990 |
+| Maker | Nintendo |
+
+## Color palette
+
+The SNES PPU uses 15-bit BGR555 color — 5 bits per channel, stored in little-endian format as `0BBBBBGG GGGRRRRR`. This gives a total gamut of 32,768 unique colors. Unlike the NES with its fixed composite-derived lookup table, the SNES has no built-in palette. All colors are programmed into CGRAM (Color Generator RAM) by the game software.
+
+Up to 256 colors can appear on screen simultaneously, organized as 8 background palettes of 16 colors each (128 entries) and 8 sprite palettes of 16 colors each (128 entries). Color 0 of all background palettes is shared — it defines the screen backdrop color. Color 0 of each sprite palette is treated as transparent.
+
+<Callout type="info">
+The SNES is an **RGB bit-depth** system — it has no fixed color table. Use `enumerateColorSpace()` from `bitmapped/presets` to generate all 32,768 valid colors at runtime. The preset ships with a representative 64-color sample for quick previewing.
+</Callout>
+
+## The key constraint: per-tile palette
+
+Each 8×8 background tile selects one of 8 palettes containing up to 16 colors. Color 0 in every background palette is shared as the universal backdrop, leaving 15 unique colors per subpalette. This means color variety within a single tile is limited to at most 16 entries, but neighboring tiles can reference different palettes, allowing for much richer color across the full screen.
+
+The constraint solver in bitmapped divides the image into 8×8 tile regions, then for each tile selects the subpalette (from a pool of 8) that minimizes overall color error. Because the solver optimizes subpalette assignment globally, it can produce surprisingly faithful results even with a relatively tight per-tile color budget.
+
+<Callout>
+Disabling the constraint removes the per-tile limit and allows all 256 simultaneous colors to appear freely anywhere in the image. Toggle it in the demo below to see the visual difference.
+</Callout>
+
+## Interactive demo
+
+<LiveDemo
+  defaultPreset="snes"
+  showDitheringControls
+  showConstraintToggle
+  showComparison
+  allowUpload
+/>
+
+## Code example
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset, enumerateColorSpace } from 'bitmapped/presets';
+
+const snes = getPreset('snes')!;
+
+// Generate the full 32,768-color gamut from the 15-bit color space
+const fullPalette = enumerateColorSpace(snes.colorSpace!).map((color) => ({
+  color,
+}));
+
+const result = process(imageData, {
+  blockSize: 4,
+  palette: fullPalette,
+  dithering: 'floyd-steinberg',
+  distanceAlgorithm: 'ciede2000',
+  constraintType: 'per-tile-palette',
+  tilePaletteConfig: {
+    tileWidth: 8,
+    tileHeight: 8,
+    subpaletteCount: 8,
+    colorsPerSubpalette: 16,
+    sharedTransparent: true,
+  },
+});
+```
+
+## Presets
+
+bitmapped includes one SNES preset:
+
+- **`snes`** — NTSC timing (256×224), 15-bit BGR555 color space, representative 64-color sample palette
+
+<details className="hardware-note">
+<summary>Hardware notes</summary>
+
+The SNES PPU (S-PPU, comprising PPU1 and PPU2 chips) supports 8 background modes numbered 0 through 7, each trading off layer count, color depth, and special features:
+
+- **Mode 0** — 4 background layers, each 4 colors (2bpp). 512 colors on screen total (the only mode where all 8 background palettes can contain unique entries). Commonly used for UIs and status bars.
+- **Mode 1** — 3 background layers (two 16-color, one 4-color). The most widely used mode for gameplay in SNES titles.
+- **Mode 2** — 2 background layers with per-tile horizontal and vertical offset (used for line-scroll effects).
+- **Mode 3** — 2 background layers (one 256-color direct, one 16-color). The 256-color layer uses all of CGRAM.
+- **Mode 4** — 2 background layers (one 256-color, one 4-color) with per-tile offset.
+- **Mode 7** — 1 affine-transformed background layer supporting rotation, scaling, and perspective effects. Used famously in F-Zero, Super Mario Kart, and Pilotwings. Only 256 colors from a single palette, but the transformation math runs per-scanline.
+
+**HDMA** (Horizontal DMA) allows automatic register writes on every scanline — enabling per-scanline color gradient effects, window shape changes, and mode switching mid-frame without CPU intervention. Many SNES games use HDMA to create gradient skies, water reflections, and pseudo-transparency.
+
+The PPU's **mosaic register** ($2106) applies hardware-level pixelation by replicating each block of N×N pixels, where N is programmable from 1 to 16. Some games use this for transition effects or deliberate lo-fi looks. This is essentially the same operation bitmapped performs in software.
+
+The SNES also supports a **color math** unit that blends two layers together (add or subtract with optional halving), giving the appearance of transparency — a feature absent from most competing 16-bit consoles.
+</details>

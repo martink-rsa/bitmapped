@@ -1,0 +1,238 @@
+---
+title: Custom Palettes
+---
+
+import { Callout } from 'nextra/components'
+
+# Custom Palettes
+
+You are not limited to built-in presets. bitmapped lets you define palettes from hex arrays, palette files, or even extract them from existing images. Every palette is just an array of `PaletteColor` objects:
+
+```ts
+type PaletteColor = { color: { r: number; g: number; b: number }; name?: string };
+type Palette = PaletteColor[];
+```
+
+## Using hex arrays
+
+The fastest way to define a custom palette is with `parseHex()`. It accepts a string containing hex color values in any common format: `#RGB`, `#RRGGBB`, or bare `RRGGBB`.
+
+```ts
+import { parseHex } from 'bitmapped/palette';
+
+// All three formats work — mix and match freely
+const palette = parseHex(`
+  #000 #fff
+  #FF6600
+  2E8B57
+  #C0C0C0
+`);
+```
+
+`parseHex()` scans the string for hex patterns, so you can paste colors from CSS files, design tools, or newline-separated lists and it will extract them all.
+
+### Manual construction
+
+If you need named colors or want full control, build the `Palette` array directly:
+
+```ts
+import type { Palette } from 'bitmapped';
+
+const palette: Palette = [
+  { color: { r: 0, g: 0, b: 0 }, name: 'Black' },
+  { color: { r: 255, g: 0, b: 0 }, name: 'Red' },
+  { color: { r: 0, g: 255, b: 0 }, name: 'Green' },
+  { color: { r: 0, g: 0, b: 255 }, name: 'Blue' },
+  { color: { r: 255, g: 255, b: 255 }, name: 'White' },
+];
+```
+
+The `name` field is optional and does not affect processing -- it is carried through for display purposes.
+
+## Loading .gpl files
+
+GIMP Palette (`.gpl`) is a plain-text format used by GIMP, Inkscape, Aseprite, and many other tools. `parseGPL()` reads the format directly.
+
+A typical `.gpl` file looks like this:
+
+```text
+GIMP Palette
+Name: Autumn
+Columns: 4
+#
+ 87  61  38	Dark Brown
+140  94  52	Medium Brown
+204 153  85	Tan
+255 204 119	Gold
+ 64  96  48	Forest Green
+128 160  80	Sage
+204  82  51	Rust
+255 128  64	Orange
+```
+
+Lines starting with `#` and non-numeric lines (like `GIMP Palette`, `Name:`, `Columns:`) are automatically skipped. Data lines follow the format `R G B\tOptional Name`.
+
+```ts
+import { parseGPL } from 'bitmapped/palette';
+
+// Load from a file input or fetch
+const response = await fetch('/palettes/autumn.gpl');
+const text = await response.text();
+const palette = parseGPL(text);
+
+// palette is now a Palette array ready for process()
+```
+
+<Callout type="info">
+Color names from the GPL file are preserved in the parsed palette. If a line has no name after the RGB values, the `name` field is omitted.
+</Callout>
+
+### Loading from a file input
+
+```ts
+import { parseGPL } from 'bitmapped/palette';
+
+const input = document.querySelector('input[type="file"]');
+input.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  const text = await file.text();
+  const palette = parseGPL(text);
+  console.log(`Loaded ${palette.length} colors`);
+});
+```
+
+## Loading .ase files
+
+Adobe Swatch Exchange (`.ase`) is a binary format used by Photoshop, Illustrator, and other Adobe tools to share color swatches. `parseASE()` reads the binary data from an `ArrayBuffer`.
+
+```ts
+import { parseASE } from 'bitmapped/palette';
+
+const response = await fetch('/palettes/brand-colors.ase');
+const buffer = await response.arrayBuffer();
+const palette = parseASE(buffer);
+```
+
+### Loading from a file input
+
+```ts
+import { parseASE } from 'bitmapped/palette';
+
+const input = document.querySelector('input[type="file"]');
+input.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  const buffer = await file.arrayBuffer();
+  const palette = parseASE(buffer);
+  console.log(`Loaded ${palette.length} colors`);
+});
+```
+
+<Callout type="warning">
+Only RGB color entries are extracted from ASE files. Colors stored as CMYK, LAB, or Grayscale are skipped. If your ASE file contains non-RGB swatches, convert them to RGB in your design tool before exporting.
+</Callout>
+
+## Extracting palettes from images
+
+Instead of defining colors manually, you can extract a palette from an existing image using median-cut quantization. This is useful when you want to pixelate an image using its own dominant colors.
+
+```ts
+import { extractPalette } from 'bitmapped/palette';
+import { process } from 'bitmapped';
+
+// Load an image into ImageData
+const img = new Image();
+img.src = '/photos/sunset.jpg';
+await new Promise((resolve) => (img.onload = resolve));
+
+const canvas = document.createElement('canvas');
+canvas.width = img.width;
+canvas.height = img.height;
+const ctx = canvas.getContext('2d');
+ctx.drawImage(img, 0, 0);
+const imageData = ctx.getImageData(0, 0, img.width, img.height);
+
+// Extract a 12-color palette from the image
+const palette = extractPalette(imageData, 12);
+
+// Use the extracted palette for pixelation
+const result = process(imageData, {
+  blockSize: 8,
+  palette,
+  dithering: 'floyd-steinberg',
+  distanceAlgorithm: 'ciede2000',
+});
+```
+
+The second argument to `extractPalette()` controls the maximum number of colors. It defaults to **16** if omitted. The algorithm samples pixels from the image, then repeatedly splits the color space along its widest channel until it reaches the target count.
+
+<Callout type="info">
+For large images, `extractPalette()` automatically samples a subset of pixels (up to 10,000) for performance. The extracted palette is still representative of the full image.
+</Callout>
+
+## Combining with presets
+
+Hardware presets define more than just a palette -- they include resolution, constraint type, dithering recommendations, and display characteristics. You can load a preset for its hardware-accurate settings but substitute your own palette.
+
+```ts
+import { process } from 'bitmapped';
+import { getPreset } from 'bitmapped/presets';
+import { parseHex } from 'bitmapped/palette';
+
+const preset = getPreset('zx-spectrum');
+const customPalette = parseHex('#000 #1D2B53 #7E2553 #008751 #AB5236 #5F574F #C2C3C7 #FFF1E8');
+
+const result = process(imageData, {
+  blockSize: 4,
+  palette: customPalette,
+  dithering: preset.recommendedDithering ?? 'floyd-steinberg',
+  distanceAlgorithm: preset.recommendedDistance ?? 'redmean',
+  targetResolution: preset.resolution,
+
+  // Keep the hardware constraints from the preset
+  constraintType: preset.constraintType,
+  attributeBlockConfig: preset.attributeBlock
+    ? {
+        width: preset.attributeBlock.width,
+        height: preset.attributeBlock.height,
+        maxColors: preset.attributeBlock.maxColors,
+        brightLocked: preset.attributeBlock.brightLocked,
+      }
+    : undefined,
+});
+```
+
+This approach gives you the ZX Spectrum's attribute-clash constraint (each 8x8 block limited to 2 colors) and native 256x192 resolution, but with your own color set instead of the original 15-color Spectrum palette.
+
+The same pattern works with any preset. For example, using NES constraints with a custom palette:
+
+```ts
+const nes = getPreset('nes-ntsc');
+
+const result = process(imageData, {
+  blockSize: 4,
+  palette: customPalette,
+  dithering: 'atkinson',
+  distanceAlgorithm: 'ciede2000',
+  targetResolution: nes.resolution,
+
+  // NES uses per-tile-palette constraints
+  constraintType: nes.constraintType,
+  tilePaletteConfig: {
+    tileWidth: 16,
+    tileHeight: 16,
+    colorsPerSubpalette: 4,
+    subpaletteCount: 4,
+    sharedTransparent: true,
+  },
+});
+```
+
+<Callout type="info">
+When substituting a custom palette, make sure it has enough colors to satisfy the preset's constraints. For example, the NES allows 4 subpalettes of 4 colors each, so your palette should contain at least 13 unique colors (4 subpalettes x 3 non-background colors + 1 shared background).
+</Callout>
+
+## Next steps
+
+- [Palette API](/api/palette) -- Full reference for `parseHex`, `parseGPL`, `parseASE`, and `extractPalette`
+- [Choosing a Preset](/guides/choosing-a-preset) -- Pick the right system for your aesthetic
+- [Hardware Constraints](/guides/hardware-constraints) -- Understand how constraint solvers enforce per-tile and attribute-block limits
