@@ -1,0 +1,343 @@
+---
+title: Dithering
+---
+
+import { Callout } from 'nextra/components'
+
+# Dithering
+
+Error diffusion and ordered dithering algorithms for reducing color banding when mapping to limited palettes. All functions are imported from `bitmapped/dither`.
+
+```typescript
+import {
+  floydSteinberg,
+  atkinsonDither,
+  bayerDither,
+  orderedDither,
+  applyPS1Dither,
+  PS1_DITHER_MATRIX,
+  matrices,
+} from 'bitmapped/dither';
+```
+
+<Callout type="info">
+For a conceptual overview of when to use each algorithm, see the [Dithering guide](/guides/dithering).
+</Callout>
+
+## `floydSteinberg`
+
+Classic error-diffusion dithering. Scans left-to-right, top-to-bottom, distributing quantization error to four neighbors:
+
+| Neighbor | Weight |
+|---|---|
+| Right `(x+1, y)` | 7/16 |
+| Bottom-left `(x-1, y+1)` | 3/16 |
+| Bottom `(x, y+1)` | 5/16 |
+| Bottom-right `(x+1, y+1)` | 1/16 |
+
+100% of the error is distributed, producing smooth gradients with minimal banding.
+
+```typescript
+function floydSteinberg(
+  imageData: ImageData,
+  matchColor: (color: RGB) => RGB,
+): ImageData;
+```
+
+### Parameters
+
+| Parameter | Type | Description |
+|---|---|---|
+| `imageData` | `ImageData` | Source image. Not modified. |
+| `matchColor` | `(color: RGB) => RGB` | Maps an input color to the nearest palette color. |
+
+### Returns
+
+A new `ImageData` with dithered colors. Alpha is set to 255 for all pixels.
+
+### Example
+
+```typescript
+import { floydSteinberg } from 'bitmapped/dither';
+import { createPaletteMatcher } from 'bitmapped/color';
+import { getPreset } from 'bitmapped/presets';
+
+const preset = getPreset('gameboy-dmg')!;
+const matcher = createPaletteMatcher(preset.palette!, 'redmean');
+const matchColor = (color: RGB) => matcher(color).color;
+
+const dithered = floydSteinberg(imageData, matchColor);
+```
+
+---
+
+## `atkinsonDither`
+
+Error-diffusion dithering with higher contrast than Floyd-Steinberg. Distributes error to six neighbors at 1/8 each, for a total of 75%. The remaining 25% is discarded, which pushes mid-tones toward black or white and produces a distinctive retro aesthetic (popularized on early Macintosh systems).
+
+| Neighbor | Weight |
+|---|---|
+| Right `(x+1, y)` | 1/8 |
+| Right+1 `(x+2, y)` | 1/8 |
+| Bottom-left `(x-1, y+1)` | 1/8 |
+| Bottom `(x, y+1)` | 1/8 |
+| Bottom-right `(x+1, y+1)` | 1/8 |
+| Two rows down `(x, y+2)` | 1/8 |
+
+```typescript
+function atkinsonDither(
+  imageData: ImageData,
+  matchColor: (color: RGB) => RGB,
+): ImageData;
+```
+
+### Parameters
+
+| Parameter | Type | Description |
+|---|---|---|
+| `imageData` | `ImageData` | Source image. Not modified. |
+| `matchColor` | `(color: RGB) => RGB` | Maps an input color to the nearest palette color. |
+
+### Returns
+
+A new `ImageData` with dithered colors. Alpha is set to 255 for all pixels.
+
+### Example
+
+```typescript
+import { atkinsonDither } from 'bitmapped/dither';
+import { createPaletteMatcher } from 'bitmapped/color';
+
+const matcher = createPaletteMatcher(palette, 'oklab');
+const matchColor = (color: RGB) => matcher(color).color;
+
+const dithered = atkinsonDither(imageData, matchColor);
+```
+
+---
+
+## `bayerDither`
+
+Ordered dithering using a Bayer threshold matrix. Produces a characteristic crosshatch pattern. This is a convenience wrapper around [`orderedDither`](#ordereddither) that generates a Bayer matrix of the specified size.
+
+```typescript
+function bayerDither(
+  imageData: ImageData,
+  matchColor: (color: RGB) => RGB,
+  matrixSize?: number,
+): ImageData;
+```
+
+### Parameters
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `imageData` | `ImageData` | — | Source image. Not modified. |
+| `matchColor` | `(color: RGB) => RGB` | — | Maps an input color to the nearest palette color. |
+| `matrixSize` | `number` | `4` | Bayer matrix dimension. Must be a power of 2 (2, 4, 8, 16, ...). |
+
+### Returns
+
+A new `ImageData` with dithered colors.
+
+### Example
+
+```typescript
+import { bayerDither } from 'bitmapped/dither';
+import { createPaletteMatcher } from 'bitmapped/color';
+
+const matcher = createPaletteMatcher(palette, 'redmean');
+const matchColor = (color: RGB) => matcher(color).color;
+
+// 8x8 Bayer matrix for finer pattern
+const dithered = bayerDither(imageData, matchColor, 8);
+```
+
+---
+
+## `orderedDither`
+
+Generic ordered dithering that works with any threshold matrix. Unlike the error-diffusion functions, this accepts a `Palette` directly and handles color matching internally.
+
+```typescript
+function orderedDither(
+  imageData: ImageData,
+  palette: Palette,
+  matrix: ThresholdMatrix,
+  options?: {
+    distanceAlgorithm?: DistanceAlgorithm;
+    strength?: number;
+  },
+): ImageData;
+```
+
+### Parameters
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `imageData` | `ImageData` | — | Source image. Not modified. |
+| `palette` | `Palette` | — | Target palette. Array of `{ color: RGB, name?: string }`. |
+| `matrix` | `ThresholdMatrix` | — | 2D array of normalized threshold values (0--1). See [Custom Matrices](#custom-matrices). |
+| `options.distanceAlgorithm` | `DistanceAlgorithm` | `'redmean'` | Color distance metric for palette matching. |
+| `options.strength` | `number` | `1` | Dither intensity. `0` = no dither (equivalent to direct palette matching). `1` = full pattern applied. |
+
+### Returns
+
+A new `ImageData` with dithered colors.
+
+### Example
+
+```typescript
+import { orderedDither, matrices } from 'bitmapped/dither';
+
+const palette = [
+  { color: { r: 0, g: 0, b: 0 } },
+  { color: { r: 255, g: 255, b: 255 } },
+  { color: { r: 255, g: 0, b: 0 } },
+  { color: { r: 0, g: 0, b: 255 } },
+];
+
+const matrix = matrices['blue-noise'](64);
+
+const dithered = orderedDither(imageData, palette, matrix, {
+  distanceAlgorithm: 'oklab',
+  strength: 0.8,
+});
+```
+
+<Callout type="info">
+The `strength` parameter scales the threshold bias applied to each pixel. At lower values, the dither pattern is subtler and fewer pixels shift to an alternate color. This is useful for reducing noise in images that already have smooth gradients.
+</Callout>
+
+---
+
+## `applyPS1Dither`
+
+Reproduces the PlayStation 1 GPU's built-in dither pattern. The PS1 applied an asymmetric 4x4 bias matrix per-channel before truncating from 8-bit to 5-bit color depth, producing the characteristic banding visible in PS1 games.
+
+Unlike the other dithering functions, `applyPS1Dither` does not take a `matchColor` callback. It operates directly on the image data, applying dither bias and then quantizing to 5-bit-per-channel (15-bit color).
+
+```typescript
+function applyPS1Dither(imageData: ImageData): ImageData;
+```
+
+### Parameters
+
+| Parameter | Type | Description |
+|---|---|---|
+| `imageData` | `ImageData` | Source image. Not modified. |
+
+### Returns
+
+A new `ImageData` quantized to 15-bit color with PS1-style dithering.
+
+### PS1_DITHER_MATRIX
+
+The raw matrix values are also exported as a constant:
+
+```typescript
+const PS1_DITHER_MATRIX = [
+  [-4,  0, -3,  1],
+  [ 2, -2,  3, -1],
+  [-3,  1, -4,  0],
+  [ 3, -1,  2, -2],
+] as const;
+```
+
+These integer values are added per-channel to the 8-bit pixel value before the 8-bit to 5-bit truncation. The asymmetric pattern avoids the regular grid artifacts typical of standard Bayer dithering.
+
+### Example
+
+```typescript
+import { applyPS1Dither } from 'bitmapped/dither';
+
+const dithered = applyPS1Dither(imageData);
+```
+
+---
+
+## Custom Matrices
+
+The `matrices` factory object provides seven built-in threshold matrix generators. Each returns a `ThresholdMatrix` (a 2D `number[][]` with values normalized to the 0--1 range).
+
+```typescript
+import { matrices } from 'bitmapped/dither';
+```
+
+### Built-in generators
+
+| Key | Default size | Description |
+|---|---|---|
+| `'bayer'` | 8 | Classic Bayer ordered dither. Crosshatch pattern. |
+| `'clustered-dot'` | 8 | Halftone-like dot clusters. |
+| `'horizontal-line'` | 8 | Horizontal scanline pattern. |
+| `'vertical-line'` | 8 | Vertical band pattern. |
+| `'diagonal-line'` | 8 | Diagonal stripe pattern. |
+| `'checkerboard'` | — | 2x2 checkerboard (fixed size, `size` parameter ignored). |
+| `'blue-noise'` | 64 | Stochastic pattern with no visible structure. Best perceptual quality. |
+
+### Usage
+
+```typescript
+// Generate an 8x8 Bayer matrix
+const bayer8 = matrices.bayer(8);
+
+// Generate a 64x64 blue noise matrix
+const blueNoise = matrices['blue-noise'](64);
+
+// Checkerboard is always 2x2
+const checker = matrices.checkerboard();
+
+// All generators accept an optional size parameter
+const largeDot = matrices['clustered-dot'](16);
+```
+
+### ThresholdMatrix format
+
+A `ThresholdMatrix` is a 2D `number[][]` where every value is normalized to the 0--1 range. The matrix tiles across the image: pixel `(x, y)` reads `matrix[y % height][x % width]`. At each pixel the threshold is converted to a bias that shifts the color before palette matching.
+
+```typescript
+type ThresholdMatrix = number[][];
+```
+
+### Using a custom matrix with `orderedDither`
+
+You can pass any `ThresholdMatrix` to `orderedDither`. For example, a simple 3x3 dispersed-dot pattern:
+
+```typescript
+import { orderedDither } from 'bitmapped/dither';
+
+// Custom 3x3 threshold matrix (values normalized 0-1)
+const custom3x3: number[][] = [
+  [0.1, 0.7, 0.4],
+  [0.6, 0.0, 0.8],
+  [0.3, 0.9, 0.5],
+];
+
+const dithered = orderedDither(imageData, palette, custom3x3, {
+  distanceAlgorithm: 'redmean',
+  strength: 1.0,
+});
+```
+
+### Individual generator imports
+
+Each generator function is also exported individually if you prefer direct imports:
+
+```typescript
+import {
+  generateBayerThresholdMatrix,
+  generateClusteredDotMatrix,
+  generateHorizontalLineMatrix,
+  generateVerticalLineMatrix,
+  generateDiagonalLineMatrix,
+  generateCheckerboardMatrix,
+  generateBlueNoiseMatrix,
+} from 'bitmapped/dither';
+
+const bayer16 = generateBayerThresholdMatrix(16);
+```
+
+<Callout type="warning">
+The `generateBayerMatrix` export (also available from `bitmapped/dither`) returns integer values in the range `[0, size*size - 1]`, not normalized 0--1 values. This is the raw Bayer matrix used internally. For ordered dithering, use `matrices.bayer()` or `generateBayerThresholdMatrix()` which return normalized matrices.
+</Callout>

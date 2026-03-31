@@ -1,0 +1,219 @@
+---
+title: Color Distance
+---
+
+import { Callout } from 'nextra/components'
+
+# Color Distance
+
+Color distance algorithms determine how "similar" two colors appear to the human eye. The choice of algorithm directly affects palette matching quality, dithering output, and overall image fidelity.
+
+## Why color distance matters
+
+When you reduce an image to a limited palette, every pixel must be matched to its "nearest" color. But what does "nearest" mean? In a 24-bit color space there are over 16 million possible values. A Game Boy palette has 4. The distance metric you choose decides which of those 4 colors each pixel maps to.
+
+A bad metric produces visible banding, incorrect hue shifts, and muddy gradients. A good metric preserves the perceived brightness and hue relationships of the original image, even with very few colors.
+
+bitmapped ships five distance algorithms. They range from a trivial RGB calculation to the full CIEDE2000 formula used by the paint and printing industries. Each trades speed for perceptual accuracy.
+
+## Euclidean
+
+The simplest possible approach. Treat each color as a point in 3D RGB space and measure the straight-line distance between them.
+
+```typescript
+import { euclideanDistance } from 'bitmapped/color';
+
+const d = euclideanDistance(
+  { r: 255, g: 0, b: 0 },
+  { r: 0, g: 255, b: 0 },
+);
+// d ≈ 360.62
+```
+
+The formula is:
+
+```
+distance = sqrt(dR² + dG² + dB²)
+```
+
+This is the fastest algorithm -- just three subtractions, three multiplications, and a square root. However, it treats the red, green, and blue channels as equally important. Human vision is not like that. We are far more sensitive to green than to blue, and our perception of red shifts depending on brightness. The result is that Euclidean distance can match a dark green pixel to a dark blue one when a dark olive would look closer to the human eye.
+
+<Callout type="warning">
+Euclidean distance works well for benchmarking and testing, but produces noticeably worse results than perceptual metrics on most palettes. Avoid it for production output.
+</Callout>
+
+## Redmean
+
+An inexpensive weighted approximation that accounts for human color perception. It adjusts the red and blue channel weights based on the average red value of the two colors being compared.
+
+```typescript
+import { redmeanDistance } from 'bitmapped/color';
+
+const d = redmeanDistance(
+  { r: 255, g: 0, b: 0 },
+  { r: 0, g: 255, b: 0 },
+);
+```
+
+The formula is:
+
+```
+rmean = (R1 + R2) / 2
+distance = sqrt(
+  (2 + rmean/256) * dR² +
+  4 * dG² +
+  (2 + (255 - rmean)/256) * dB²
+)
+```
+
+The green channel always gets the highest weight (4x), matching our visual sensitivity. The red and blue weights slide between roughly 2x and 3x depending on `rmean`. When both colors are reddish (`rmean` is high), red differences are weighted more heavily and blue differences less -- and vice versa.
+
+Redmean is only marginally slower than Euclidean but produces significantly better palette matches. It is the recommended default for most use cases.
+
+## CIE76
+
+CIE76 converts both colors from sRGB to the CIE L\*a\*b\* color space, then computes Euclidean distance in that space. Lab was designed by the International Commission on Illumination (CIE) specifically for perceptual uniformity -- equal numeric distances correspond to roughly equal perceived differences.
+
+```typescript
+import { cie76Distance, rgbToLab } from 'bitmapped/color';
+
+const d = cie76Distance(
+  { r: 255, g: 0, b: 0 },
+  { r: 0, g: 255, b: 0 },
+);
+
+// You can also inspect the Lab values directly:
+const lab = rgbToLab({ r: 128, g: 64, b: 32 });
+// lab.L = lightness, lab.a = green-red, lab.b = blue-yellow
+```
+
+The conversion chain is:
+
+```
+sRGB (0–255)
+  → linear RGB (gamma decode)
+    → CIE XYZ (D65 illuminant)
+      → CIE L*a*b*
+```
+
+Each step is well-defined. The gamma decode uses the sRGB transfer function (threshold at 0.04045, exponent 2.4). The XYZ conversion uses the standard 3x3 matrix for the D65 reference white. The Lab conversion applies a cube-root compressive nonlinearity that models human brightness perception.
+
+CIE76 is noticeably slower than Redmean because of the color space conversion (gamma decode, matrix multiply, cube roots). But it handles dark colors and desaturated tones much more accurately.
+
+## CIEDE2000
+
+The gold standard for perceptual color distance. CIEDE2000 operates in CIE L\*a\*b\* space but applies a series of corrections that CIE76 omits:
+
+- **Lightness weighting** (SL) -- adjusts sensitivity based on overall brightness
+- **Chroma weighting** (SC) -- adjusts sensitivity based on color saturation
+- **Hue weighting** (SH) -- adjusts sensitivity based on hue angle, with a T term that models the non-uniform shape of human hue discrimination
+- **Rotation term** (RT) -- corrects for a known problem near blue where the Lab a\* axis is not perpendicular to perceived hue
+
+```typescript
+import { ciede2000Distance } from 'bitmapped/color';
+
+const d = ciede2000Distance(
+  { r: 255, g: 0, b: 0 },
+  { r: 0, g: 255, b: 0 },
+);
+```
+
+The formula is complex. It involves computing adjusted chroma values (C'), hue angles via `atan2`, hue difference with wraparound handling, five trigonometric operations for the T term, and the rotation term near blue (centered at hue 275 degrees). The parametric weighting factors kL, kC, kH are all set to 1 (reference conditions).
+
+<Callout type="info">
+CIEDE2000 is the most accurate algorithm bitmapped offers, but it is significantly slower due to the trigonometric operations (sin, cos, atan2, exp, pow). For large images or real-time previews, consider Oklab or Redmean instead.
+</Callout>
+
+## Oklab
+
+A modern perceptually uniform color space created by Bjorn Ottosson in 2020. Oklab achieves near-CIEDE2000 accuracy with a much simpler conversion and no trigonometric corrections.
+
+```typescript
+import { oklabDistance, rgbToOklab } from 'bitmapped/color';
+
+const d = oklabDistance(
+  { r: 255, g: 0, b: 0 },
+  { r: 0, g: 255, b: 0 },
+);
+
+// Inspect Oklab values:
+const ok = rgbToOklab({ r: 128, g: 64, b: 32 });
+// ok.L = lightness, ok.a = green-red, ok.b = blue-yellow
+```
+
+The conversion chain is:
+
+```
+sRGB (0–255)
+  → linear RGB (gamma decode)
+    → LMS (cone response, 3×3 matrix)
+      → Oklab (cube root + 3×3 matrix)
+```
+
+Compared to Lab's XYZ intermediate step, Oklab goes through LMS (long/medium/short cone responses) and uses two simple 3x3 matrix multiplications with a cube root in between. No reference white normalization, no piecewise functions for the nonlinearity. The result is a color space where Euclidean distance closely matches human perception -- including in the problematic blue region where CIEDE2000 needs its rotation term.
+
+Oklab offers the best accuracy-to-speed ratio. It is the recommended choice when you need better-than-Redmean accuracy without the cost of CIEDE2000.
+
+## Comparison
+
+| Algorithm | Speed | Perceptual accuracy | Best for |
+|---|---|---|---|
+| `euclidean` | Fastest | Poor | Performance benchmarks, testing |
+| `redmean` | Fast | Good | **General use (recommended default)** |
+| `cie76` | Moderate | Good | Perceptually accurate matching |
+| `oklab` | Moderate | Excellent | Best accuracy/speed tradeoff |
+| `ciede2000` | Slow | Best | Maximum accuracy, small palettes |
+
+<Callout type="info">
+"Slow" is relative. On a modern machine, CIEDE2000 processes a 256x240 image in milliseconds. The speed difference matters most during real-time previews or when processing many frames.
+</Callout>
+
+## Using `getDistanceFunction()`
+
+Rather than importing each distance function individually, you can use the factory function to select one dynamically. This is useful when the algorithm is chosen at runtime -- for example, from a dropdown or a preset's recommended settings.
+
+```typescript
+import { getDistanceFunction } from 'bitmapped/color';
+import type { DistanceAlgorithm, RGB } from 'bitmapped';
+
+const algorithm: DistanceAlgorithm = 'oklab';
+const distanceFn = getDistanceFunction(algorithm);
+
+const colorA: RGB = { r: 100, g: 50, b: 200 };
+const colorB: RGB = { r: 110, g: 45, b: 190 };
+
+const d = distanceFn(colorA, colorB);
+// Lower values mean the colors are more similar
+```
+
+The returned function has the signature `(a: RGB, b: RGB) => number`. All five algorithms return values where lower means more similar, but the scales are not directly comparable across algorithms. A distance of 10 in Euclidean space does not mean the same thing as 10 in Oklab space.
+
+## When to use which
+
+**Default to `redmean`.** It is fast, produces good results on virtually all palettes, and is the most forgiving choice. Most hardware presets recommend it.
+
+**Use `oklab` for best accuracy without CIEDE2000 cost.** Oklab excels at matching subtle color differences -- skin tones, sky gradients, desaturated scenes. It is especially good with large palettes (Amiga, VGA, Genesis) where many candidate colors are close together.
+
+**Use `ciede2000` for small palettes where every match counts.** With only 4 colors (Game Boy) or 16 colors (CGA), a single wrong match is highly visible. CIEDE2000's corrections for lightness, chroma, and hue make the biggest difference when the palette is sparse.
+
+**Use `cie76` as a middle ground.** It is more accurate than Redmean in dark and desaturated regions, and faster than CIEDE2000. A reasonable choice if you want Lab-space accuracy without the full CIEDE2000 overhead.
+
+**Use `euclidean` only for performance benchmarks or debugging.** It helps isolate whether a visual artifact is caused by the distance metric or by another stage in the pipeline.
+
+## Try it yourself
+
+Experiment with different distance algorithms on a real image. Select a preset with a small palette (like C64) to see the most dramatic differences between algorithms.
+
+<LiveDemo
+  defaultPreset="c64-pepto"
+  showPresetSelector
+  showDitheringControls
+  showComparison
+  allowUpload
+/>
+
+## Further reading
+
+- [Color Utilities API](/api/color) -- Full reference for all distance functions, palette matching, and color conversion
+- [process()](/api/process) -- The `distanceAlgorithm` option in the main processing function
+- [How It Works](/concepts/how-it-works) -- Where color distance fits in the processing pipeline

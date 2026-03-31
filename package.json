@@ -1,0 +1,31 @@
+{
+  "name": "bitmapped-monorepo",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "test": "turbo run test",
+    "test:watch": "pnpm --filter bitmapped test:watch",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,md,json}\"",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean && rm -rf node_modules .turbo",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "ci:publish": "pnpm --filter bitmapped build && changeset publish",
+    "validate": "pnpm lint && pnpm typecheck && pnpm test && pnpm format:check",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.29.0",
+    "husky": "^9.1.7",
+    "prettier": "^3.4.0",
+    "turbo": "^2.8.0",
+    "typescript": "^6.0.0"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=22"
+  }
+}

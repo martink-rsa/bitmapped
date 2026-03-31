@@ -1,0 +1,221 @@
+---
+title: Attribute Clash
+---
+
+import { Callout } from 'nextra/components'
+
+# Attribute Clash
+
+Attribute clash is the visual artifact that occurs when hardware limits the number of colors available within a small screen region. Understanding how it works is key to reproducing authentic retro graphics.
+
+## What Is Attribute Clash?
+
+In the early 1980s, VRAM was expensive. Storing an independent color value for every pixel on screen would have required far more memory than home computers and consoles could afford. The solution: store color information not per pixel, but per rectangular region of pixels. Every pixel within that region shares the same color attributes.
+
+This works fine when the image content aligns neatly to the grid. But when a color boundary falls in the middle of a region -- a character's red hat against a blue sky, for example -- the hardware forces both colors to coexist in a single attribute cell. The constraint solver must pick the best pair (or small set) of colors for that cell, and every pixel in the cell is remapped to one of those colors. The result is a distinctive "bleeding" effect where colors leak across boundaries that the grid doesn't respect.
+
+Different systems used different block sizes and color limits, but the underlying principle is the same: a trade-off between memory cost and color freedom.
+
+<Callout type="info">
+Attribute clash is sometimes called "color clash" or "attribute bleeding." On the ZX Spectrum it was so pervasive that it became the defining visual characteristic of the platform.
+</Callout>
+
+## ZX Spectrum (8x8)
+
+The ZX Spectrum's ULA chip divides the 256x192 display into a grid of 8x8 pixel cells. Each cell gets a single attribute byte that encodes all of its color information:
+
+| Bit(s) | Field | Purpose |
+|---|---|---|
+| 0-2 | INK | Foreground color (1 of 8) |
+| 3-5 | PAPER | Background color (1 of 8) |
+| 6 | BRIGHT | Brightness level (applies to **both** INK and PAPER) |
+| 7 | FLASH | Alternates INK and PAPER at ~1.5 Hz |
+
+The 8 base colors at normal brightness use a hardware voltage ratio of `255 x 0.85 = 216 (0xD8)`. With the BRIGHT bit set, all channels use full voltage (0xFF). Black is shared between both levels, giving 15 unique colors total.
+
+The critical limitation is the BRIGHT bit. Because it applies to the entire cell, you cannot mix a normal-brightness color with a bright color in the same 8x8 block. A cell can contain Bright Red and Bright Cyan, or normal Red and normal Cyan, but never Bright Red and normal Cyan. This is what creates the most visible attribute clash: the solver must choose a single brightness level for each cell, and any pixel that "wants" the other level gets forced to the wrong shade.
+
+<PaletteDisplay
+  colors={[
+    '#000000','#0000D8','#D80000','#D800D8','#00D800','#00D8D8','#D8D800','#D8D8D8',
+  ]}
+  columns={8}
+  swatchSize={36}
+  showHex
+  groupLabel="Normal brightness (0xD8)"
+/>
+
+<PaletteDisplay
+  colors={[
+    '#000000','#0000FF','#FF0000','#FF00FF','#00FF00','#00FFFF','#FFFF00','#FFFFFF',
+  ]}
+  columns={8}
+  swatchSize={36}
+  showHex
+  groupLabel="Bright (0xFF)"
+/>
+
+Many Spectrum games worked around attribute clash by using monochrome graphics (a single ink color on black paper) or carefully designing levels so that color boundaries aligned to the 8x8 grid. Some later titles used advanced techniques like rendering at the attribute boundary to minimize visible clash.
+
+## NES (16x16)
+
+The NES PPU (Picture Processing Unit) takes a different approach to color constraints. Its nametable stores tile indices for the background layer, while a separate attribute table assigns palette information to 16x16 pixel regions.
+
+Each attribute byte covers a 32x32 pixel area (a 4x4 grid of 8x8 tiles), divided into four 16x16 quadrants. Each quadrant gets 2 bits selecting one of 4 background palettes. Each palette holds 3 unique colors plus a shared backdrop color (index `$00` in VRAM), giving 4 colors per 16x16 region.
+
+| Resource | Count |
+|---|---|
+| PPU color LUT entries | 64 (54 unique, some duplicate blacks) |
+| Background palettes | 4 (each: 3 colors + 1 shared backdrop) |
+| Sprite palettes | 4 (each: 3 colors + 1 transparent) |
+| Max simultaneous colors | 25 (4 palettes x 3 unique + 1 backdrop + 4 sprite palettes x 3) |
+| Attribute region | 16x16 pixels |
+
+The 16x16 region is larger than the ZX Spectrum's 8x8 cell, which means the constraint is less visible per block -- but having only 4 colors (3+backdrop) per region is restrictive. NES artists compensated by designing tile layouts that respected attribute boundaries, often using the shared backdrop color as a neutral separator.
+
+<Callout type="info">
+The NES attribute table is one of the most unusual color constraint systems in retro hardware. Each byte encodes palettes for four 16x16 quadrants, packed as 2 bits each -- making it impossible to assign palettes at finer than 16x16 granularity for backgrounds.
+</Callout>
+
+## C64
+
+The Commodore 64's VIC-II chip supports two bitmap modes, each with its own attribute constraints. Both modes use the same 16-color palette (here shown in the Colodore variant).
+
+### Hires mode (320x200)
+
+In hires mode, each 8x8 pixel cell can use exactly 2 colors from the 16-color palette. One byte of color RAM stores the foreground and background color indices for each cell. Pixels are single-width (1:1), giving a full 320x200 resolution.
+
+This is configured as:
+
+```
+attributeBlock: { width: 8, height: 8, maxColors: 2 }
+```
+
+With only 2 colors per cell, the constraint is similar to the ZX Spectrum -- but without the brightness-locking restriction. Any two of the 16 palette colors can coexist in a single cell, giving artists more flexibility in color choice even though the cell size is the same.
+
+### Multicolor mode (160x200)
+
+Multicolor mode trades horizontal resolution for more colors per cell. Pixels are double-wide (2:1 PAR), giving an effective resolution of 160x200. Each 4x8 pixel cell can use 4 colors:
+
+| Source | Colors |
+|---|---|
+| Background register (`$D021`) | 1 shared across entire screen |
+| Color RAM (per cell) | 2 unique to the cell |
+| Screen RAM (per cell) | 1 unique to the cell |
+| **Total per cell** | **4** |
+
+The shared background color is set globally. The solver accounts for this by always including the background color in every cell's subset and filling the remaining slots with the best local choices.
+
+This is configured as:
+
+```
+attributeBlock: { width: 4, height: 8, maxColors: 4, globalBackground: 1 }
+```
+
+The `globalBackground: 1` tells the solver that palette index 1 (white in the Colodore palette) is always present in every cell's color subset.
+
+<Callout type="warning">
+Multicolor mode uses double-wide pixels. At 160x200 with 2:1 pixel aspect ratio, each logical pixel is twice as wide as it is tall. The `displayCharacteristics.doubleWidePixels` flag on the preset communicates this to the rendering pipeline.
+</Callout>
+
+## The Constraint Solver Algorithm
+
+bitmapped's `solveAttributeClash` function reproduces these hardware constraints by dividing the image into blocks and selecting the optimal color subset for each one.
+
+### How it works
+
+1. **Divide into blocks.** The image is split into a grid of `width x height` pixel blocks, matching the hardware's attribute cell size (8x8 for ZX Spectrum and C64 hires, 4x8 for C64 multicolor, 16x16 for NES).
+
+2. **Extract block pixels.** For each block, all pixel colors are collected into an array.
+
+3. **Select optimal colors.** The solver picks the best N colors for the block using one of three strategies, depending on the configuration:
+
+   - **Bright-locked pair selection** (`brightLocked: true`) -- Used for the ZX Spectrum. Tests all valid (ink, paper) pairs within the non-bright group (palette indices 0-7) and the bright group (indices 8-15) separately. That gives C(8,2) = 28 candidate pairs per brightness level, 56 total. The pair with the lowest total mapping error wins.
+
+   - **Exhaustive pair search** (`maxColors === 2`, palette size 64 or fewer) -- Used for C64 hires and similar systems without brightness locking. Tests all C(n,2) pairs from the full palette. With 16 colors, that is 120 candidate pairs -- fast enough to check exhaustively.
+
+   - **Greedy selection** (`maxColors > 2`) -- Used for C64 multicolor and similar multi-color constraints. If a `globalBackground` index is specified, that color is included first. Otherwise, the solver seeds with the "most popular" color (the palette color with the smallest total distance to all pixels in the block). Then it iteratively adds the palette color that reduces total block error the most, until `maxColors` is reached.
+
+4. **Remap pixels.** Every pixel in the block is mapped to its nearest color in the selected subset using the configured [distance algorithm](/concepts/color-distance).
+
+### Error measurement
+
+The solver measures "error" as the sum of color distances from each pixel to its nearest color in the candidate subset. The distance function is configurable -- `euclidean` is fastest, while `redmean` or `ciede2000` produce more perceptually accurate results.
+
+```
+totalError = sum(minDistance(pixel, subset) for each pixel in block)
+```
+
+The candidate subset with the lowest total error is chosen, meaning the solver always selects the colors that best represent the block as a whole -- even if that means some individual pixels end up further from their ideal color.
+
+## Interactive demo
+
+Try it with your own image. Toggle constraints on and off to see the difference attribute clash makes.
+
+<LiveDemo
+  defaultPreset="zx-spectrum"
+  showDitheringControls
+  showConstraintToggle
+  showComparison
+  allowUpload
+/>
+
+## Code example
+
+### ZX Spectrum with brightness-locked attribute clash
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset } from 'bitmapped/presets';
+
+const zx = getPreset('zx-spectrum')!;
+
+const result = process(imageData, {
+  blockSize: 1,
+  palette: zx.palette!,
+  dithering: 'floyd-steinberg',
+  distanceAlgorithm: 'redmean',
+  constraintType: 'attribute-block',
+  attributeBlockConfig: {
+    width: 8,
+    height: 8,
+    maxColors: 2,
+    brightLocked: true,
+  },
+});
+```
+
+The `brightLocked: true` flag tells the solver to enforce the ZX Spectrum's rule that both colors in a cell must share the same brightness level.
+
+### C64 multicolor with shared background
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset } from 'bitmapped/presets';
+
+const c64mc = getPreset('c64-multicolor')!;
+
+const result = process(imageData, {
+  blockSize: 1,
+  palette: c64mc.palette!,
+  dithering: 'none',
+  distanceAlgorithm: 'redmean',
+  constraintType: 'attribute-block',
+  attributeBlockConfig: {
+    width: 4,
+    height: 8,
+    maxColors: 4,
+    globalBackground: 1,
+  },
+});
+```
+
+The `globalBackground: 1` ensures palette index 1 is always included in every cell's color subset, matching the C64's shared background register behavior.
+
+## See also
+
+- [ZX Spectrum preset](/presets/zx-spectrum) -- Full preset details, palette, and hardware notes
+- [NES preset](/presets/nes) -- PPU palette and background color constraints
+- [C64 preset](/presets/c64) -- Hires and multicolor mode details
+- [Constraints API](/api/constraints) -- Full API reference for all constraint solvers
+- [How It Works](/concepts/how-it-works) -- The complete processing pipeline

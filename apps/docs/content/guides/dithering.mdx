@@ -1,0 +1,282 @@
+---
+title: Dithering
+---
+
+import { Callout } from 'nextra/components'
+
+# Dithering
+
+When you quantize an image from millions of colors down to a limited palette, smooth gradients collapse into flat bands of color. Dithering solves this by introducing controlled noise that tricks the eye into perceiving intermediate tones that don't actually exist in the palette.
+
+## What is dithering?
+
+Imagine a gradient from black to white, but your palette only contains those two colors. Without dithering, every pixel darker than mid-gray becomes black and every pixel lighter becomes white -- a hard edge where the original had a smooth transition.
+
+Dithering mixes black and white pixels in varying densities so that _from a distance_, the eye blends them into perceived shades of gray. The same principle applies to color: by interleaving nearby palette colors, dithering can simulate thousands of intermediate hues from a handful of fixed colors.
+
+bitmapped supports two families of dithering algorithms:
+
+- **Error diffusion** -- sequential algorithms that spread quantization error to neighboring pixels (Floyd-Steinberg, Atkinson)
+- **Ordered dithering** -- threshold-matrix algorithms that decide per-pixel whether to round up or down, producing repeating patterns (Bayer, blue noise, clustered-dot, line patterns, checkerboard, PS1)
+
+## Error diffusion
+
+Error-diffusion algorithms process the image pixel by pixel, left to right, top to bottom. For each pixel they find the nearest palette color, compute the difference (the _error_), and distribute that error to surrounding pixels that haven't been processed yet. This causes future pixels to compensate, creating the illusion of the missing color.
+
+### Floyd-Steinberg
+
+The classic error-diffusion algorithm, published by Robert Floyd and Louis Steinberg in 1976. It distributes 100% of the quantization error to four neighbors using these weights:
+
+```
+              *   7/16
+        3/16  5/16  1/16
+```
+
+Where `*` is the current pixel. The error spreads to:
+
+| Neighbor     | Weight |
+| ------------ | ------ |
+| Right        | 7/16   |
+| Bottom-left  | 3/16   |
+| Bottom       | 5/16   |
+| Bottom-right | 1/16   |
+
+Because all the error is redistributed, Floyd-Steinberg preserves the overall brightness of the image faithfully. It produces natural-looking results with fine detail, making it the best general-purpose choice for photographic images.
+
+```ts
+import { process } from 'bitmapped';
+import { getPreset } from 'bitmapped/presets';
+
+const preset = getPreset('nes-ntsc');
+const result = process(imageData, {
+  palette: preset.palette,
+  dithering: 'floyd-steinberg',
+  distanceAlgorithm: 'redmean',
+});
+```
+
+### Atkinson
+
+Developed by Bill Atkinson for the original Apple Macintosh, this algorithm distributes error to six neighbors but only propagates **75%** of the total error (each neighbor receives 1/8):
+
+```
+              *   1/8  1/8
+        1/8  1/8  1/8
+              1/8
+```
+
+The six neighbors and their weights:
+
+| Neighbor      | Weight |
+| ------------- | ------ |
+| Right         | 1/8    |
+| Right +2      | 1/8    |
+| Bottom-left   | 1/8    |
+| Bottom        | 1/8    |
+| Bottom-right  | 1/8    |
+| Two rows down | 1/8    |
+
+The deliberately lost 25% of error produces higher contrast output -- darks stay darker and lights stay lighter. This gives Atkinson dithering its distinctive look, immediately recognizable from early Macintosh screenshots and HyperCard stacks.
+
+```ts
+const result = process(imageData, {
+  palette: preset.palette,
+  dithering: 'atkinson',
+  distanceAlgorithm: 'redmean',
+});
+```
+
+<Callout type="info">
+Atkinson dithering works especially well with small palettes (2-4 colors) where preserving contrast matters more than tonal accuracy. Try it with the Macintosh preset for an authentic 1-bit look.
+</Callout>
+
+## Ordered dithering
+
+Ordered dithering uses a **threshold matrix** (a repeating grid of values) to add a per-pixel bias before finding the nearest palette color. Unlike error diffusion, each pixel is processed independently -- there is no sequential dependency. This makes ordered dithering parallelizable and gives it a structured, patterned appearance.
+
+The algorithm for each pixel:
+
+1. Look up the threshold value from the matrix at position `(x % matrixWidth, y % matrixHeight)`
+2. Scale the threshold to a bias in the range `[-spread/2, +spread/2]`
+3. Add the bias to the pixel's RGB channels
+4. Find the nearest palette color for the biased value
+
+### Bayer
+
+The Bayer matrix is a recursively defined threshold pattern that produces characteristic crosshatch textures. bitmapped supports any power-of-2 size:
+
+- **2x2** -- very coarse, visible grid pattern
+- **4x4** -- good balance of structure and detail (default)
+- **8x8** -- finer pattern, closer to smooth gradients
+
+Larger matrices produce finer dithering because they have more distinct threshold levels. An 8x8 Bayer matrix provides 64 threshold levels, while a 2x2 only provides 4.
+
+```ts
+// Default 4x4 Bayer dithering
+const result = process(imageData, {
+  palette: preset.palette,
+  dithering: 'bayer',
+});
+```
+
+The 4x4 Bayer matrix (integer values before normalization):
+
+```
+ 0  8  2 10
+12  4 14  6
+ 3 11  1  9
+15  7 13  5
+```
+
+Each value is divided by 16 (the total number of entries) to produce normalized thresholds in the 0-1 range.
+
+### Blue noise
+
+Blue-noise dithering uses a stochastic threshold matrix with carefully distributed values that avoid both clumping and regular patterns. The result is the highest-quality ordered dithering available -- it looks almost as natural as error diffusion while retaining the per-pixel independence of ordered methods.
+
+```ts
+const result = process(imageData, {
+  palette: preset.palette,
+  dithering: 'blue-noise',
+});
+```
+
+<Callout type="info">
+Blue noise is the best choice when you want ordered dithering (for its speed or its non-sequential processing) but don't want visible crosshatch or grid artifacts.
+</Callout>
+
+## Other patterns
+
+bitmapped includes several additional ordered dithering patterns, each with a distinctive visual character:
+
+**Clustered-dot** (`'clustered-dot'`) -- Groups thresholds into circular clusters, producing a halftone print effect reminiscent of newspaper or comic book reproduction.
+
+**Horizontal line** (`'horizontal-line'`) -- Threshold values are arranged in horizontal bands. Creates a scanline or CRT-like appearance.
+
+**Vertical line** (`'vertical-line'`) -- Same concept as horizontal, but with vertical bands. Useful for certain display emulation effects.
+
+**Diagonal line** (`'diagonal-line'`) -- Bands run at a 45-degree angle. Creates a distinct engraving or cross-hatching feel.
+
+**Checkerboard** (`'checkerboard'`) -- A simple 2x2 alternating pattern. The coarsest ordered dithering, producing a very visible grid, but it can be effective at extremely low resolutions or for a deliberately retro look.
+
+**PS1 ordered** (`'ps1-ordered'`) -- Reproduces the asymmetric 4x4 dither matrix used by the PlayStation 1 GPU. The PS1 applied this pattern per-channel before truncating from 8-bit to 5-bit color depth, giving textured 3D games their characteristic banding:
+
+```
+-4   0  -3   1
+ 2  -2   3  -1
+-3   1  -4   0
+ 3  -1   2  -2
+```
+
+This matrix adds integer bias values directly to each color channel before quantization, producing the subtle color noise visible in PS1-era games.
+
+## When to use which
+
+| Method | Best for | Avoid when |
+| --- | --- | --- |
+| **Floyd-Steinberg** | Photographic images, smooth gradients, maximum tonal accuracy | You need deterministic per-pixel output or are processing pixel art |
+| **Atkinson** | High-contrast images, small palettes (1-bit, 4-color), retro Mac aesthetic | You need smooth tonal gradations in shadows and highlights |
+| **Bayer** | Pixel art, retro game aesthetics, when you want visible structure | Processing photographs where crosshatch artifacts would be distracting |
+| **Blue noise** | Best-quality ordered dithering, subtle texture without obvious patterns | You specifically want the structured look of Bayer |
+| **PS1 ordered** | Authentic PlayStation 1 look, 5-bit color depth emulation | Palettes that aren't based on 15/16-bit color |
+| **None** | Flat-shaded art, palettes with many colors, when hard edges are desired | Images with gradients or subtle color transitions |
+
+## Dither strength
+
+For ordered dithering patterns, the `ditherStrength` option controls how aggressively the threshold matrix biases pixel values. It ranges from `0` (no dithering -- equivalent to direct palette matching) to `1` (full strength, the default).
+
+Lower values produce subtler dithering with less visible patterning, while higher values push pixels further from their original colors to create more pronounced texture.
+
+```ts
+// Subtle Bayer dithering at half strength
+const subtle = process(imageData, {
+  palette: preset.palette,
+  dithering: 'bayer',
+  ditherStrength: 0.3,
+});
+
+// Full-strength blue noise (default)
+const full = process(imageData, {
+  palette: preset.palette,
+  dithering: 'blue-noise',
+  ditherStrength: 1.0,
+});
+```
+
+<Callout type="warning">
+`ditherStrength` only applies to ordered dithering patterns (Bayer, blue noise, clustered-dot, line variants, checkerboard, and custom matrices). Error-diffusion algorithms (Floyd-Steinberg and Atkinson) always diffuse the full computed error.
+</Callout>
+
+## Custom dither matrices
+
+You can supply your own threshold matrix for complete control over the dithering pattern. Set `dithering` to `'custom'` and provide a `ditherMatrix` -- a 2D array of normalized values in the 0-1 range:
+
+```ts
+// A simple 3x3 custom threshold matrix
+const result = process(imageData, {
+  palette: preset.palette,
+  dithering: 'custom',
+  ditherMatrix: [
+    [0.0, 0.5, 0.25],
+    [0.75, 0.125, 0.625],
+    [0.375, 0.875, 0.5],
+  ],
+  ditherStrength: 0.8,
+});
+```
+
+### Built-in matrix factories
+
+The `matrices` factory object from `bitmapped/dither` lets you generate any built-in threshold matrix programmatically. This is useful when you want to use a matrix at a non-default size or inspect its values:
+
+```ts
+import { matrices } from 'bitmapped/dither';
+
+// Generate a 16x16 Bayer matrix (default is 8)
+const largeMatrix = matrices.bayer(16);
+
+// Generate a 64x64 blue noise matrix (default is 64)
+const blueNoise = matrices['blue-noise'](64);
+
+// Generate other patterns
+const halftone = matrices['clustered-dot'](8);
+const hLines = matrices['horizontal-line'](8);
+const vLines = matrices['vertical-line'](8);
+const dLines = matrices['diagonal-line'](8);
+const checker = matrices.checkerboard(); // always 2x2
+
+// Use with the custom dithering option
+const result = process(imageData, {
+  palette: preset.palette,
+  dithering: 'custom',
+  ditherMatrix: largeMatrix,
+});
+```
+
+Available factories:
+
+| Factory | Default size | Description |
+| --- | --- | --- |
+| `matrices.bayer(size)` | 8 | Recursive Bayer crosshatch (power of 2) |
+| `matrices['blue-noise'](size)` | 64 | Stochastic blue-noise texture |
+| `matrices['clustered-dot'](size)` | 8 | Halftone dot clusters |
+| `matrices['horizontal-line'](size)` | 8 | Horizontal scanline bands |
+| `matrices['vertical-line'](size)` | 8 | Vertical bands |
+| `matrices['diagonal-line'](size)` | 8 | 45-degree diagonal bands |
+| `matrices.checkerboard()` | 2 | Fixed 2x2 alternating pattern |
+
+## Try it out
+
+Upload an image and compare dithering algorithms side by side:
+
+<LiveDemo
+  defaultPreset="c64-pepto"
+  showDitheringControls
+  showComparison
+  allowUpload
+/>
+
+## Further reading
+
+- [Color Distance](/concepts/color-distance) -- How the palette matching step measures color similarity, and why algorithm choice affects dithering quality
+- [Dithering API](/api/dither) -- Full API reference for all dithering functions and types

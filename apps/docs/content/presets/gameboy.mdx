@@ -1,0 +1,95 @@
+---
+title: Game Boy
+---
+
+import { Callout } from 'nextra/components'
+
+# Game Boy
+
+| Spec | Value |
+|---|---|
+| Resolution | 160×144 |
+| Total colors | 4 shades |
+| Simultaneous | 4 |
+| Constraint | Global monochrome palette |
+| Display | STN LCD (green-tinted) |
+| Year | 1989 |
+| Maker | Nintendo |
+
+## Color palette
+
+The original Game Boy (DMG-01) has no color — just 4 shades rendered on a green-tinted STN LCD. The entire screen shares a single palette register.
+
+<PaletteDisplay
+  colors={['#E0F8D0', '#88C070', '#346856', '#081820']}
+  labels={['Lightest (0)', 'Light (1)', 'Dark (2)', 'Darkest (3)']}
+  columns={4}
+  swatchSize={48}
+  showHex
+  groupLabel="Game Boy DMG (BGB emulator palette)"
+/>
+
+The Game Boy Pocket improved the LCD to a greyscale display:
+
+<PaletteDisplay
+  colors={['#FFFFFF', '#A8A8A8', '#545454', '#000000']}
+  labels={['White', 'Light Grey', 'Dark Grey', 'Black']}
+  columns={4}
+  swatchSize={48}
+  showHex
+  groupLabel="Game Boy Pocket"
+/>
+
+## The key constraint: 4 shades, that's it
+
+With only 4 brightness levels, every artistic decision comes down to contrast management. There's no color to fall back on — readability depends entirely on how well the 4 shades are distributed.
+
+This extreme limitation is what makes Game Boy-style pixel art so distinctive. Dithering patterns become a critical tool: Floyd-Steinberg creates smooth gradients, while ordered dithering (Bayer) produces the clean, patterned look many Game Boy games used.
+
+## Interactive demo
+
+<LiveDemo
+  defaultPreset="gameboy-dmg"
+  showDitheringControls
+  showComparison
+  allowUpload
+/>
+
+## Code example
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset } from 'bitmapped/presets';
+
+const gb = getPreset('gameboy-dmg')!;
+
+const result = process(imageData, {
+  blockSize: 4,
+  palette: gb.palette!,
+  dithering: 'bayer',
+  ditherStrength: 0.8,
+  distanceAlgorithm: 'redmean',
+});
+```
+
+<Callout type="info">
+Try Bayer dithering at strength 0.6–0.8 for the most authentic Game Boy look. Floyd-Steinberg works too but produces a softer result than what you'd typically see in actual Game Boy games, which used hand-placed dithering patterns.
+</Callout>
+
+## Presets
+
+bitmapped includes three Game Boy presets:
+
+- **`gameboy-dmg`** — Original DMG green LCD palette
+- **`gameboy-pocket`** — Game Boy Pocket greyscale palette
+- **`gameboy-color`** — Game Boy Color with 15-bit RGB (32,768 colors), 8 background palettes of 4 colors with per-tile selection
+
+<details className="hardware-note">
+<summary>Hardware notes</summary>
+
+The Game Boy's LCD is a 160×144 pixel STN (super-twisted nematic) display with notoriously slow response time, producing visible ghosting on moving sprites. The green tint comes from the LCD technology itself — the backlight (actually a reflective layer) produces a green-shifted image.
+
+The PPU supports two tile maps, each with its own palette register that maps the 2-bit pixel values (0–3) to one of 4 shade levels. In practice, games almost always use the same mapping for the entire screen.
+
+The Game Boy Color upgraded to a TFT display with 15-bit RGB color (5 bits per channel). Each 8×8 tile independently selects from 8 background palettes of 4 colors each — similar in concept to the SNES but at a smaller scale.
+</details>

@@ -1,0 +1,339 @@
+---
+title: Export
+---
+
+import { Callout } from 'nextra/components'
+
+# Export
+
+Functions for converting processed `ImageData` into downloadable image files in various formats. All functions are imported from the `bitmapped/export` subpath.
+
+```typescript
+import {
+  toPNGBlob,
+  downloadPNG,
+  imageDataToBlob,
+  toJPEGBlob,
+  downloadJPEG,
+  toWebPBlob,
+  downloadWebP,
+  imageDataToSVG,
+  toSVGBlob,
+  downloadSVG,
+  defaultFilenameBase,
+  downloadBlob,
+} from 'bitmapped/export';
+```
+
+<Callout type="info">
+PNG is recommended for pixel art — lossless compression preserves crisp pixel boundaries.
+</Callout>
+
+For a walkthrough of common export workflows, see the [Exporting guide](/guides/exporting).
+
+---
+
+## PNG
+
+Lossless raster export. Best choice for pixel art and retro-style output.
+
+### `toPNGBlob`
+
+Converts a canvas element to a PNG `Blob`.
+
+```typescript
+function toPNGBlob(canvas: HTMLCanvasElement): Promise<Blob>;
+```
+
+| Parameter | Type | Description |
+|---|---|---|
+| `canvas` | `HTMLCanvasElement` | The canvas to convert. |
+
+**Returns:** `Promise<Blob>` — A PNG blob.
+
+```typescript
+const blob = await toPNGBlob(canvas);
+// Use the blob for upload, display, etc.
+```
+
+### `downloadPNG`
+
+Triggers a browser download of the canvas as a PNG file.
+
+```typescript
+function downloadPNG(
+  canvas: HTMLCanvasElement,
+  filename?: string,
+): Promise<void>;
+```
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `canvas` | `HTMLCanvasElement` | — | The canvas to export. |
+| `filename` | `string` | `'YYYYMMDD-HHMMSS-bitmapped.png'` | Download filename. |
+
+```typescript
+await downloadPNG(canvas);
+await downloadPNG(canvas, 'my-pixel-art.png');
+```
+
+### `imageDataToBlob`
+
+Converts `ImageData` directly to a PNG blob without requiring a pre-existing canvas. Uses `OffscreenCanvas` internally when available, falling back to a temporary `HTMLCanvasElement`.
+
+```typescript
+function imageDataToBlob(imageData: ImageData): Promise<Blob>;
+```
+
+| Parameter | Type | Description |
+|---|---|---|
+| `imageData` | `ImageData` | The image data to convert. |
+
+**Returns:** `Promise<Blob>` — A PNG blob.
+
+```typescript
+import { process } from 'bitmapped';
+import { imageDataToBlob } from 'bitmapped/export';
+
+const result = process(sourceImageData, { blockSize: 4, palette });
+const blob = await imageDataToBlob(result.imageData);
+```
+
+---
+
+## JPEG
+
+Lossy raster export. Smaller file sizes but introduces compression artifacts — generally not ideal for pixel art.
+
+### `toJPEGBlob`
+
+Converts a canvas element to a JPEG `Blob` with configurable quality.
+
+```typescript
+function toJPEGBlob(
+  canvas: HTMLCanvasElement,
+  quality?: number,
+): Promise<Blob>;
+```
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `canvas` | `HTMLCanvasElement` | — | The canvas to convert. |
+| `quality` | `number` | `0.92` | JPEG quality from 0 to 1. |
+
+**Returns:** `Promise<Blob>` — A JPEG blob.
+
+```typescript
+const blob = await toJPEGBlob(canvas, 0.85);
+```
+
+### `downloadJPEG`
+
+Triggers a browser download of the canvas as a JPEG file.
+
+```typescript
+function downloadJPEG(
+  canvas: HTMLCanvasElement,
+  filename?: string,
+  quality?: number,
+): Promise<void>;
+```
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `canvas` | `HTMLCanvasElement` | — | The canvas to export. |
+| `filename` | `string` | `'YYYYMMDD-HHMMSS-bitmapped.jpg'` | Download filename. |
+| `quality` | `number` | `0.92` | JPEG quality from 0 to 1. |
+
+```typescript
+await downloadJPEG(canvas);
+await downloadJPEG(canvas, 'photo.jpg', 0.75);
+```
+
+---
+
+## WebP
+
+Lossy/lossless raster export with generally better compression than JPEG. Browser support is near-universal in modern browsers.
+
+### `toWebPBlob`
+
+Converts a canvas element to a WebP `Blob` with configurable quality.
+
+```typescript
+function toWebPBlob(
+  canvas: HTMLCanvasElement,
+  quality?: number,
+): Promise<Blob>;
+```
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `canvas` | `HTMLCanvasElement` | — | The canvas to convert. |
+| `quality` | `number` | `0.92` | WebP quality from 0 to 1. |
+
+**Returns:** `Promise<Blob>` — A WebP blob.
+
+```typescript
+const blob = await toWebPBlob(canvas, 0.9);
+```
+
+### `downloadWebP`
+
+Triggers a browser download of the canvas as a WebP file.
+
+```typescript
+function downloadWebP(
+  canvas: HTMLCanvasElement,
+  filename?: string,
+  quality?: number,
+): Promise<void>;
+```
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `canvas` | `HTMLCanvasElement` | — | The canvas to export. |
+| `filename` | `string` | `'YYYYMMDD-HHMMSS-bitmapped.webp'` | Download filename. |
+| `quality` | `number` | `0.92` | WebP quality from 0 to 1. |
+
+```typescript
+await downloadWebP(canvas);
+await downloadWebP(canvas, 'output.webp', 0.8);
+```
+
+---
+
+## SVG
+
+Vector export where each pixel is represented as an SVG `<rect>` element. Consecutive same-color pixels in a row are merged into wider rects for a more compact file. Fully transparent pixels are omitted. Semi-transparent pixels receive an `opacity` attribute.
+
+The generated SVG uses `shape-rendering="crispEdges"` to preserve sharp pixel boundaries at any zoom level.
+
+### `imageDataToSVG`
+
+Converts `ImageData` to an SVG markup string.
+
+```typescript
+function imageDataToSVG(imageData: ImageData): string;
+```
+
+| Parameter | Type | Description |
+|---|---|---|
+| `imageData` | `ImageData` | The image data to convert. |
+
+**Returns:** `string` — Complete SVG markup.
+
+```typescript
+const svgString = imageDataToSVG(result.imageData);
+document.getElementById('preview')!.innerHTML = svgString;
+```
+
+### `toSVGBlob`
+
+Converts `ImageData` to an SVG `Blob`. This is a synchronous operation (no `Promise` returned).
+
+```typescript
+function toSVGBlob(imageData: ImageData): Blob;
+```
+
+| Parameter | Type | Description |
+|---|---|---|
+| `imageData` | `ImageData` | The image data to convert. |
+
+**Returns:** `Blob` — An SVG blob with MIME type `image/svg+xml`.
+
+```typescript
+const blob = toSVGBlob(result.imageData);
+```
+
+### `downloadSVG`
+
+Triggers a browser download of the image data as an SVG file. This is a synchronous operation.
+
+```typescript
+function downloadSVG(
+  imageData: ImageData,
+  filename?: string,
+): void;
+```
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `imageData` | `ImageData` | — | The image data to export. |
+| `filename` | `string` | `'YYYYMMDD-HHMMSS-bitmapped.svg'` | Download filename. |
+
+```typescript
+downloadSVG(result.imageData);
+downloadSVG(result.imageData, 'pixel-art.svg');
+```
+
+---
+
+## Helpers
+
+Low-level utilities used internally by the format-specific functions. Useful if you need to build custom export logic.
+
+### `defaultFilenameBase`
+
+Returns a timestamped string in the format `YYYYMMDD-HHMMSS-bitmapped`, suitable for use as a filename base (without extension).
+
+```typescript
+function defaultFilenameBase(): string;
+```
+
+**Returns:** `string` — e.g. `'20260331-143022-bitmapped'`.
+
+```typescript
+const base = defaultFilenameBase();
+const filename = `${base}.png`; // '20260331-143022-bitmapped.png'
+```
+
+### `downloadBlob`
+
+Triggers a browser download from a `Blob` by creating a temporary `<a>` element with an object URL, clicking it, then revoking the URL.
+
+```typescript
+function downloadBlob(blob: Blob, filename: string): void;
+```
+
+| Parameter | Type | Description |
+|---|---|---|
+| `blob` | `Blob` | The blob to download. |
+| `filename` | `string` | The download filename including extension. |
+
+```typescript
+const blob = new Blob([data], { type: 'application/octet-stream' });
+downloadBlob(blob, 'output.bin');
+```
+
+---
+
+## Full example
+
+Process an image with a Game Boy preset, then export it as both PNG and SVG:
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset } from 'bitmapped/presets';
+import { downloadPNG, downloadSVG } from 'bitmapped/export';
+
+const preset = getPreset('gameboy-dmg')!;
+const result = process(sourceImageData, {
+  blockSize: 4,
+  palette: preset.palette!,
+  dithering: 'bayer',
+});
+
+// Render to canvas for raster export
+const canvas = document.createElement('canvas');
+canvas.width = result.imageData.width;
+canvas.height = result.imageData.height;
+const ctx = canvas.getContext('2d')!;
+ctx.putImageData(result.imageData, 0, 0);
+
+// Download as PNG (lossless)
+await downloadPNG(canvas, 'gameboy.png');
+
+// Download as SVG (vector, scalable)
+downloadSVG(result.imageData, 'gameboy.svg');
+```

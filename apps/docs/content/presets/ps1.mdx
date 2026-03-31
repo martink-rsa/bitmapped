@@ -1,0 +1,103 @@
+---
+title: PlayStation 1
+---
+
+import { Callout } from 'nextra/components'
+
+# PlayStation 1
+
+| Spec | Value |
+|---|---|
+| Resolution | 320×240 |
+| Total colors | 32,768 (15-bit framebuffer) |
+| Simultaneous | 32,768 |
+| Constraint | PS1 ordered dither |
+| Display | CRT composite / S-Video / RGB |
+| Year | 1994 |
+| Maker | Sony |
+
+## Color palette
+
+The PS1 GPU uses a 15-bit framebuffer in BGR555 format — 5 bits per channel, yielding 32,768 possible colors. Unlike older consoles with fixed color lookup tables, the PS1 has no palette indirection for 3D rendering. The GPU rasterizes polygons directly into the framebuffer at full 15-bit color depth.
+
+Textures, however, support three storage formats:
+
+- **4-bit CLUT** — 16-color palette per texture, used heavily to conserve VRAM
+- **8-bit CLUT** — 256-color palette per texture
+- **15-bit direct** — full color, no palette lookup
+
+Most PS1 games use 4-bit and 8-bit CLUT textures to fit more data into the limited 1 MB of VRAM, with the CLUT palettes themselves stored in VRAM as well.
+
+<Callout type="info">
+  bitmapped models the PS1's 15-bit framebuffer output. The 5-bit-per-channel quantization is what you see on screen regardless of the texture format used internally.
+</Callout>
+
+## The key constraint: PS1 ordered dither
+
+The PS1 GPU applies a characteristic ordered dither pattern when rendering Gouraud-shaded polygons. Internal color interpolation runs at higher precision than the 15-bit framebuffer output, so the GPU uses a fixed asymmetric 4×4 dither matrix to reduce color banding. This produces the distinctive cross-hatch noise visible in virtually every PS1 game with smooth shading.
+
+The hardware dither matrix, applied per-channel before truncating 8-bit values to 5-bit:
+
+```
+PS1_DITHER_MATRIX = [
+  [-4,  0, -3,  1],
+  [ 2, -2,  3, -1],
+  [-3,  1, -4,  0],
+  [ 3, -1,  2, -2],
+]
+```
+
+Note the asymmetry — this is not a standard Bayer matrix. The values range from -4 to +3, and the pattern repeats every 4 pixels in both dimensions. Each value is added to the 8-bit channel value (then clamped to 0-255) before the 8-to-5-bit truncation. This is what gives PS1 rendering its unmistakable grainy texture, especially visible in dark gradients and Gouraud-shaded surfaces.
+
+<Callout>
+  The dither is applied by the GPU hardware, not by game developers. Every game that uses Gouraud shading exhibits this pattern, though some games disable it for flat-shaded or textured polygons.
+</Callout>
+
+bitmapped reproduces this with the `'ps1-ordered'` dithering algorithm, applying the same matrix used by the original hardware.
+
+## Interactive demo
+
+<LiveDemo
+  defaultPreset="ps1"
+  showDitheringControls
+  showComparison
+  allowUpload
+/>
+
+## Code example
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset } from 'bitmapped/presets';
+
+const ps1 = getPreset('ps1')!;
+
+const result = process(imageData, {
+  blockSize: 1,
+  palette: ps1.palette!,
+  dithering: 'ps1-ordered',
+  distanceAlgorithm: 'euclidean',
+});
+```
+
+## Presets
+
+bitmapped includes one PS1 preset:
+
+- **`ps1`** — 320×240 mode, 15-bit BGR555 color space, PS1 ordered dither
+
+<details className="hardware-note">
+<summary>Hardware notes</summary>
+
+The PS1 GPU was designed by Toshiba and operates independently from the main MIPS R3000A CPU. It handles 2D sprites, polygon rasterization, and framebuffer management, but it has several well-known limitations that define the PS1's visual character.
+
+**No perspective correction.** The GPU performs affine texture mapping — textures are interpolated linearly across polygons without accounting for depth. This causes visible texture warping on large polygons viewed at an angle, which is why PS1 developers subdivided geometry into many small triangles.
+
+**Vertex jitter.** All vertex coordinates use fixed-point integer math with no floating-point unit in the GPU pipeline. Vertices snap to integer positions on the screen, causing the characteristic "wobbling" geometry visible when the camera moves. This is not a bug — it is a fundamental consequence of the hardware's integer coordinate system.
+
+**Multiple resolution modes.** The GPU supports horizontal resolutions of 256, 320, 384, 512, and 640 pixels, with vertical resolutions of 240 (NTSC) or 256 (PAL), optionally interlaced to double the vertical resolution. Most games use 320×240.
+
+**1 MB VRAM.** Video RAM is shared between the framebuffer and all texture data. A single 320×240 framebuffer in 15-bit color consumes 150 KB, and double-buffering uses 300 KB, leaving roughly 700 KB for textures. This tight budget is why CLUT textures (4-bit and 8-bit) are used so heavily.
+
+**Semi-transparency.** The GPU supports four blending modes for semi-transparent polygons and sprites: 50% blend, additive, subtractive, and additive with 25% source. These are used extensively for lighting effects, shadows, water, and particle effects throughout the PS1 library.
+</details>

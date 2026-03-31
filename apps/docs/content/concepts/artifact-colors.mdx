@@ -1,0 +1,157 @@
+---
+title: Artifact Colors
+---
+
+import { Callout } from 'nextra/components'
+
+# Artifact Colors
+
+The Apple II produces color not through a color palette chip or a frame buffer, but through the interaction of its pixel clock with the NTSC television signal. What the hardware outputs is monochrome. What the TV displays is color. bitmapped simulates this process to reproduce authentic Apple II HiRes output.
+
+## How the Apple II produces color
+
+Apple II HiRes mode is a 1-bit-per-pixel display. Each pixel is either on (white) or off (black). There is no color information stored in memory at all.
+
+The trick is timing. The Apple II's pixel clock runs at approximately 3.58 MHz — the same frequency as the NTSC color subcarrier. This is not a coincidence. When the monochrome pixel stream reaches a color TV, the TV's decoder cannot distinguish intentional color data from the pixel on/off transitions. Adjacent pixels that switch between on and off create phase shifts in the signal, and the TV interprets those phase shifts as hue.
+
+The result: a monochrome computer produces six distinct colors on a color display, purely as an artifact of signal timing. Plug the same Apple II into a monochrome monitor, and you see only black and white.
+
+<Callout type="info">
+Steve Wozniak designed the Apple II's video circuit to exploit this NTSC quirk deliberately. The pixel clock frequency was chosen to match the color subcarrier so that software could produce color output without dedicated color hardware — saving components and cost.
+</Callout>
+
+## NTSC signal encoding
+
+An NTSC composite signal encodes color as a phase offset relative to a reference signal called the **colorburst**. The colorburst defines hue = 0. A pixel's position within the color subcarrier cycle determines what phase angle the TV "sees," and phase angle maps directly to hue.
+
+Because the pixel clock and the subcarrier run at the same frequency, every pixel occupies a fixed position in the cycle. Even-column pixels sit at one phase angle, and odd-column pixels sit at the opposite angle. This means:
+
+- A lit pixel in an **even column** produces one hue (violet or blue, depending on the palette bit).
+- A lit pixel in an **odd column** produces the complementary hue (green or orange).
+- **Two adjacent lit pixels** span a full half-cycle, and the TV averages them to white.
+- **Two adjacent off pixels** produce black.
+
+This is why Apple II color is inseparable from horizontal position. You cannot place violet at an odd column or green at an even column. The physics of the NTSC signal forbid it.
+
+## 7-pixel byte groups
+
+Apple II HiRes memory is organized as a series of bytes, each controlling 7 horizontal pixels. The byte layout is:
+
+```
+Bit:    7    6  5  4  3  2  1  0
+        │    └──────────────────┘
+        │         7 pixels
+        │        (on / off)
+        │
+   Palette bit
+   (color group select)
+```
+
+**Bits 0-6** are the pixel on/off data. Bit 0 appears leftmost on screen; bit 6 appears rightmost. Each bit controls one pixel: 1 = lit, 0 = off.
+
+**Bit 7** (the MSB) does not control a pixel. Instead, it selects which of the two color groups applies to all seven pixels in this byte. This is the **palette bit**:
+
+- Palette bit = 0: colors come from Group 1 (violet/green)
+- Palette bit = 1: colors come from Group 2 (blue/orange)
+
+At byte boundaries, adjacent pixels from neighboring bytes interact. If the last pixel of one byte and the first pixel of the next byte are both lit, the TV sees them as adjacent and blends them to white — regardless of which color group either byte selected. This boundary interaction is one reason Apple II graphics programming is notoriously tricky.
+
+## The two palette sets
+
+Each color group contains exactly four colors: black (both off), white (two adjacent on), and two chromatic colors determined by odd/even column position.
+
+<PaletteDisplay
+  colors={['#000000', '#FF44FD', '#14F53C', '#FFFFFF']}
+  labels={['Black', 'Violet', 'Green', 'White']}
+  columns={4}
+  swatchSize={48}
+  showHex
+  groupLabel="Group 1 (palette bit = 0)"
+/>
+
+<PaletteDisplay
+  colors={['#000000', '#14CFFD', '#FF6A3C', '#FFFFFF']}
+  labels={['Black', 'Blue', 'Orange', 'White']}
+  columns={4}
+  swatchSize={48}
+  showHex
+  groupLabel="Group 2 (palette bit = 1)"
+/>
+
+Within each group, the two chromatic colors are complementary pairs: violet and green are opposite hues, as are blue and orange. Black and white are shared across both groups but arise from different bit patterns — black when a pixel is off, white when two adjacent pixels are both on.
+
+<Callout type="warning">
+The exact RGB values of artifact colors vary between TV sets, emulators, and capture cards. The values above are a commonly used reference set. Real NTSC decoding is analog, so there is no single "correct" palette — only approximations.
+</Callout>
+
+## The constraint solver
+
+bitmapped's artifact color solver enforces the Apple II's group constraint. The algorithm processes the image in horizontal groups of `pixelsPerGroup` pixels (typically 7, matching the byte width):
+
+1. **Collect source pixels** for the current group from the input image.
+2. **Test both color groups.** For each group, map every pixel in the span to the nearest color from that group's four-color set, using the configured color distance algorithm.
+3. **Sum the total error** for each group across all pixels in the span.
+4. **Choose the group with the lowest total error.** All pixels in the group are assigned colors from the winning set.
+5. **Advance to the next group** and repeat.
+
+This is a greedy, per-group decision. The solver does not backtrack or consider inter-group dependencies. In practice, this produces results that closely match what real Apple II software achieves — the byte-level color group constraint is the dominant visual factor, and optimizing each group independently captures it well.
+
+```
+Scanline:  ┌─ group 1 ─┐┌─ group 2 ─┐┌─ group 3 ─┐  ...
+           │ 7 pixels   ││ 7 pixels   ││ 7 pixels   │
+           │ best of    ││ best of    ││ best of    │
+           │ G1 vs G2   ││ G1 vs G2   ││ G1 vs G2   │
+           └────────────┘└────────────┘└────────────┘
+```
+
+The solver accepts any number of palette sets (not just two), but the Apple II preset provides exactly two — matching the hardware's single palette bit.
+
+## Interactive demo
+
+<LiveDemo defaultPreset="apple-ii-hires" showComparison allowUpload />
+
+## Code example
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset } from 'bitmapped/presets';
+
+const apple2 = getPreset('apple-ii-hires')!;
+
+const result = process(imageData, {
+  blockSize: 4,
+  palette: apple2.palette!,
+  dithering: 'atkinson',
+  distanceAlgorithm: 'redmean',
+  constraintType: 'artifact-color',
+  artifactConfig: {
+    pixelsPerGroup: 7,
+    paletteSets: [
+      ['#000000', '#FF44FD', '#14F53C', '#FFFFFF'],  // Group 1
+      ['#000000', '#14CFFD', '#FF6A3C', '#FFFFFF'],  // Group 2
+    ],
+  },
+});
+```
+
+<Callout type="info">
+Atkinson dithering was created at Apple and works particularly well with the Apple II's limited palette. It diffuses only 75% of the quantization error, which keeps large dark or light areas cleaner than Floyd-Steinberg.
+</Callout>
+
+## Further reading
+
+- [Apple II preset](/presets/apple2) — Preset details and hardware notes
+- [Constraints API](/api/constraints) — Full constraint solver reference
+- [How It Works](/concepts/how-it-works) — The complete processing pipeline
+
+<details className="hardware-note">
+<summary>Hardware notes</summary>
+
+The Apple II HiRes screen occupies 8 KB of memory at `$2000`-`$3FFF` (page 1) or `$4000`-`$5FFF` (page 2). The memory layout is notoriously non-linear: consecutive bytes on screen are not consecutive in memory. Rows are interleaved in groups of 8, a side effect of the video circuitry reusing address counters from the text mode.
+
+The "half-pixel shift" is another subtlety. When the palette bit (bit 7) is set, all seven pixels in that byte are shifted right by half a pixel position. This shifts the phase relationship with the color subcarrier, which is how the two color groups arise. In practice, this means Group 2 pixels appear offset by half a dot from Group 1 pixels.
+
+Later Apple II models added **Double HiRes** mode (560x192, 16 colors) and the **Apple IIgs** had a true 16-color super HiRes mode (320x200 with 16 palettes of 16 colors from 4096). These modes bypass NTSC artifact coloring entirely. bitmapped's artifact color constraint applies specifically to the original 280x192 HiRes mode.
+
+Monochrome monitors were common in the Apple II era. Many users preferred them for text and business applications because they displayed the full 280-pixel resolution without color fringing. The same software that shows six colors on a color TV displays crisp black-and-white on a monochrome monitor.
+</details>

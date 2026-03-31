@@ -1,0 +1,484 @@
+---
+title: Color Utilities
+---
+
+import { Callout } from 'nextra/components'
+
+# Color Utilities
+
+Functions for measuring perceptual color distance, matching colors to a palette, converting between color spaces, and hardware-accurate quantization. All functions are imported from `bitmapped/color`.
+
+```typescript
+import {
+  euclideanDistance,
+  redmeanDistance,
+  cie76Distance,
+  ciede2000Distance,
+  oklabDistance,
+  getDistanceFunction,
+  findNearestColor,
+  createPaletteMatcher,
+  findNearestColors,
+  mapImageToPalette,
+  rgbToLab,
+  rgbToOklab,
+  quantizeBits,
+  quantizeGenesis,
+  quantizeCPC,
+  expandVGA6to8,
+  GENESIS_DAC_NORMAL,
+  GENESIS_DAC_SHADOW,
+  GENESIS_DAC_HIGHLIGHT,
+  LEVELS,
+} from 'bitmapped/color';
+```
+
+## Distance Algorithms
+
+Five color distance functions are provided, each accepting two `RGB` values and returning a numeric distance (lower = more similar). They differ in perceptual accuracy and performance.
+
+### Euclidean
+
+```typescript
+function euclideanDistance(a: RGB, b: RGB): number;
+```
+
+Straight-line distance in RGB space. Fastest option but perceptually inaccurate because it treats all channels equally.
+
+```typescript
+import { euclideanDistance } from 'bitmapped/color';
+
+const d = euclideanDistance(
+  { r: 255, g: 0, b: 0 },
+  { r: 0, g: 255, b: 0 },
+);
+// d ≈ 360.62
+```
+
+### Redmean
+
+```typescript
+function redmeanDistance(a: RGB, b: RGB): number;
+```
+
+Weighted Euclidean distance that approximates human perception by scaling channel differences based on the mean red value. Good accuracy with minimal overhead.
+
+```typescript
+import { redmeanDistance } from 'bitmapped/color';
+
+const d = redmeanDistance(
+  { r: 255, g: 0, b: 0 },
+  { r: 0, g: 255, b: 0 },
+);
+// d ≈ 584.58
+```
+
+### CIE76
+
+```typescript
+function cie76Distance(a: RGB, b: RGB): number;
+```
+
+Euclidean distance in CIE L\*a\*b\* space. Converts both colors to Lab first, providing better perceptual uniformity than RGB-based methods at the cost of the color space conversion.
+
+```typescript
+import { cie76Distance } from 'bitmapped/color';
+
+const d = cie76Distance(
+  { r: 255, g: 0, b: 0 },
+  { r: 0, g: 255, b: 0 },
+);
+// d ≈ 170.57
+```
+
+### CIEDE2000
+
+```typescript
+function ciede2000Distance(a: RGB, b: RGB): number;
+```
+
+The gold standard for perceptual color difference. Operates in CIE L\*a\*b\* space with corrections for lightness, chroma, hue, and a rotation term. Most accurate but slowest.
+
+```typescript
+import { ciede2000Distance } from 'bitmapped/color';
+
+const d = ciede2000Distance(
+  { r: 255, g: 0, b: 0 },
+  { r: 0, g: 255, b: 0 },
+);
+// d ≈ 72.19
+```
+
+### Oklab
+
+```typescript
+function oklabDistance(a: RGB, b: RGB): number;
+```
+
+Euclidean distance in Oklab space. A modern perceptually uniform color space that offers excellent accuracy with faster conversion than Lab. Best overall accuracy-to-speed ratio.
+
+```typescript
+import { oklabDistance } from 'bitmapped/color';
+
+const d = oklabDistance(
+  { r: 255, g: 0, b: 0 },
+  { r: 0, g: 255, b: 0 },
+);
+// d ≈ 0.52
+```
+
+### `getDistanceFunction`
+
+```typescript
+function getDistanceFunction(
+  algorithm: DistanceAlgorithm,
+): (a: RGB, b: RGB) => number;
+```
+
+Factory function that returns the distance function for a given algorithm name.
+
+| Parameter | Type | Description |
+|---|---|---|
+| `algorithm` | `DistanceAlgorithm` | One of `'euclidean'`, `'redmean'`, `'cie76'`, `'ciede2000'`, `'oklab'` |
+
+**Returns:** A function `(a: RGB, b: RGB) => number`.
+
+```typescript
+import { getDistanceFunction } from 'bitmapped/color';
+
+const distFn = getDistanceFunction('oklab');
+const d = distFn({ r: 100, g: 50, b: 200 }, { r: 110, g: 60, b: 190 });
+```
+
+## Palette Matching
+
+### `findNearestColor`
+
+```typescript
+function findNearestColor(
+  color: RGB,
+  palette: Palette,
+  algorithm?: DistanceAlgorithm,
+): PaletteColor;
+```
+
+Finds the single closest palette color to a given RGB value.
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `color` | `RGB` | **required** | The color to match |
+| `palette` | `Palette` | **required** | Array of `{ color: RGB, name?: string }` to search |
+| `algorithm` | `DistanceAlgorithm` | `'redmean'` | Distance metric to use |
+
+**Returns:** The nearest `PaletteColor`.
+
+```typescript
+import { findNearestColor } from 'bitmapped/color';
+
+const palette = [
+  { color: { r: 0, g: 0, b: 0 }, name: 'Black' },
+  { color: { r: 255, g: 255, b: 255 }, name: 'White' },
+  { color: { r: 255, g: 0, b: 0 }, name: 'Red' },
+];
+
+const match = findNearestColor(
+  { r: 200, g: 30, b: 20 },
+  palette,
+  'oklab',
+);
+// match → { color: { r: 255, g: 0, b: 0 }, name: 'Red' }
+```
+
+### `createPaletteMatcher`
+
+```typescript
+function createPaletteMatcher(
+  palette: Palette,
+  algorithm?: DistanceAlgorithm,
+): (color: RGB) => PaletteColor;
+```
+
+Creates a reusable matcher closure. Pre-computes the distance function once, then returns a function that finds the nearest palette color for any input RGB.
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `palette` | `Palette` | **required** | Palette to match against |
+| `algorithm` | `DistanceAlgorithm` | `'redmean'` | Distance metric to use |
+
+**Returns:** A function `(color: RGB) => PaletteColor`.
+
+**Throws:** `Error` if the palette is empty.
+
+<Callout type="info">
+Use `createPaletteMatcher` when matching many pixels to the same palette. It avoids re-resolving the distance function on every call, which matters when processing thousands of pixels.
+</Callout>
+
+```typescript
+import { createPaletteMatcher } from 'bitmapped/color';
+
+const matcher = createPaletteMatcher(palette, 'ciede2000');
+
+// Match many pixels efficiently
+for (const pixel of pixels) {
+  const nearest = matcher(pixel);
+  // ...
+}
+```
+
+### `findNearestColors`
+
+```typescript
+function findNearestColors(
+  color: RGB,
+  palette: Palette,
+  n: number,
+  algorithm?: DistanceAlgorithm,
+): PaletteColor[];
+```
+
+Returns the top N closest palette colors to a given RGB value, sorted by distance (closest first).
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `color` | `RGB` | **required** | The color to match |
+| `palette` | `Palette` | **required** | Palette to search |
+| `n` | `number` | **required** | Number of results to return |
+| `algorithm` | `DistanceAlgorithm` | `'redmean'` | Distance metric to use |
+
+**Returns:** An array of up to `n` `PaletteColor` entries, sorted by distance.
+
+**Throws:** `Error` if the palette is empty.
+
+```typescript
+import { findNearestColors } from 'bitmapped/color';
+
+const top3 = findNearestColors(
+  { r: 128, g: 64, b: 200 },
+  palette,
+  3,
+  'oklab',
+);
+// top3[0] is the closest, top3[2] is the third-closest
+```
+
+### `mapImageToPalette`
+
+```typescript
+function mapImageToPalette(
+  imageData: ImageData,
+  palette: Palette,
+  algorithm?: DistanceAlgorithm,
+): ImageData;
+```
+
+Maps every pixel in an `ImageData` to its nearest palette color. Returns a new `ImageData` -- the input is not modified.
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `imageData` | `ImageData` | **required** | Source image data |
+| `palette` | `Palette` | **required** | Palette to match against |
+| `algorithm` | `DistanceAlgorithm` | `'redmean'` | Distance metric to use |
+
+**Returns:** A new `ImageData` with every pixel replaced by its nearest palette color.
+
+```typescript
+import { mapImageToPalette } from 'bitmapped/color';
+import { getPreset } from 'bitmapped/presets';
+
+const gb = getPreset('gameboy-dmg')!;
+const result = mapImageToPalette(imageData, gb.palette!, 'oklab');
+// result is a new ImageData with only Game Boy colors
+```
+
+<Callout type="info">
+This function does not apply dithering or hardware constraints. For the full pipeline (resize, dither, constraints), use [`process()`](/api/process) instead.
+</Callout>
+
+## Color Conversion
+
+### `rgbToLab`
+
+```typescript
+function rgbToLab(color: RGB): LabColor;
+```
+
+Converts an RGB color to CIE L\*a\*b\* space via the sRGB → linear RGB → XYZ (D65 illuminant) → Lab chain. Used internally by `cie76Distance` and `ciede2000Distance`.
+
+| Parameter | Type | Description |
+|---|---|---|
+| `color` | `RGB` | The sRGB color to convert (channels 0--255) |
+
+**Returns:** `LabColor` with properties `L` (lightness, 0--100), `a` (green--red axis), `b` (blue--yellow axis).
+
+```typescript
+import { rgbToLab } from 'bitmapped/color';
+
+const lab = rgbToLab({ r: 255, g: 128, b: 0 });
+// lab → { L: 69.48, a: 38.85, b: 74.99 }
+```
+
+### `rgbToOklab`
+
+```typescript
+function rgbToOklab(color: RGB): OklabColor;
+```
+
+Converts an RGB color to Oklab space via the sRGB → linear RGB → LMS → Oklab chain. Used internally by `oklabDistance`.
+
+| Parameter | Type | Description |
+|---|---|---|
+| `color` | `RGB` | The sRGB color to convert (channels 0--255) |
+
+**Returns:** `OklabColor` with properties `L` (lightness, 0--1), `a` (green--red axis), `b` (blue--yellow axis).
+
+```typescript
+import { rgbToOklab } from 'bitmapped/color';
+
+const ok = rgbToOklab({ r: 255, g: 128, b: 0 });
+// ok → { L: 0.79, a: 0.06, b: 0.16 }
+```
+
+## Quantization
+
+Hardware-accurate color quantization functions for emulating retro system DACs and color spaces.
+
+### `quantizeBits`
+
+```typescript
+function quantizeBits(value: number, bits: number): number;
+```
+
+Standard linear quantization. Reduces an 8-bit channel value (0--255) to the number of levels representable by the given bit depth, then expands back to 8-bit.
+
+| Parameter | Type | Description |
+|---|---|---|
+| `value` | `number` | Input channel value (0--255) |
+| `bits` | `number` | Target bit depth (must be > 0) |
+
+**Returns:** The quantized 8-bit value.
+
+**Throws:** `Error` if `bits` is 0 or negative.
+
+```typescript
+import { quantizeBits } from 'bitmapped/color';
+
+quantizeBits(200, 3); // 3-bit: 8 levels → 219
+quantizeBits(200, 2); // 2-bit: 4 levels → 170
+quantizeBits(200, 1); // 1-bit: 2 levels → 255
+```
+
+### `quantizeGenesis`
+
+```typescript
+function quantizeGenesis(value: number): number;
+```
+
+Sega Genesis/Mega Drive nonlinear DAC quantization. Maps an 8-bit value to the closest entry in the hardware-measured DAC table (`GENESIS_DAC_NORMAL`). The Genesis DAC has 8 levels per channel but they are not evenly spaced.
+
+| Parameter | Type | Description |
+|---|---|---|
+| `value` | `number` | Input channel value (0--255) |
+
+**Returns:** The closest Genesis DAC output value.
+
+```typescript
+import { quantizeGenesis } from 'bitmapped/color';
+
+quantizeGenesis(100); // → 87
+quantizeGenesis(200); // → 206
+quantizeGenesis(50);  // → 52
+```
+
+### `quantizeCPC`
+
+```typescript
+function quantizeCPC(value: number): number;
+```
+
+Amstrad CPC 3-level quantization. The CPC is not a bit-depth system -- each channel maps to exactly 3 hardware levels: `0x00`, `0x80`, and `0xFF`.
+
+| Parameter | Type | Description |
+|---|---|---|
+| `value` | `number` | Input channel value (0--255) |
+
+**Returns:** One of `0`, `128`, or `255`.
+
+```typescript
+import { quantizeCPC } from 'bitmapped/color';
+
+quantizeCPC(30);  // → 0
+quantizeCPC(100); // → 128
+quantizeCPC(220); // → 255
+```
+
+### `expandVGA6to8`
+
+```typescript
+function expandVGA6to8(value: number): number;
+```
+
+Expands a 6-bit VGA DAC value (0--63) to 8-bit (0--255). Preserves the 0 → 0 and 63 → 255 mapping accurately.
+
+| Parameter | Type | Description |
+|---|---|---|
+| `value` | `number` | A 6-bit value (0--63) |
+
+**Returns:** The expanded 8-bit value (0--255).
+
+```typescript
+import { expandVGA6to8 } from 'bitmapped/color';
+
+expandVGA6to8(0);  // → 0
+expandVGA6to8(32); // → 130
+expandVGA6to8(63); // → 255
+```
+
+### Constants
+
+#### `GENESIS_DAC_NORMAL`
+
+```typescript
+const GENESIS_DAC_NORMAL: readonly [0, 52, 87, 116, 144, 172, 206, 255];
+```
+
+Hardware-measured DAC output levels for the Sega Genesis in normal video mode. 8 nonlinear levels per channel.
+
+#### `GENESIS_DAC_SHADOW`
+
+```typescript
+const GENESIS_DAC_SHADOW: readonly [0, 29, 52, 70, 87, 101, 116, 130];
+```
+
+DAC levels for Genesis shadow/highlight mode (shadow half). Used for darkened sprites and backgrounds.
+
+#### `GENESIS_DAC_HIGHLIGHT`
+
+```typescript
+const GENESIS_DAC_HIGHLIGHT: readonly [130, 144, 158, 172, 187, 206, 228, 255];
+```
+
+DAC levels for Genesis shadow/highlight mode (highlight half). Used for brightened sprites and backgrounds.
+
+#### `LEVELS`
+
+```typescript
+const LEVELS: Record<number, readonly number[]>;
+```
+
+Pre-computed lookup tables mapping bit depths (1--6) to all valid 8-bit output values for that depth. Useful for quickly enumerating the color levels a system supports.
+
+| Key | Length | Example values |
+|---|---|---|
+| `1` | 2 | `[0, 255]` |
+| `2` | 4 | `[0, 85, 170, 255]` |
+| `3` | 8 | `[0, 36, 73, 109, 146, 182, 219, 255]` |
+| `4` | 16 | `[0, 17, 34, ..., 238, 255]` |
+| `5` | 32 | `[0, 8, 16, ..., 247, 255]` |
+| `6` | 64 | `[0, 4, 8, ..., 251, 255]` |
+
+```typescript
+import { LEVELS } from 'bitmapped/color';
+
+LEVELS[3]; // → [0, 36, 73, 109, 146, 182, 219, 255]
+LEVELS[4]; // → [0, 17, 34, 51, ..., 238, 255]
+```

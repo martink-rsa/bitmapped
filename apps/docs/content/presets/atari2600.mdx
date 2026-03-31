@@ -1,0 +1,104 @@
+---
+title: Atari 2600
+---
+
+import { Callout } from 'nextra/components'
+
+# Atari 2600
+
+| Spec | Value |
+|---|---|
+| Resolution | 160x192 (NTSC) / 160x228 (PAL) |
+| Total colors | 128 (NTSC) / 104 (PAL) |
+| Simultaneous | 4 per scanline |
+| Constraint | Scanline color limit |
+| Display | CRT composite (NTSC/PAL) |
+| Year | 1977 |
+| Maker | Atari |
+
+## Color palette
+
+The Atari 2600's TIA chip uses a 7-bit color register to generate color via NTSC composite encoding. The register format is `CCCC_LLL0` — 4 bits select one of 16 hues, 3 bits select one of 8 luminance levels, and bit 0 is unused. This gives 16 hues x 8 luminances = 128 unique colors in NTSC mode. The PAL version uses a different color encoding that produces only 104 colors (13 hues x 8 luminances).
+
+Here are the first 8 hue rows (64 of 128 NTSC colors), showing the luminance ramp for each hue:
+
+<PaletteDisplay
+  colors={[
+    '#000000','#404040','#6C6C6C','#909090','#B0B0B0','#C8C8C8','#DCDCDC','#ECECEC',
+    '#444400','#646410','#848424','#A0A034','#B8B840','#D0D050','#E8E85C','#FCFC68',
+    '#702800','#844414','#985C28','#AC783C','#BC8C4C','#CCA05C','#DCB468','#ECC878',
+    '#841800','#983418','#AC5030','#C06848','#D0805C','#E09470','#ECA880','#FCBC94',
+    '#880000','#9C2020','#B03C3C','#C05858','#D07070','#E08888','#ECA0A0','#FCB4B4',
+    '#78005C','#8C2074','#A03C88','#B0589C','#C070B0','#D084C0','#DC9CD0','#ECB0E0',
+    '#480078','#602090','#783CA4','#8C58B8','#A070CC','#B484DC','#C49CEC','#D4B0FC',
+    '#140084','#302098','#4C3CAC','#6858C0','#7C70D0','#9488E0','#A8A0EC','#BCB4FC',
+  ]}
+  columns={8}
+  swatchSize={24}
+  groupLabel="NTSC TIA Palette (first 8 of 16 hues, 64 of 128 colors)"
+/>
+
+<Callout type="info">
+The full NTSC palette contains 128 colors across 16 hue rows. The remaining 8 hues continue through blues, teals, greens, and yellow-greens. The PAL palette is a subset with 13 hues (104 colors) due to the different color encoding standard.
+</Callout>
+
+## The key constraint: scanline color limits
+
+The TIA has no framebuffer — it renders one scanline at a time from a handful of hardware registers. Each scanline can display at most **4 colors**: the background, the playfield, and two player/missile objects. There is no way to exceed this limit on a single line of pixels.
+
+Games achieve more color variety by reprogramming the TIA's color registers between scanlines, a technique called **"racing the beam"**. The CPU must update registers in the narrow window between the end of one scanline and the start of the next. This is why Atari 2600 games often feature horizontal bands of color — each row can have a completely different set of 4 colors, but within a row the limit is strict.
+
+bitmapped's per-scanline constraint solver enforces the 4-color-per-scanline limit, selecting the optimal set of colors for each row to minimize overall color error.
+
+## Interactive demo
+
+<LiveDemo
+  defaultPreset="atari-2600-ntsc"
+  showDitheringControls
+  showConstraintToggle
+  showComparison
+  allowUpload
+/>
+
+## Code example
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset } from 'bitmapped/presets';
+
+const atari = getPreset('atari-2600-ntsc')!;
+
+const result = process(imageData, {
+  blockSize: 4,
+  palette: atari.palette!,
+  dithering: 'bayer',
+  distanceAlgorithm: 'redmean',
+  constraintType: 'per-scanline',
+  scanlineConfig: {
+    maxColorsPerLine: 4,
+  },
+});
+```
+
+## Presets
+
+bitmapped includes two Atari 2600 presets:
+
+- **`atari-2600-ntsc`** — 128-color NTSC TIA palette (16 hues x 8 luminances), 160x192 resolution
+- **`atari-2600-pal`** — 104-color PAL TIA palette (13 hues x 8 luminances), 160x228 resolution
+
+<details className="hardware-note">
+<summary>Hardware notes</summary>
+
+The TIA (Television Interface Adapter) was designed by Jay Miner, who would later go on to design the Amiga's custom chipsets. It is one of the most constrained graphics chips ever put into a home console.
+
+**No framebuffer.** The TIA has no video RAM at all. The CPU must "race the beam" — updating the TIA's registers in real time as the electron beam scans across the CRT. The entire system has only 128 bytes of RAM.
+
+**Asymmetric playfield.** The playfield is 20 "pixels" wide (at 4x the player sprite resolution), stored in three registers (PF0, PF1, PF2). The right half of the screen can either mirror the left half or repeat it, allowing asymmetric layouts at the cost of CPU time to rewrite registers mid-scanline.
+
+**Player sprites.** Each of the two player objects is only 8 pixels wide, stored in a single byte (GRP0, GRP1). They can be stretched to 2x or 4x width and duplicated or triplicated at fixed intervals across the scanline using the NUSIZ registers.
+
+**HMOVE artifacts.** Repositioning sprites horizontally requires a hardware operation (HMOVE) that produces visible black lines at the left edge of the screen — a well-known visual artifact in many 2600 games.
+
+**Pixel aspect ratio.** The TIA's 160-pixel horizontal resolution uses wide pixels with a 2:1 pixel aspect ratio (PAR), so the actual display fills a standard 4:3 CRT.
+</details>

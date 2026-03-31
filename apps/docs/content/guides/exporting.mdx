@@ -1,0 +1,212 @@
+---
+title: Exporting
+---
+
+import { Callout } from 'nextra/components'
+
+# Exporting
+
+Once you have processed an image, bitmapped provides helpers to export the result as PNG, JPEG, WebP, or SVG via the `bitmapped/export` subpath. Every format follows the same pattern: a function to create a `Blob`, and a convenience function to trigger a browser download.
+
+```ts
+import {
+  toPNGBlob, downloadPNG, imageDataToBlob,
+  toJPEGBlob, downloadJPEG,
+  toWebPBlob, downloadWebP,
+  imageDataToSVG, toSVGBlob, downloadSVG,
+} from 'bitmapped/export';
+```
+
+All download functions generate a default filename using the pattern `YYYYMMDD-HHMMSS-bitmapped.ext` (e.g. `20260331-143022-bitmapped.png`). You can override this by passing your own filename.
+
+## PNG export
+
+PNG is the recommended format for pixel art. It is lossless, meaning every pixel is preserved exactly as computed -- no compression artifacts, no blurred edges, no color shifts. This makes it the ideal choice for retro-style output where crisp, hard pixel boundaries are the whole point.
+
+### `toPNGBlob(canvas)`
+
+Converts an `HTMLCanvasElement` to a PNG `Blob`:
+
+```ts
+const blob = await toPNGBlob(canvas);
+// Use the blob -- upload it, display it, etc.
+```
+
+### `downloadPNG(canvas, filename?)`
+
+Creates a PNG blob and triggers a browser download:
+
+```ts
+await downloadPNG(canvas);
+// Downloads as "20260331-143022-bitmapped.png"
+
+await downloadPNG(canvas, 'my-pixel-art.png');
+// Downloads as "my-pixel-art.png"
+```
+
+### `imageDataToBlob(imageData)`
+
+Exports an `ImageData` object directly to a PNG blob without requiring you to manage a canvas. Internally it uses an `OffscreenCanvas` (with a fallback to a regular canvas in environments that do not support it):
+
+```ts
+import { process } from 'bitmapped';
+import { imageDataToBlob } from 'bitmapped/export';
+
+const result = process(imageData, options);
+const blob = await imageDataToBlob(result.imageData);
+```
+
+<Callout type="info">
+`imageDataToBlob` is especially useful in Web Workers or Node-like environments where you have `ImageData` but no visible canvas element.
+</Callout>
+
+## JPEG and WebP export
+
+JPEG and WebP are lossy formats. They reduce file size by discarding information, which introduces compression artifacts -- blurred pixel boundaries, color banding, and ringing around hard edges. For pixel art, this typically defeats the purpose.
+
+However, lossy formats can make sense when:
+
+- **File size is critical** (e.g. thumbnails, social media previews)
+- **The output is photographic** -- high-color-count results from systems like VGA or Amiga HAM mode, where the source material is already photographic and compression artifacts are less noticeable
+
+Both JPEG and WebP default to a quality of **0.92** (on a 0--1 scale).
+
+### JPEG
+
+```ts
+// Create a JPEG blob with default quality (0.92)
+const blob = await toJPEGBlob(canvas);
+
+// Create a JPEG blob with custom quality
+const smallBlob = await toJPEGBlob(canvas, 0.75);
+
+// Download as JPEG
+await downloadJPEG(canvas);
+await downloadJPEG(canvas, 'output.jpg', 0.8);
+```
+
+### WebP
+
+```ts
+// Create a WebP blob with default quality (0.92)
+const blob = await toWebPBlob(canvas);
+
+// Create a WebP blob with custom quality
+const smallBlob = await toWebPBlob(canvas, 0.75);
+
+// Download as WebP
+await downloadWebP(canvas);
+await downloadWebP(canvas, 'output.webp', 0.8);
+```
+
+<Callout type="warning">
+Lossy compression blurs the sharp pixel boundaries that define pixel art. Always prefer PNG unless you have a specific reason to use JPEG or WebP.
+</Callout>
+
+## SVG export
+
+The SVG exporter converts each pixel of your `ImageData` into an SVG `<rect>` element. The result is a vector image that scales to any size without blurring -- true resolution independence.
+
+To keep file size down, consecutive same-color pixels in each row are merged into a single wider `<rect>`. Fully transparent pixels are skipped entirely. Semi-transparent pixels preserve their opacity.
+
+### `imageDataToSVG(imageData)`
+
+Returns the SVG as a raw string:
+
+```ts
+const svgString = imageDataToSVG(result.imageData);
+// Returns: <svg xmlns="..." width="256" height="240" shape-rendering="crispEdges">
+//   <rect x="0" y="0" width="3" height="1" fill="#0f380f"/>
+//   ...
+// </svg>
+```
+
+### `toSVGBlob(imageData)` and `downloadSVG(imageData, filename?)`
+
+```ts
+const blob = toSVGBlob(result.imageData);
+
+downloadSVG(result.imageData);
+// Downloads as "20260331-143022-bitmapped.svg"
+
+downloadSVG(result.imageData, 'pixel-art.svg');
+```
+
+<Callout type="info">
+Note that SVG functions accept `ImageData` directly, not a canvas. This is different from the PNG/JPEG/WebP functions which accept an `HTMLCanvasElement`.
+</Callout>
+
+<Callout type="warning">
+SVG file size grows with image complexity. A 256x240 image with many color changes can produce a large file. For images with large flat-color regions (common in pixel art), the run-length merging keeps output compact. For photographic or highly dithered results, PNG will usually be smaller.
+</Callout>
+
+## Integration with React / download button
+
+Here is a complete React component that processes an image and provides a download button:
+
+```tsx
+import { useRef, useState, useCallback } from 'react';
+import { process } from 'bitmapped';
+import { getPreset } from 'bitmapped/presets';
+import { downloadPNG } from 'bitmapped/export';
+
+export function PixelArtExporter({ sourceImageData }: {
+  sourceImageData: ImageData;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [processed, setProcessed] = useState(false);
+  const preset = getPreset('nes-ntsc');
+
+  const handleProcess = useCallback(() => {
+    const result = process(sourceImageData, {
+      blockSize: 4,
+      palette: preset.palette,
+      dithering: 'floyd-steinberg',
+      distanceAlgorithm: 'redmean',
+    });
+
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.width = result.imageData.width;
+    canvas.height = result.imageData.height;
+    canvas.getContext('2d')!.putImageData(result.imageData, 0, 0);
+    setProcessed(true);
+  }, [sourceImageData, preset]);
+
+  const handleDownload = useCallback(() => {
+    if (canvasRef.current) {
+      downloadPNG(canvasRef.current, 'nes-pixel-art.png');
+    }
+  }, []);
+
+  return (
+    <div>
+      <button onClick={handleProcess}>Process</button>
+      <canvas ref={canvasRef} style={{ imageRendering: 'pixelated' }} />
+      {processed && (
+        <button onClick={handleDownload}>Download PNG</button>
+      )}
+    </div>
+  );
+}
+```
+
+<Callout type="info">
+For production use, run `process()` in a [Web Worker](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API) to keep the UI responsive. See the bitmapped demo app for a complete worker-based implementation.
+</Callout>
+
+## Format comparison
+
+| Format | Lossless? | Pixel-perfect? | File size | Best for |
+| ------ | --------- | -------------- | --------- | -------- |
+| PNG | Yes | Yes | Medium | Pixel art, sprites, anything with hard edges |
+| JPEG | No | No | Small | Photographic results where file size matters |
+| WebP | No | No | Smallest | Same as JPEG but with better compression |
+| SVG | Yes | Yes | Varies | Scalable output, embedding in web pages, print |
+
+**TL;DR:** Use PNG for pixel art. Use SVG when you need infinite scalability. Use JPEG or WebP only when file size is a priority and lossy artifacts are acceptable.
+
+## Further reading
+
+- [Export API reference](/api/export) -- Full function signatures and parameter details
+- [Getting Started](/getting-started) -- Set up bitmapped in your project

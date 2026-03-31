@@ -1,0 +1,55 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.canvasArea {
+  min-width: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.controlsArea {
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--surface);
+}
+
+/* Tablet */
+@media (max-width: 1023px) {
+  .workspace {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+
+  .controlsArea {
+    border-left: none;
+    border-top: 1px solid var(--border);
+  }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+  .workspace {
+    grid-template-rows: auto 1fr;
+  }
+}

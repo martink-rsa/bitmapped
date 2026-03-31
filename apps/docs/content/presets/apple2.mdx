@@ -1,0 +1,138 @@
+---
+title: Apple II
+---
+
+import { Callout } from 'nextra/components'
+
+# Apple II
+
+| Spec | Value |
+|---|---|
+| Resolution | 280x192 (Hi-Res) / 40x48 (Lo-Res) |
+| Total colors | 6 artifact (Hi-Res) / 16 (Lo-Res) |
+| Simultaneous | 6 / 16 |
+| Constraint | NTSC artifact color (Hi-Res) |
+| Display | CRT composite (NTSC) |
+| Year | 1977 |
+| Maker | Apple |
+
+## Color palette
+
+The Apple II has two distinct graphics modes with completely different color systems.
+
+### Hi-Res artifact colors
+
+The Hi-Res mode is technically monochrome -- it outputs a 1-bit signal at 280 pixels wide. But because the pixel clock is close to the NTSC color subcarrier frequency (~3.58 MHz), adjacent pixels create interference patterns that a color TV decodes as color. This produces the famous artifact colors.
+
+The palette bit (bit 7 of each byte in video memory) selects between two color groups:
+
+<PaletteDisplay
+  colors={['#000000', '#FF44FD', '#14F53C', '#FFFFFF']}
+  labels={['Black', 'Violet', 'Green', 'White']}
+  columns={4}
+  swatchSize={40}
+  showHex
+  groupLabel="Group 1 — Violet / Green (palette bit = 0)"
+/>
+
+<PaletteDisplay
+  colors={['#000000', '#14CFFD', '#FF6A3C', '#FFFFFF']}
+  labels={['Black', 'Blue', 'Orange', 'White']}
+  columns={4}
+  swatchSize={40}
+  showHex
+  groupLabel="Group 2 — Blue / Orange (palette bit = 1)"
+/>
+
+### Lo-Res 16-color palette
+
+The Lo-Res mode uses large 7x8-pixel blocks at 40x48 resolution, with a full 16-color palette that doesn't depend on NTSC artifacts:
+
+<PaletteDisplay
+  colors={[
+    '#000000','#722640','#40337F','#E434FE',
+    '#0C5940','#808080','#1B9AFE','#BFB3FF',
+    '#404C00','#E46501','#808080','#F1A6BF',
+    '#1BCB01','#BFCC80','#8DD9BF','#FFFFFF',
+  ]}
+  columns={4}
+  swatchSize={40}
+  showHex
+  groupLabel="Lo-Res 16-Color Palette"
+/>
+
+<Callout type="info">
+  Two grays appear in the Lo-Res palette (indices 5 and 10). They are both `#808080` -- this is not a bug. The original hardware produced two electrically distinct gray signals that happened to decode to the same perceived color on most displays.
+</Callout>
+
+## The key constraint: NTSC artifact color
+
+Hi-Res colors are not freely assignable. They emerge from the interaction between three factors:
+
+1. **Pixel position** -- whether the pixel falls on an even or odd column determines which color from the active group appears. Even columns produce violet or blue; odd columns produce green or orange.
+2. **Palette bit** -- bit 7 (the MSB) of each byte in video memory selects between Group 1 (violet/green) and Group 2 (blue/orange). This bit applies to all 7 pixels encoded in that byte.
+3. **NTSC decoding** -- the TV's composite decoder interprets the high-frequency pixel pattern as color information. Two or more adjacent lit pixels blend together to produce white.
+
+This means that within any 7-pixel group (one byte of video memory), you can only use colors from a single group. You cannot mix violet and orange in the same byte. And the specific color that appears depends on horizontal position -- you cannot freely place any color at any pixel.
+
+bitmapped's `artifact-color` constraint solver models this interaction by evaluating both palette groups for each 7-pixel segment and selecting the group that minimizes overall color error.
+
+## Interactive demo
+
+<LiveDemo
+  defaultPreset="apple-ii-hires"
+  showDitheringControls
+  showComparison
+  allowUpload
+/>
+
+## Code example
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset } from 'bitmapped/presets';
+
+const apple2 = getPreset('apple-ii-hires')!;
+
+// Group 1: Black, Violet, Green, White
+const group1 = ['#000000', '#FF44FD', '#14F53C', '#FFFFFF'];
+// Group 2: Black, Blue, Orange, White
+const group2 = ['#000000', '#14CFFD', '#FF6A3C', '#FFFFFF'];
+
+const result = process(imageData, {
+  blockSize: 1,
+  palette: apple2.palette!,
+  dithering: 'atkinson',
+  distanceAlgorithm: 'ciede2000',
+  constraintType: 'artifact-color',
+  artifactConfig: {
+    pixelsPerGroup: 7,
+    paletteSets: [group1, group2],
+  },
+});
+```
+
+<Callout type="info">
+  Atkinson dithering pairs well with the Apple II -- Bill Atkinson developed it at Apple specifically for the Macintosh, and its limited error diffusion (only 75% of the quantization error is spread) produces clean, high-contrast results that complement artifact color rendering.
+</Callout>
+
+## Presets
+
+bitmapped includes two Apple II presets:
+
+- **`apple-ii-lores`** -- Lo-Res mode, 40x48 resolution, 16 colors, no constraint
+- **`apple-ii-hires`** -- Hi-Res mode, 280x192 resolution, 6 artifact colors, NTSC artifact color constraint
+
+<details className="hardware-note">
+<summary>Hardware notes</summary>
+
+**Hi-Res memory layout.** The Hi-Res framebuffer occupies 8 KB of RAM ($2000-$3FFF for page 1, $4000-$5FFF for page 2). Scanlines are not stored sequentially -- they are interleaved across three groups of 64 lines each. The first byte at $2000 maps to scanline 0, but the next byte at address $2000 + $0400 maps to scanline 64, and $2000 + $0800 maps to scanline 128. Within each group the pattern repeats at 128-byte offsets. This interleaving was a side effect of the DRAM refresh circuit design, not a deliberate choice.
+
+Each byte encodes 7 pixels (bits 0-6) plus the palette/color group select bit (bit 7). This gives 280 visible pixels per line (40 bytes x 7 pixels).
+
+**Double Hi-Res.** The Apple IIe (1983) and later models supported Double Hi-Res mode: 560x192 with 16 colors, using both main and auxiliary RAM banks. This mode used the same NTSC artifact principle but at double horizontal resolution, enabling all 16 Lo-Res colors. It required 16 KB of video memory and was significantly harder to program.
+
+**Monochrome monitors.** Users with monochrome (green or amber phosphor) monitors saw no artifact colors -- just sharp black-and-white pixels at the full 280x192 resolution. Many productivity applications were designed for monochrome display, and some games offered both monochrome and color modes.
+
+**Apple IIgs.** The IIgs (1986) introduced a true 16-color super hi-res mode (320x200 or 640x200) with a 4096-color RGB palette, independent of NTSC artifacts. It used a completely different video architecture and is not modeled by the Apple II presets in bitmapped.
+</details>

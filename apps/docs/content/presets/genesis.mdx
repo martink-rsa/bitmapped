@@ -1,0 +1,110 @@
+---
+title: Sega Genesis / Mega Drive
+---
+
+import { Callout } from 'nextra/components'
+
+# Sega Genesis / Mega Drive
+
+| Spec | Value |
+|---|---|
+| Resolution | 320x224 (NTSC) / 320x240 (PAL) |
+| Total colors | 512 (9-bit RGB) |
+| Simultaneous | 61 |
+| Constraint | Per-tile palette, nonlinear DAC |
+| Display | CRT composite / RGB |
+| Year | 1988 |
+| Maker | Sega |
+
+## Color palette
+
+The Genesis VDP uses 9-bit RGB (3 bits per channel), giving 512 possible colors. Unlike most systems with even bit-depth spacing, the Genesis DAC (digital-to-analog converter) is **nonlinear** -- the 8 voltage levels per channel are not evenly spaced. The hardware-measured values are:
+
+```
+DAC levels: [0, 52, 87, 116, 144, 172, 206, 255]
+```
+
+This means the steps between adjacent levels are 52, 35, 29, 28, 28, 34, 49 -- larger at the extremes (darks and brights) and compressed in the midtones. The result is a distinctive color curve that slightly brightens midrange values compared to a linear 3-bit encoding.
+
+bitmapped uses the `genesisQuantize()` function to match this curve, snapping each 8-bit channel value to the nearest hardware DAC level rather than using uniform 3-bit quantization.
+
+<Callout type="info">
+The DAC values come from TmEE and Eke's hardware analysis of the Yamaha YM7101 VDP. These are the normal-mode levels -- Shadow and Highlight modes use separate tables that shift the entire range darker or brighter.
+</Callout>
+
+## The key constraint: per-tile palette with nonlinear DAC
+
+Colors are organized into **4 palettes of 16 colors each**. One color per palette is reserved as transparent, leaving 15 unique colors per palette plus a single shared backdrop color, for a maximum of **61 simultaneous colors** (4 x 15 + 1).
+
+Each 8x8 tile selects one of the four palettes. This means color choices are locked at the tile level -- every pixel within a tile must draw from the same 16-color subpalette. Games work around this by carefully assigning tiles to palettes, often reserving one palette for the player character, one for enemies, and two for backgrounds.
+
+The nonlinear DAC compounds this constraint: the 512-color gamut is unevenly distributed through perceptual color space. Two colors that are adjacent in the 3-bit digital domain may be perceptually closer or further apart than you'd expect, which affects palette selection and dithering quality.
+
+<Callout>
+Many Genesis games use composite video dithering -- alternating pixels of two colors that blend together on a CRT composite display, effectively creating colors outside the 512-color gamut. bitmapped's Genesis preset enables composite dither blending by default to reproduce this effect.
+</Callout>
+
+## Interactive demo
+
+<LiveDemo
+  defaultPreset="genesis"
+  showDitheringControls
+  showConstraintToggle
+  showComparison
+  allowUpload
+/>
+
+## Code example
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset, enumerateColorSpace } from 'bitmapped/presets';
+
+const genesis = getPreset('genesis')!;
+
+// The full 512-color palette, quantized through the nonlinear DAC
+const fullPalette = enumerateColorSpace(genesis.colorSpace!);
+
+const result = process(imageData, {
+  blockSize: 4,
+  palette: genesis.palette!,
+  dithering: 'floyd-steinberg',
+  distanceAlgorithm: 'ciede2000',
+  constraintType: 'per-tile-palette',
+  tilePaletteConfig: {
+    tileWidth: 8,
+    tileHeight: 8,
+    subpaletteCount: 4,
+    colorsPerSubpalette: 16,
+    sharedTransparent: true,
+  },
+});
+```
+
+## Presets
+
+bitmapped includes two Genesis presets:
+
+- **`genesis`** -- NTSC timing (320x224), nonlinear DAC palette, composite dither enabled
+- **`genesis-pal`** -- PAL timing (320x240), same palette and DAC curve
+
+Both presets also support the alternative H32 mode (256 pixels wide) as documented in the resolution metadata.
+
+<details className="hardware-note">
+<summary>Hardware notes</summary>
+
+**VDP (Yamaha YM7101):** The Genesis video display processor handles all graphics -- two scrolling background planes, a sprite layer (up to 80 sprites on screen, 20 per scanline), and a window plane. It operates on 8x8 tiles stored in 64 KB of VRAM.
+
+**Shadow/Highlight mode:** A special VDP mode that effectively triples the apparent palette. Each pixel can be rendered in normal, shadow (dark), or highlight (bright) mode, using separate DAC tables:
+- Shadow: `[0, 29, 52, 70, 87, 101, 116, 130]`
+- Normal: `[0, 52, 87, 116, 144, 172, 206, 255]`
+- Highlight: `[130, 144, 158, 172, 187, 206, 228, 255]`
+
+This gives roughly 1,500 apparent colors (512 x 3 modes, minus overlapping values), used in games like Sonic 3 for underwater darkening effects and Streets of Rage 2 for lighting.
+
+**H40 vs H32 modes:** The VDP supports two horizontal resolutions -- H40 mode (320 pixels, 40 tiles wide) used by most games, and H32 mode (256 pixels, 32 tiles wide) used by some early titles and for reduced CPU load.
+
+**DMA:** The VDP's Direct Memory Access unit can transfer data to VRAM at high speed during active display or vertical blank, enabling fast tile updates, scroll table changes, and palette swaps. Raster effects (mid-frame palette changes, scroll splits) are achieved via horizontal interrupt handlers that reprogram the VDP between scanlines.
+
+**Blast processing:** Sega's famous marketing term was hyperbole, but the Genesis did have a genuine speed advantage in certain areas. Its Motorola 68000 CPU ran at 7.67 MHz (NTSC) with 16-bit data paths and 32-bit internals, compared to the SNES's 65C816 at 3.58 MHz. The faster CPU and the VDP's DMA made the Genesis particularly strong at fast-scrolling action games.
+</details>

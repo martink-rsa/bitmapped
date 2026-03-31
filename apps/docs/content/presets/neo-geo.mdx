@@ -1,0 +1,104 @@
+---
+title: Neo Geo
+---
+
+import { Callout } from 'nextra/components'
+
+# Neo Geo
+
+| Spec | Value |
+|---|---|
+| Resolution | 320x224 |
+| Total colors | 65,536 (16-bit with dark bit) |
+| Simultaneous | 4,096 (256 palettes x 16) |
+| Constraint | Per-sprite palette (16 colors per palette) |
+| Display | CRT RGB |
+| Year | 1990 |
+| Maker | SNK |
+
+## Color palette
+
+The Neo Geo uses a unique 16-bit color format. Each color word encodes 5 bits per channel for red, green, and blue, plus a shared "dark bit" that halves the brightness of all three channels simultaneously. This gives each of the 32,768 base RGB555 colors a normal and dark variant, totaling 65,536 unique colors.
+
+The bit layout of a 16-bit color word is:
+
+```
+D R0 G0 B0 R4R3R2R1 G4G3G2G1 B4B3B2B1
+```
+
+Where `D` is the dark bit (bit 15), `R0`/`G0`/`B0` are the least significant bits of each channel (bits 14-12), and the upper nibbles hold bits 4-1 of each channel. The dark bit acts as a shared LSB appended to each channel's 5-bit value, effectively producing 6-bit precision per channel.
+
+<Callout type="info">
+The dark bit is not simply a global dimming flag. It is folded into the per-channel value as the lowest bit, so it shifts *all three channels* by one shade simultaneously. This is why the Neo Geo can produce subtler gradients than a straight RGB555 system.
+</Callout>
+
+## The key constraint: per-sprite palette
+
+Colors are organized into 256 palettes of 16 colors each, for a maximum of 4,096 simultaneous colors on screen. Each sprite selects one of these 256 palettes.
+
+The generous 256-palette count is far more than most contemporary systems offered (the SNES had 8 sprite palettes, the Genesis had 4). This abundance is why Neo Geo games are known for their rich, vibrant artwork with smooth gradients and detailed shading. Artists could dedicate entire palettes to individual characters or background elements without the palette-sharing compromises required on other hardware.
+
+However, the 16-color-per-palette limit still shapes how graphics are structured. Large characters with many color needs are assembled from multiple sprites, each potentially using a different palette, carefully aligned to avoid visible seams.
+
+## Interactive demo
+
+<LiveDemo
+  defaultPreset="neo-geo"
+  showDitheringControls
+  showComparison
+  allowUpload
+/>
+
+## Code example
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset, enumerateColorSpace } from 'bitmapped/presets';
+
+const neoGeo = getPreset('neo-geo')!;
+
+// Generate the full palette from the color space definition
+const fullPalette = enumerateColorSpace(neoGeo.colorSpace!);
+
+const result = process(imageData, {
+  blockSize: 4,
+  palette: fullPalette,
+  dithering: 'floyd-steinberg',
+  distanceAlgorithm: 'ciede2000',
+});
+```
+
+bitmapped also exposes low-level utilities for working with Neo Geo color words directly:
+
+```typescript
+import {
+  decodeNeoGeoColor,
+  encodeNeoGeoColor,
+} from 'bitmapped';
+
+// Decode a 16-bit Neo Geo color word to RGB
+const rgb = decodeNeoGeoColor(0b1_1_0_0_1111_0000_0111);
+// { r: 255, g: 4, b: 60 }
+
+// Encode an RGB color back to a 16-bit Neo Geo color word
+const word = encodeNeoGeoColor(255, 0, 60);
+// Quantizes to 6-bit per channel, packs into Neo Geo bit layout
+```
+
+## Presets
+
+bitmapped includes one Neo Geo preset:
+
+- **`neo-geo`** — RGB555 + dark bit color space (65,536 possible colors), 4,096 simultaneous, 320x224 resolution, CRT RGB output with scanline effects
+
+<details className="hardware-note">
+<summary>Hardware notes</summary>
+
+The Neo Geo's LSPC2 sprite engine can render up to 380 sprites per frame, each 16 pixels wide and variable in height (constructed by stacking 16x16 pixel tiles vertically). A separate fixed tile layer provides an always-visible overlay typically used for score displays, health bars, and other UI elements.
+
+The MVS (Multi Video System) arcade cabinet and AES (Advanced Entertainment System) home console share identical hardware — the same cartridges work in both. The only differences are the cartridge shell shape and the BIOS. This arcade-home parity was unprecedented and meant home players got the exact same experience as the arcade, but at a premium price (the AES console launched at $649 and individual game cartridges could cost $200+).
+
+Memory cartridges could be massive for the era, with some late-era titles reaching up to 330 Mbit (about 41 MB). By comparison, SNES cartridges maxed out around 48 Mbit. This generous ROM capacity, combined with the powerful sprite hardware, allowed Neo Geo games to feature large, lavishly animated characters — a hallmark of SNK's fighting games like Fatal Fury, Art of Fighting, The King of Fighters, and Samurai Shodown.
+
+The system was designed arcade-first, home-second. SNK's business model centered on the MVS arcade platform, where operators could swap game cartridges easily. The AES home version was a secondary market, which is why it carried such high prices — it was essentially arcade hardware in a home console form factor.
+</details>

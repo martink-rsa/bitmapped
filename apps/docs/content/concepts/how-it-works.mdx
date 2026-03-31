@@ -1,0 +1,181 @@
+---
+title: How It Works
+---
+
+import { Callout } from 'nextra/components'
+
+# How It Works
+
+bitmapped processes images through a multi-stage pipeline that mirrors how real hardware produces output. Each stage transforms the image data, building from raw pixels to hardware-accurate retro output.
+
+## Pipeline overview
+
+```
+Source Image
+    │
+    ▼
+┌─────────────┐
+│  Preprocess  │  CSS filters: brightness, contrast, saturation, etc.
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐
+│   Resize     │  Scale to target resolution (optional)
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐
+│  Pixelate    │  Block-average downsample (blockSize × blockSize → 1 pixel)
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐
+│  Quantize    │  Map each pixel to the nearest palette color
+│  + Dither    │  Apply error diffusion or ordered dithering
+└──────┬──────┘
+       │
+       ▼
+┌─────────────┐
+│ Constraints  │  Enforce hardware-specific spatial color rules
+└──────┬──────┘
+       │
+       ▼
+   Output (ProcessResult)
+```
+
+## Stage 1: Preprocess
+
+Optional CSS-style image filters applied before any pixelation. These affect the source image, not the output.
+
+```typescript
+filters: {
+  brightness: 1.1,  // Slightly brighter
+  contrast: 1.2,    // More contrast
+  saturate: 0.8,    // Slightly desaturated
+  grayscale: 0,     // 0 = full color, 1 = grey
+  sepia: 0,
+  invert: 0,
+  hueRotate: 0,     // Degrees
+  blur: 0,          // Pixels
+}
+```
+
+This stage uses Canvas 2D `filter` property internally. It's useful for compensating for palette limitations — boosting contrast before quantizing to a 4-shade Game Boy palette, for example.
+
+**Module:** `bitmapped/preprocess`
+
+## Stage 2: Resize
+
+Scales the source to `targetResolution` if specified. Three fit modes:
+
+- **`contain`** — Fit within bounds, preserve aspect ratio (may letterbox)
+- **`cover`** — Fill bounds, preserve aspect ratio (may crop)
+- **`stretch`** — Exact dimensions, distorts aspect ratio
+
+Two interpolation methods: `bilinear` (smoother) and `nearest` (sharper, better for already-pixelated sources).
+
+## Stage 3: Pixelate
+
+The core downsampling step. Divides the image into `blockSize × blockSize` blocks and averages each block to a single color.
+
+- `blockSize: 1` — No downsampling (1:1 pixel mapping)
+- `blockSize: 4` — Every 4×4 region becomes one pixel
+- `blockSize: 8` — Every 8×8 region becomes one pixel (very chunky)
+
+The output is a `PixelGrid` — a 2D array of RGB values, one per block. This grid is what subsequent stages work on.
+
+<Callout type="info">
+To target a specific system resolution, calculate `blockSize` as `Math.floor(sourceWidth / targetWidth)`. For example, a 1024px wide image targeting NES resolution (256px): `blockSize = 4`.
+</Callout>
+
+## Stage 4: Quantize + Dither
+
+Two interleaved operations that map the continuous-color pixel grid to the target palette.
+
+### Palette matching
+
+For each pixel, find the nearest color in the palette using the selected distance algorithm:
+
+| Algorithm | Speed | Accuracy | Best for |
+|---|---|---|---|
+| `euclidean` | Fastest | Poor | Testing, performance-critical |
+| `redmean` | Fast | Good | **General use (recommended)** |
+| `cie76` | Moderate | Good | Perceptually accurate matching |
+| `ciede2000` | Slow | Best | Maximum accuracy, small palettes |
+| `oklab` | Moderate | Excellent | Best accuracy/speed tradeoff |
+
+### Dithering
+
+Dithering creates the illusion of more colors by distributing quantization error:
+
+**Error diffusion** (Floyd-Steinberg, Atkinson) — Diffuses the difference between the original color and the matched palette color to neighboring pixels. Produces smooth gradients but can look noisy on small palettes.
+
+**Ordered dithering** (Bayer, blue-noise, etc.) — Uses a fixed threshold matrix to decide whether each pixel rounds up or down. Produces structured patterns that look clean and intentional — closer to how actual retro hardware dithered.
+
+**Module:** `bitmapped/dither`
+
+## Stage 5: Constraints
+
+The stage that makes bitmapped unique. Hardware spatial constraints override individual pixel colors to enforce the rules of real video hardware.
+
+### Constraint types
+
+**Attribute block** (`attribute-block`) — Used by ZX Spectrum, NES. Divides the image into rectangular blocks (8×8 for ZX, 16×16 for NES). Each block can only use a limited number of colors. The solver selects the optimal color subset for each block.
+
+**Tile palette** (`per-tile-palette`) — Used by SNES, Genesis, Master System, Game Boy Color. Each tile selects from a set of subpalettes. More flexible than attribute blocks because tiles are smaller and each independently chooses its palette.
+
+**Per-scanline** (`per-scanline`) — Used by Atari 2600. Each horizontal scanline has a maximum number of simultaneous colors. The solver selects the best N colors per row.
+
+**HAM** (`ham`) — Used by Amiga. Each pixel is either a direct palette color or a modification of the previous pixel's color (changing one RGB channel). This allows smooth gradients but creates color fringing on sharp edges.
+
+**Artifact color** (`artifact-color`) — Used by Apple II. Pixels are grouped, and each group is constrained to one of two fixed color sets determined by NTSC signal timing.
+
+**Per-row-in-tile** (`per-row-in-tile`) — Used by ColecoVision, MSX (TMS9918A chip). Each 8-pixel horizontal row within a tile independently selects 2 colors.
+
+**Module:** `bitmapped/constraints` — See [Constraints API reference](/api/constraints)
+
+## Stage 6: Output
+
+The processed pixel grid is rendered back to an `ImageData` at the original input dimensions. Each pixel in the grid is expanded back to fill its `blockSize × blockSize` region.
+
+The `ProcessResult` contains:
+- `imageData` — Ready to draw with `ctx.putImageData()`
+- `grid` — The 2D pixel grid for programmatic access
+- `width`, `height` — Grid dimensions
+- `effectiveResolution` — Post-resize dimensions (if resize was used)
+
+## Putting it together
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset, enumerateColorSpace } from 'bitmapped/presets';
+
+const preset = getPreset('genesis')!;
+
+// For RGB-bitdepth systems, enumerate the full color space
+const palette = preset.colorSpace
+  ? enumerateColorSpace(preset.colorSpace).map((c) => ({ color: c }))
+  : preset.palette!;
+
+const result = process(imageData, {
+  blockSize: Math.floor(imageData.width / preset.resolution.width),
+  palette,
+  dithering: 'floyd-steinberg',
+  distanceAlgorithm: 'redmean',
+  constraintType: preset.constraintType,
+  tilePaletteConfig: preset.paletteLayout
+    ? {
+        tileWidth: preset.tileSize!.width,
+        tileHeight: preset.tileSize!.height,
+        colorsPerSubpalette: preset.paletteLayout.colorsPerSubpalette,
+        sharedTransparent: preset.paletteLayout.sharedTransparent,
+      }
+    : undefined,
+});
+
+// Render
+const canvas = document.getElementById('output') as HTMLCanvasElement;
+canvas.width = result.imageData.width;
+canvas.height = result.imageData.height;
+canvas.getContext('2d')!.putImageData(result.imageData, 0, 0);
+```

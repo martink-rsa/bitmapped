@@ -1,0 +1,97 @@
+---
+title: NES / Famicom
+---
+
+import { Callout } from 'nextra/components'
+
+# NES / Famicom
+
+| Spec | Value |
+|---|---|
+| Resolution | 256×240 (NTSC) / 256×239 (PAL) |
+| Total colors | 54 unique (64-entry LUT with duplicates) |
+| Simultaneous | 25 (4 bg palettes × 4 + backdrop + 4 sprite palettes × 3) |
+| Constraint | 16×16 attribute blocks |
+| Display | CRT composite |
+| Year | 1983 |
+| Maker | Nintendo |
+
+## Color palette
+
+The NES PPU generates color via NTSC composite video — there is no single "correct" RGB palette. bitmapped uses a 2C02 PPU reference palette. The 64-entry lookup table is organized as 4 rows of 16, encoding brightness × hue:
+
+<PaletteDisplay
+  colors={[
+    '#545454','#001E74','#081090','#300088','#440064','#5C0030','#540400','#3C1800',
+    '#202A00','#083A00','#004000','#003C00','#00323C','#000000','#000000','#000000',
+    '#989698','#084CC4','#3032EC','#5C1EE4','#8814B0','#A01464','#982220','#783C00',
+    '#545A00','#287200','#087C00','#007628','#006678','#000000','#000000','#000000',
+    '#ECEEEC','#4C9AEC','#7080EC','#9C6CEC','#D064E0','#E878A0','#E09470','#C8A820',
+    '#A8B820','#68D000','#40D820','#38D874','#38C8CC','#3C3C3C','#000000','#000000',
+    '#ECEEEC','#A8CCE4','#B4B8EC','#D4B0E4','#E4A8D4','#E4A8B8','#E0A8A0','#D8B098',
+    '#C8B888','#B0C090','#A8CC8C','#A0CCA0','#A0C4C4','#A8A8A8','#000000','#000000',
+  ]}
+  columns={16}
+  swatchSize={28}
+  showHex
+  groupLabel="2C02 PPU Reference Palette (64 entries)"
+/>
+
+## The key constraint: 16×16 attribute blocks
+
+The NES nametable uses attribute bytes that assign one of four background palettes to each 16×16 pixel region (a 2×2 group of 8×8 tiles). Every pixel within that block must use colors from the same 4-color palette.
+
+This forces color boundaries to align to a coarse grid — it's why NES games have that distinctive blocky color look, where you can often see rectangular regions of different color sets.
+
+bitmapped's attribute-block constraint solver divides the image into 16×16 blocks and selects the optimal 4-color subpalette for each block, minimizing color error.
+
+## Interactive demo
+
+<LiveDemo
+  defaultPreset="nes-ntsc"
+  showDitheringControls
+  showConstraintToggle
+  showComparison
+  allowUpload
+/>
+
+## Code example
+
+```typescript
+import { process } from 'bitmapped';
+import { getPreset } from 'bitmapped/presets';
+
+const nes = getPreset('nes-ntsc')!;
+
+const result = process(imageData, {
+  blockSize: 4,
+  palette: nes.palette!,
+  dithering: 'floyd-steinberg',
+  distanceAlgorithm: 'redmean',
+  constraintType: 'attribute-block',
+  attributeBlockConfig: {
+    width: 16,
+    height: 16,
+    maxColors: 4,
+  },
+});
+```
+
+## Presets
+
+bitmapped includes two NES presets:
+
+- **`nes-ntsc`** — NTSC timing (256×240), 2C02 PPU palette
+- **`nes-pal`** — PAL timing (256×239), same palette
+
+<details className="hardware-note">
+<summary>Hardware notes</summary>
+
+The NES PPU (2C02) doesn't store RGB values — it generates NTSC composite video directly from a 6-bit color index (2 bits value × 4 bits hue). The signal is decoded by the TV's NTSC decoder, which is why every CRT displays NES games slightly differently.
+
+Color `$0D` generates a "blacker than black" signal that can damage some CRT monitors. It should always be mapped to pure black.
+
+The PPU supports emphasis bits ($2001 bits 5-7) that tint the entire screen by dimming selected color channels ~20%. This is used in some games for fade effects.
+
+The background palette is organized as 4 subpalettes of 4 colors each, with color 0 of all palettes sharing a single backdrop color. The attribute table assigns one of these four palettes to each 16×16 region.
+</details>

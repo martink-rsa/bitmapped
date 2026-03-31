@@ -1,0 +1,331 @@
+---
+title: Palette Parsing
+---
+
+import { Callout } from 'nextra/components'
+
+# Palette Parsing
+
+Functions for importing color palettes from various formats and extracting palettes from images. All functions are imported from `bitmapped/palette`.
+
+```typescript
+import {
+  parseHex,
+  parseGPL,
+  parseASE,
+  extractPalette,
+} from 'bitmapped/palette';
+```
+
+Each function returns a `Palette`, which is an array of `PaletteColor` objects:
+
+```typescript
+type Palette = PaletteColor[];
+
+interface PaletteColor {
+  color: RGB;   // { r: number, g: number, b: number }
+  name?: string;
+}
+```
+
+<Callout type="info">
+For a practical walkthrough of loading and creating palettes, see the [Custom Palettes guide](/guides/custom-palettes).
+</Callout>
+
+---
+
+## `parseHex`
+
+Parses a text string containing hex color values into a `Palette`.
+
+```typescript
+function parseHex(text: string): Palette
+```
+
+### Parameters
+
+| Parameter | Type | Description |
+|---|---|---|
+| `text` | `string` | A string containing one or more hex color values, separated by whitespace or newlines. |
+
+### Return value
+
+A `Palette` array with one entry per matched hex color. Colors are returned in the order they appear in the input. No `name` property is set on the entries.
+
+### Supported formats
+
+| Format | Example | Description |
+|---|---|---|
+| `#RRGGBB` | `#FF6600` | Standard 6-digit hex with hash prefix. |
+| `#RGB` | `#F60` | Shorthand 3-digit hex. Expanded to 6 digits (e.g. `#F60` becomes `#FF6600`). |
+| `RRGGBB` | `FF6600` | Bare 6-digit hex without hash prefix. |
+
+<Callout type="warning">
+Bare 3-digit hex values (e.g. `F60` without a `#` prefix) are **not** matched, since they would create too many false positives with arbitrary text.
+</Callout>
+
+### Example
+
+```typescript
+import { parseHex } from 'bitmapped/palette';
+
+// Inline hex strings
+const palette = parseHex(`
+  #0F380F #306230 #8BAC0F #9BBC0F
+`);
+// => [
+//   { color: { r: 15, g: 56, b: 15 } },
+//   { color: { r: 48, g: 98, b: 48 } },
+//   { color: { r: 139, g: 172, b: 15 } },
+//   { color: { r: 155, g: 188, b: 15 } },
+// ]
+
+// Shorthand 3-digit hex
+const cga = parseHex('#000 #555 #AAA #FFF');
+// 4 colors: black, dark gray, light gray, white
+
+// Bare hex (no # prefix)
+const bare = parseHex('FF0000 00FF00 0000FF');
+// 3 colors: red, green, blue
+```
+
+---
+
+## `parseGPL`
+
+Parses a GIMP Palette (`.gpl`) format string into a `Palette`.
+
+```typescript
+function parseGPL(text: string): Palette
+```
+
+### Parameters
+
+| Parameter | Type | Description |
+|---|---|---|
+| `text` | `string` | The full text content of a `.gpl` file. |
+
+### Return value
+
+A `Palette` array with one entry per data line. If a color name is present after the RGB values, it is included as the `name` property.
+
+### GPL format
+
+The GIMP Palette format is a plain-text file. Data lines contain three decimal RGB values (0--255) separated by whitespace, optionally followed by a tab and a color name. The parser skips any line that does not start with a numeric value, so header lines (`GIMP Palette`, `Name:`, `Columns:`) and comment lines (`#`) are ignored automatically.
+
+```
+GIMP Palette
+Name: My Palette
+Columns: 4
+#
+  0   0   0	Black
+255 255 255	White
+255   0   0	Red
+  0 128   0	Green
+  0   0 255	Blue
+```
+
+### Example
+
+```typescript
+import { parseGPL } from 'bitmapped/palette';
+
+const gplText = `GIMP Palette
+Name: CGA
+Columns: 4
+#
+  0   0   0	Black
+  0   0 170	Blue
+  0 170   0	Green
+  0 170 170	Cyan
+170   0   0	Red
+170   0 170	Magenta
+170  85   0	Brown
+170 170 170	Light Gray`;
+
+const palette = parseGPL(gplText);
+// => [
+//   { color: { r: 0, g: 0, b: 0 }, name: 'Black' },
+//   { color: { r: 0, g: 0, b: 170 }, name: 'Blue' },
+//   { color: { r: 0, g: 170, b: 0 }, name: 'Green' },
+//   ...
+// ]
+
+// Load from a file
+const response = await fetch('/palettes/c64.gpl');
+const text = await response.text();
+const c64 = parseGPL(text);
+```
+
+<Callout type="info">
+GIMP Palette files can be exported from GIMP, Aseprite, and many other pixel art editors. They are a simple, human-readable format that is easy to create by hand.
+</Callout>
+
+---
+
+## `parseASE`
+
+Parses an Adobe Swatch Exchange (`.ase`) binary file into a `Palette`.
+
+```typescript
+function parseASE(buffer: ArrayBuffer): Palette
+```
+
+### Parameters
+
+| Parameter | Type | Description |
+|---|---|---|
+| `buffer` | `ArrayBuffer` | The raw binary content of an `.ase` file. Must be at least 12 bytes. |
+
+### Return value
+
+A `Palette` array containing only the RGB color entries found in the file. If a swatch has a name in the ASE file, it is included as the `name` property.
+
+### Errors
+
+| Condition | Error message |
+|---|---|
+| Buffer smaller than 12 bytes | `Invalid ASE file: buffer too small (need at least 12 bytes, got N)` |
+| Missing `ASEF` signature | `Invalid ASE file: expected signature "ASEF", got "..."` |
+
+### Behavior details
+
+- The ASE format is **big-endian** throughout.
+- The parser verifies the 4-byte `ASEF` magic signature at offset 0.
+- Only color entries with the `RGB ` color model are extracted. **CMYK**, **LAB**, and **Gray** entries are silently skipped.
+- Group start and group end blocks are skipped.
+- RGB channel values are stored as 32-bit floats (0.0--1.0) in the file and are converted to 0--255 integer range with clamping.
+
+### Example
+
+```typescript
+import { parseASE } from 'bitmapped/palette';
+
+// From a fetch request
+const response = await fetch('/palettes/retro.ase');
+const buffer = await response.arrayBuffer();
+const palette = parseASE(buffer);
+
+// From a file input
+const fileInput = document.querySelector<HTMLInputElement>(
+  '#palette-upload'
+);
+fileInput?.addEventListener('change', async (e) => {
+  const file = (e.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+
+  const buffer = await file.arrayBuffer();
+  const palette = parseASE(buffer);
+  console.log(`Loaded ${palette.length} RGB colors`);
+});
+```
+
+<Callout type="warning">
+ASE files from Adobe applications may contain CMYK or LAB swatches. These are skipped during parsing -- only RGB colors are returned. If your palette appears to be missing colors, check the source file's color mode.
+</Callout>
+
+---
+
+## `extractPalette`
+
+Extracts a color palette from an image using median-cut color quantization.
+
+```typescript
+function extractPalette(
+  imageData: ImageData,
+  maxColors?: number
+): Palette
+```
+
+### Parameters
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `imageData` | `ImageData` | **required** | The source image to extract colors from. |
+| `maxColors` | `number` | `16` | Maximum number of colors to extract. The result may contain fewer colors if the image has limited color variety. |
+
+### Return value
+
+A `Palette` array with up to `maxColors` entries. Each color is the average of all pixels in its quantization bucket. No `name` property is set on the entries.
+
+### Algorithm
+
+The function uses **median-cut quantization**:
+
+1. All pixels are collected into a single bucket (large images are downsampled to 10,000 pixels for performance).
+2. The bucket with the largest color range is found.
+3. That bucket is sorted along its longest channel axis (R, G, or B) and split at the median.
+4. Steps 2--3 repeat until `maxColors` buckets exist or no bucket can be split further.
+5. Each bucket's colors are averaged to produce the final palette entry.
+
+### Example
+
+```typescript
+import { extractPalette } from 'bitmapped/palette';
+import { process } from 'bitmapped';
+
+// Draw an image onto a canvas to get ImageData
+const img = new Image();
+img.src = '/photos/landscape.jpg';
+await img.decode();
+
+const canvas = document.createElement('canvas');
+canvas.width = img.width;
+canvas.height = img.height;
+const ctx = canvas.getContext('2d')!;
+ctx.drawImage(img, 0, 0);
+
+const sourceData = ctx.getImageData(
+  0, 0, canvas.width, canvas.height
+);
+
+// Extract a 12-color palette from the image
+const palette = extractPalette(sourceData, 12);
+
+// Use the extracted palette to pixelate the same image
+const result = process(sourceData, {
+  blockSize: 8,
+  palette,
+  dithering: 'floyd-steinberg',
+  distanceAlgorithm: 'redmean',
+});
+```
+
+<Callout type="info">
+Extracting a palette from the source image and feeding it back into `process()` produces a posterized effect that preserves the image's own color character, rather than mapping to a fixed hardware palette.
+</Callout>
+
+---
+
+## Auto-detecting format
+
+You can write a simple helper to detect the palette format and call the right parser:
+
+```typescript
+import {
+  parseHex,
+  parseGPL,
+  parseASE,
+} from 'bitmapped/palette';
+
+async function loadPalette(
+  file: File
+): Promise<Palette> {
+  if (file.name.endsWith('.ase')) {
+    const buffer = await file.arrayBuffer();
+    return parseASE(buffer);
+  }
+
+  const text = await file.text();
+
+  if (
+    text.startsWith('GIMP Palette') ||
+    file.name.endsWith('.gpl')
+  ) {
+    return parseGPL(text);
+  }
+
+  // Fall back to hex parsing
+  return parseHex(text);
+}
+```

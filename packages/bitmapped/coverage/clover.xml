@@ -1,0 +1,2143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1774965490432" clover="3.2.0">
+  <project timestamp="1774965490432" name="All files">
+    <metrics statements="1807" coveredstatements="1737" conditionals="478" coveredconditionals="417" methods="214" coveredmethods="209" elements="2499" coveredelements="2363" complexity="0" loc="1807" ncloc="1807" packages="17" files="93" classes="93"/>
+    <package name="color">
+      <metrics statements="161" coveredstatements="160" conditionals="47" coveredconditionals="46" methods="25" coveredmethods="25"/>
+      <file name="distance.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/color/distance.ts">
+        <metrics statements="107" coveredstatements="107" conditionals="29" coveredconditionals="29" methods="9" coveredmethods="9"/>
+        <line num="14" count="273" type="stmt"/>
+        <line num="15" count="273" type="cond" truecount="2" falsecount="0"/>
+        <line num="25" count="54" type="stmt"/>
+        <line num="26" count="54" type="stmt"/>
+        <line num="27" count="54" type="stmt"/>
+        <line num="30" count="54" type="stmt"/>
+        <line num="31" count="54" type="stmt"/>
+        <line num="32" count="54" type="stmt"/>
+        <line num="35" count="54" type="stmt"/>
+        <line num="36" count="54" type="stmt"/>
+        <line num="37" count="54" type="stmt"/>
+        <line num="40" count="54" type="stmt"/>
+        <line num="41" count="54" type="stmt"/>
+        <line num="43" count="54" type="cond" truecount="2" falsecount="0"/>
+        <line num="44" count="54" type="cond" truecount="2" falsecount="0"/>
+        <line num="45" count="54" type="cond" truecount="2" falsecount="0"/>
+        <line num="47" count="54" type="stmt"/>
+        <line num="61" count="37" type="stmt"/>
+        <line num="62" count="37" type="stmt"/>
+        <line num="63" count="37" type="stmt"/>
+        <line num="66" count="37" type="stmt"/>
+        <line num="67" count="37" type="stmt"/>
+        <line num="68" count="37" type="stmt"/>
+        <line num="71" count="37" type="stmt"/>
+        <line num="72" count="37" type="stmt"/>
+        <line num="73" count="37" type="stmt"/>
+        <line num="76" count="37" type="stmt"/>
+        <line num="93" count="79444" type="stmt"/>
+        <line num="94" count="79444" type="stmt"/>
+        <line num="95" count="79444" type="stmt"/>
+        <line num="96" count="79444" type="stmt"/>
+        <line num="107" count="307345693" type="stmt"/>
+        <line num="108" count="307345693" type="stmt"/>
+        <line num="109" count="307345693" type="stmt"/>
+        <line num="110" count="307345693" type="stmt"/>
+        <line num="111" count="307345693" type="stmt"/>
+        <line num="126" count="11" type="stmt"/>
+        <line num="127" count="11" type="stmt"/>
+        <line num="128" count="11" type="stmt"/>
+        <line num="129" count="11" type="stmt"/>
+        <line num="130" count="11" type="stmt"/>
+        <line num="131" count="11" type="stmt"/>
+        <line num="143" count="14" type="stmt"/>
+        <line num="144" count="14" type="stmt"/>
+        <line num="146" count="14" type="stmt"/>
+        <line num="147" count="14" type="stmt"/>
+        <line num="148" count="14" type="stmt"/>
+        <line num="150" count="14" type="stmt"/>
+        <line num="151" count="14" type="stmt"/>
+        <line num="152" count="14" type="stmt"/>
+        <line num="154" count="14" type="stmt"/>
+        <line num="155" count="14" type="stmt"/>
+        <line num="156" count="14" type="stmt"/>
+        <line num="158" count="14" type="stmt"/>
+        <line num="159" count="14" type="stmt"/>
+        <line num="161" count="14" type="stmt"/>
+        <line num="162" count="14" type="stmt"/>
+        <line num="164" count="14" type="stmt"/>
+        <line num="165" count="14" type="stmt"/>
+        <line num="167" count="14" type="stmt"/>
+        <line num="168" count="14" type="cond" truecount="2" falsecount="0"/>
+        <line num="170" count="14" type="stmt"/>
+        <line num="171" count="14" type="cond" truecount="2" falsecount="0"/>
+        <line num="174" count="14" type="stmt"/>
+        <line num="175" count="14" type="stmt"/>
+        <line num="179" count="14" type="cond" truecount="2" falsecount="0"/>
+        <line num="180" count="4" type="stmt"/>
+        <line num="181" count="10" type="cond" truecount="2" falsecount="0"/>
+        <line num="182" count="4" type="stmt"/>
+        <line num="183" count="6" type="cond" truecount="2" falsecount="0"/>
+        <line num="184" count="3" type="stmt"/>
+        <line num="186" count="3" type="stmt"/>
+        <line num="189" count="14" type="stmt"/>
+        <line num="192" count="14" type="stmt"/>
+        <line num="193" count="14" type="stmt"/>
+        <line num="196" count="14" type="cond" truecount="2" falsecount="0"/>
+        <line num="197" count="4" type="stmt"/>
+        <line num="198" count="10" type="cond" truecount="2" falsecount="0"/>
+        <line num="199" count="4" type="stmt"/>
+        <line num="200" count="6" type="cond" truecount="2" falsecount="0"/>
+        <line num="201" count="5" type="stmt"/>
+        <line num="203" count="1" type="stmt"/>
+        <line num="208" count="14" type="stmt"/>
+        <line num="215" count="14" type="stmt"/>
+        <line num="216" count="14" type="stmt"/>
+        <line num="217" count="14" type="stmt"/>
+        <line num="218" count="14" type="stmt"/>
+        <line num="221" count="14" type="stmt"/>
+        <line num="222" count="14" type="stmt"/>
+        <line num="223" count="14" type="stmt"/>
+        <line num="224" count="14" type="stmt"/>
+        <line num="227" count="14" type="stmt"/>
+        <line num="228" count="14" type="stmt"/>
+        <line num="229" count="14" type="stmt"/>
+        <line num="231" count="14" type="stmt"/>
+        <line num="244" count="17" type="stmt"/>
+        <line num="245" count="17" type="stmt"/>
+        <line num="246" count="17" type="stmt"/>
+        <line num="247" count="17" type="stmt"/>
+        <line num="248" count="17" type="stmt"/>
+        <line num="249" count="17" type="stmt"/>
+        <line num="260" count="21512" type="cond" truecount="5" falsecount="0"/>
+        <line num="262" count="22" type="stmt"/>
+        <line num="264" count="21486" type="stmt"/>
+        <line num="266" count="1" type="stmt"/>
+        <line num="268" count="1" type="stmt"/>
+        <line num="270" count="2" type="stmt"/>
+      </file>
+      <file name="index.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/color/index.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+      <file name="match.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/color/match.ts">
+        <metrics statements="29" coveredstatements="28" conditionals="10" coveredconditionals="9" methods="8" coveredmethods="8"/>
+        <line num="23" count="21400" type="stmt"/>
+        <line num="25" count="21400" type="cond" truecount="1" falsecount="1"/>
+        <line num="26" count="0" type="stmt"/>
+        <line num="29" count="21400" type="stmt"/>
+        <line num="30" count="1697691" type="stmt"/>
+        <line num="31" count="1697691" type="stmt"/>
+        <line num="33" count="1697691" type="stmt"/>
+        <line num="34" count="278011709" type="stmt"/>
+        <line num="35" count="278011709" type="cond" truecount="2" falsecount="0"/>
+        <line num="36" count="10997548" type="stmt"/>
+        <line num="37" count="10997548" type="stmt"/>
+        <line num="41" count="1697691" type="stmt"/>
+        <line num="58" count="21273" type="stmt"/>
+        <line num="76" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="77" count="1" type="stmt"/>
+        <line num="80" count="4" type="stmt"/>
+        <line num="82" count="4" type="stmt"/>
+        <line num="83" count="24" type="stmt"/>
+        <line num="87" count="44" type="stmt"/>
+        <line num="89" count="18" type="stmt"/>
+        <line num="106" count="3" type="stmt"/>
+        <line num="107" count="3" type="stmt"/>
+        <line num="108" count="3" type="stmt"/>
+        <line num="109" count="3" type="stmt"/>
+        <line num="111" count="3" type="stmt"/>
+        <line num="112" count="6" type="stmt"/>
+        <line num="113" count="6" type="stmt"/>
+        <line num="114" count="6" type="stmt"/>
+        <line num="117" count="3" type="stmt"/>
+      </file>
+      <file name="quantize.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/color/quantize.ts">
+        <metrics statements="25" coveredstatements="25" conditionals="8" coveredconditionals="8" methods="8" coveredmethods="8"/>
+        <line num="10" count="7" type="cond" truecount="2" falsecount="0"/>
+        <line num="11" count="2" type="stmt"/>
+        <line num="13" count="5" type="stmt"/>
+        <line num="14" count="5" type="stmt"/>
+        <line num="15" count="5" type="stmt"/>
+        <line num="22" count="7" type="stmt"/>
+        <line num="23" count="7" type="stmt"/>
+        <line num="24" count="7" type="stmt"/>
+        <line num="30" count="269" type="stmt"/>
+        <line num="31" count="269" type="stmt"/>
+        <line num="32" count="269" type="stmt"/>
+        <line num="33" count="1883" type="stmt"/>
+        <line num="34" count="1883" type="cond" truecount="2" falsecount="0"/>
+        <line num="35" count="922" type="stmt"/>
+        <line num="36" count="922" type="stmt"/>
+        <line num="39" count="269" type="stmt"/>
+        <line num="47" count="265" type="cond" truecount="2" falsecount="0"/>
+        <line num="48" count="198" type="cond" truecount="2" falsecount="0"/>
+        <line num="49" count="67" type="stmt"/>
+        <line num="57" count="69" type="stmt"/>
+        <line num="64" count="7" type="stmt"/>
+        <line num="67" count="56" type="stmt"/>
+        <line num="68" count="112" type="stmt"/>
+        <line num="69" count="224" type="stmt"/>
+        <line num="70" count="448" type="stmt"/>
+      </file>
+    </package>
+    <package name="constraints">
+      <metrics statements="470" coveredstatements="469" conditionals="110" coveredconditionals="105" methods="32" coveredmethods="32"/>
+      <file name="apple2-artifact.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/constraints/apple2-artifact.ts">
+        <metrics statements="52" coveredstatements="51" conditionals="16" coveredconditionals="13" methods="4" coveredmethods="4"/>
+        <line num="9" count="84" type="cond" truecount="1" falsecount="1"/>
+        <line num="10" count="84" type="cond" truecount="1" falsecount="1"/>
+        <line num="11" count="0" type="stmt"/>
+        <line num="13" count="84" type="stmt"/>
+        <line num="49" count="13" type="stmt"/>
+        <line num="50" count="13" type="stmt"/>
+        <line num="51" count="13" type="stmt"/>
+        <line num="52" count="13" type="cond" truecount="2" falsecount="0"/>
+        <line num="54" count="13" type="cond" truecount="2" falsecount="0"/>
+        <line num="55" count="1" type="stmt"/>
+        <line num="61" count="12" type="stmt"/>
+        <line num="62" count="22" type="cond" truecount="2" falsecount="0"/>
+        <line num="63" count="1" type="stmt"/>
+        <line num="65" count="84" type="stmt"/>
+        <line num="68" count="12" type="stmt"/>
+        <line num="70" count="22" type="stmt"/>
+        <line num="71" count="32" type="stmt"/>
+        <line num="72" count="32" type="stmt"/>
+        <line num="75" count="32" type="stmt"/>
+        <line num="76" count="32" type="stmt"/>
+        <line num="77" count="210" type="stmt"/>
+        <line num="78" count="210" type="stmt"/>
+        <line num="86" count="32" type="stmt"/>
+        <line num="87" count="32" type="stmt"/>
+        <line num="89" count="32" type="stmt"/>
+        <line num="90" count="62" type="stmt"/>
+        <line num="91" count="62" type="stmt"/>
+        <line num="92" count="62" type="stmt"/>
+        <line num="94" count="62" type="stmt"/>
+        <line num="95" count="406" type="stmt"/>
+        <line num="96" count="406" type="stmt"/>
+        <line num="97" count="406" type="stmt"/>
+        <line num="99" count="406" type="stmt"/>
+        <line num="100" count="1624" type="stmt"/>
+        <line num="101" count="1624" type="cond" truecount="2" falsecount="0"/>
+        <line num="102" count="950" type="stmt"/>
+        <line num="103" count="950" type="stmt"/>
+        <line num="107" count="406" type="stmt"/>
+        <line num="108" count="406" type="stmt"/>
+        <line num="111" count="62" type="cond" truecount="2" falsecount="0"/>
+        <line num="112" count="52" type="stmt"/>
+        <line num="113" count="52" type="stmt"/>
+        <line num="118" count="32" type="cond" truecount="1" falsecount="1"/>
+        <line num="119" count="32" type="stmt"/>
+        <line num="120" count="210" type="stmt"/>
+        <line num="121" count="210" type="stmt"/>
+        <line num="122" count="210" type="stmt"/>
+        <line num="123" count="210" type="stmt"/>
+        <line num="124" count="210" type="stmt"/>
+        <line num="125" count="210" type="stmt"/>
+        <line num="126" count="210" type="stmt"/>
+        <line num="132" count="11" type="stmt"/>
+      </file>
+      <file name="attribute-clash.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/constraints/attribute-clash.ts">
+        <metrics statements="133" coveredstatements="133" conditionals="44" coveredconditionals="43" methods="7" coveredmethods="7"/>
+        <line num="17" count="83109" type="stmt"/>
+        <line num="18" count="83109" type="stmt"/>
+        <line num="19" count="83109" type="stmt"/>
+        <line num="20" count="194150" type="stmt"/>
+        <line num="21" count="194150" type="cond" truecount="2" falsecount="0"/>
+        <line num="22" count="139286" type="stmt"/>
+        <line num="23" count="139286" type="stmt"/>
+        <line num="26" count="83109" type="stmt"/>
+        <line num="34" count="408858" type="stmt"/>
+        <line num="35" count="408858" type="stmt"/>
+        <line num="36" count="7381362" type="stmt"/>
+        <line num="37" count="7381362" type="stmt"/>
+        <line num="38" count="14762724" type="stmt"/>
+        <line num="39" count="14762724" type="cond" truecount="2" falsecount="0"/>
+        <line num="41" count="7381362" type="stmt"/>
+        <line num="43" count="408858" type="stmt"/>
+        <line num="63" count="8" type="stmt"/>
+        <line num="64" count="8" type="stmt"/>
+        <line num="67" count="8" type="stmt"/>
+        <line num="68" count="8" type="stmt"/>
+        <line num="69" count="64" type="stmt"/>
+        <line num="70" count="224" type="stmt"/>
+        <line num="71" count="224" type="stmt"/>
+        <line num="72" count="224" type="cond" truecount="2" falsecount="0"/>
+        <line num="73" count="36" type="stmt"/>
+        <line num="74" count="36" type="stmt"/>
+        <line num="80" count="8" type="stmt"/>
+        <line num="81" count="8" type="stmt"/>
+        <line num="82" count="8" type="stmt"/>
+        <line num="83" count="64" type="stmt"/>
+        <line num="84" count="224" type="stmt"/>
+        <line num="85" count="224" type="stmt"/>
+        <line num="86" count="224" type="cond" truecount="2" falsecount="0"/>
+        <line num="87" count="1" type="stmt"/>
+        <line num="88" count="1" type="stmt"/>
+        <line num="93" count="8" type="stmt"/>
+        <line num="107" count="3419" type="stmt"/>
+        <line num="108" count="3419" type="stmt"/>
+        <line num="110" count="3419" type="stmt"/>
+        <line num="111" count="54517" type="stmt"/>
+        <line num="112" count="408410" type="stmt"/>
+        <line num="113" count="408410" type="stmt"/>
+        <line num="114" count="408410" type="cond" truecount="2" falsecount="0"/>
+        <line num="115" count="10399" type="stmt"/>
+        <line num="116" count="10399" type="stmt"/>
+        <line num="121" count="3419" type="stmt"/>
+        <line num="143" count="677" type="stmt"/>
+        <line num="144" count="677" type="stmt"/>
+        <line num="147" count="677" type="cond" truecount="4" falsecount="0"/>
+        <line num="148" count="676" type="stmt"/>
+        <line num="149" count="676" type="stmt"/>
+        <line num="153" count="677" type="stmt"/>
+        <line num="155" count="677" type="cond" truecount="2" falsecount="0"/>
+        <line num="158" count="1" type="stmt"/>
+        <line num="159" count="1" type="stmt"/>
+        <line num="160" count="1" type="stmt"/>
+        <line num="161" count="5" type="stmt"/>
+        <line num="162" count="5" type="stmt"/>
+        <line num="163" count="5" type="stmt"/>
+        <line num="164" count="320" type="stmt"/>
+        <line num="166" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="167" count="1" type="stmt"/>
+        <line num="168" count="1" type="stmt"/>
+        <line num="171" count="1" type="stmt"/>
+        <line num="172" count="1" type="stmt"/>
+        <line num="176" count="677" type="stmt"/>
+        <line num="177" count="20464" type="stmt"/>
+        <line num="178" count="20464" type="stmt"/>
+        <line num="179" count="20464" type="stmt"/>
+        <line num="180" count="20464" type="cond" truecount="1" falsecount="1"/>
+        <line num="182" count="20464" type="stmt"/>
+        <line num="186" count="677" type="stmt"/>
+        <line num="187" count="1911" type="stmt"/>
+        <line num="188" count="1911" type="stmt"/>
+        <line num="190" count="1911" type="stmt"/>
+        <line num="191" count="30543" type="cond" truecount="2" falsecount="0"/>
+        <line num="193" count="26841" type="stmt"/>
+        <line num="194" count="26841" type="stmt"/>
+        <line num="196" count="26841" type="stmt"/>
+        <line num="197" count="817804" type="stmt"/>
+        <line num="198" count="817804" type="cond" truecount="2" falsecount="0"/>
+        <line num="199" count="294336" type="stmt"/>
+        <line num="203" count="26841" type="cond" truecount="2" falsecount="0"/>
+        <line num="204" count="4538" type="stmt"/>
+        <line num="205" count="4538" type="stmt"/>
+        <line num="210" count="1911" type="cond" truecount="4" falsecount="0"/>
+        <line num="212" count="1565" type="stmt"/>
+        <line num="213" count="1565" type="stmt"/>
+        <line num="214" count="1565" type="stmt"/>
+        <line num="217" count="1565" type="stmt"/>
+        <line num="218" count="48204" type="stmt"/>
+        <line num="219" count="48204" type="cond" truecount="2" falsecount="0"/>
+        <line num="220" count="26204" type="stmt"/>
+        <line num="225" count="677" type="stmt"/>
+        <line num="254" count="24" type="cond" truecount="2" falsecount="0"/>
+        <line num="255" count="1" type="stmt"/>
+        <line num="260" count="23" type="cond" truecount="2" falsecount="0"/>
+        <line num="267" count="24" type="stmt"/>
+        <line num="268" count="24" type="stmt"/>
+        <line num="270" count="24" type="stmt"/>
+        <line num="271" count="24" type="stmt"/>
+        <line num="274" count="24" type="stmt"/>
+        <line num="275" count="24" type="stmt"/>
+        <line num="277" count="24" type="stmt"/>
+        <line num="278" count="297" type="stmt"/>
+        <line num="279" count="4105" type="stmt"/>
+        <line num="280" count="4105" type="stmt"/>
+        <line num="281" count="4105" type="stmt"/>
+        <line num="282" count="4105" type="stmt"/>
+        <line num="285" count="4105" type="stmt"/>
+        <line num="286" count="4105" type="stmt"/>
+        <line num="288" count="4105" type="stmt"/>
+        <line num="289" count="13497" type="stmt"/>
+        <line num="290" count="83109" type="stmt"/>
+        <line num="291" count="83109" type="stmt"/>
+        <line num="296" count="83109" type="stmt"/>
+        <line num="303" count="4105" type="cond" truecount="2" falsecount="0"/>
+        <line num="306" count="8" type="stmt"/>
+        <line num="307" count="4097" type="cond" truecount="4" falsecount="0"/>
+        <line num="309" count="3419" type="stmt"/>
+        <line num="310" count="678" type="cond" truecount="2" falsecount="0"/>
+        <line num="312" count="5" type="stmt"/>
+        <line num="315" count="677" type="stmt"/>
+        <line num="325" count="4105" type="stmt"/>
+        <line num="326" count="83109" type="stmt"/>
+        <line num="327" count="83109" type="stmt"/>
+        <line num="328" count="83109" type="stmt"/>
+        <line num="329" count="83109" type="stmt"/>
+        <line num="330" count="83109" type="stmt"/>
+        <line num="331" count="83109" type="stmt"/>
+        <line num="332" count="83109" type="stmt"/>
+        <line num="333" count="83109" type="stmt"/>
+        <line num="338" count="297" type="stmt"/>
+      </file>
+      <file name="cga-subpalette.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/constraints/cga-subpalette.ts">
+        <metrics statements="21" coveredstatements="21" conditionals="4" coveredconditionals="4" methods="1" coveredmethods="1"/>
+        <line num="26" count="20" type="stmt"/>
+        <line num="27" count="20" type="stmt"/>
+        <line num="28" count="20" type="stmt"/>
+        <line num="29" count="20" type="cond" truecount="2" falsecount="0"/>
+        <line num="30" count="20" type="stmt"/>
+        <line num="32" count="20" type="stmt"/>
+        <line num="34" count="20" type="stmt"/>
+        <line num="35" count="102242" type="stmt"/>
+        <line num="36" count="102242" type="stmt"/>
+        <line num="42" count="102242" type="stmt"/>
+        <line num="43" count="102242" type="stmt"/>
+        <line num="45" count="102242" type="stmt"/>
+        <line num="46" count="653768" type="stmt"/>
+        <line num="47" count="653768" type="cond" truecount="2" falsecount="0"/>
+        <line num="48" count="217469" type="stmt"/>
+        <line num="49" count="217469" type="stmt"/>
+        <line num="53" count="102242" type="stmt"/>
+        <line num="54" count="102242" type="stmt"/>
+        <line num="55" count="102242" type="stmt"/>
+        <line num="56" count="102242" type="stmt"/>
+        <line num="59" count="20" type="stmt"/>
+      </file>
+      <file name="ham.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/constraints/ham.ts">
+        <metrics statements="46" coveredstatements="46" conditionals="12" coveredconditionals="12" methods="2" coveredmethods="2"/>
+        <line num="40" count="13" type="stmt"/>
+        <line num="41" count="13" type="stmt"/>
+        <line num="42" count="13" type="stmt"/>
+        <line num="43" count="13" type="cond" truecount="2" falsecount="0"/>
+        <line num="46" count="13" type="stmt"/>
+        <line num="51" count="13" type="stmt"/>
+        <line num="52" count="13" type="stmt"/>
+        <line num="53" count="13" type="stmt"/>
+        <line num="54" count="13" type="stmt"/>
+        <line num="61" count="62103" type="stmt"/>
+        <line num="62" count="62103" type="stmt"/>
+        <line num="63" count="62103" type="stmt"/>
+        <line num="66" count="13" type="stmt"/>
+        <line num="69" count="249" type="cond" truecount="2" falsecount="0"/>
+        <line num="73" count="249" type="stmt"/>
+        <line num="74" count="20701" type="stmt"/>
+        <line num="75" count="20701" type="stmt"/>
+        <line num="81" count="20701" type="stmt"/>
+        <line num="82" count="20701" type="stmt"/>
+        <line num="85" count="20701" type="stmt"/>
+        <line num="86" count="334224" type="stmt"/>
+        <line num="87" count="334224" type="stmt"/>
+        <line num="88" count="334224" type="cond" truecount="2" falsecount="0"/>
+        <line num="89" count="102830" type="stmt"/>
+        <line num="90" count="102830" type="stmt"/>
+        <line num="95" count="20701" type="stmt"/>
+        <line num="100" count="20701" type="stmt"/>
+        <line num="101" count="20701" type="cond" truecount="2" falsecount="0"/>
+        <line num="102" count="14917" type="stmt"/>
+        <line num="103" count="14917" type="stmt"/>
+        <line num="107" count="20701" type="stmt"/>
+        <line num="112" count="20701" type="stmt"/>
+        <line num="113" count="20701" type="cond" truecount="2" falsecount="0"/>
+        <line num="114" count="3912" type="stmt"/>
+        <line num="115" count="3912" type="stmt"/>
+        <line num="119" count="20701" type="stmt"/>
+        <line num="124" count="20701" type="stmt"/>
+        <line num="125" count="20701" type="cond" truecount="2" falsecount="0"/>
+        <line num="126" count="2203" type="stmt"/>
+        <line num="127" count="2203" type="stmt"/>
+        <line num="131" count="20701" type="stmt"/>
+        <line num="132" count="20701" type="stmt"/>
+        <line num="133" count="20701" type="stmt"/>
+        <line num="134" count="20701" type="stmt"/>
+        <line num="137" count="20701" type="stmt"/>
+        <line num="141" count="13" type="stmt"/>
+      </file>
+      <file name="neo-geo-color.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/constraints/neo-geo-color.ts">
+        <metrics statements="22" coveredstatements="22" conditionals="2" coveredconditionals="2" methods="2" coveredmethods="2"/>
+        <line num="18" count="12" type="stmt"/>
+        <line num="19" count="12" type="stmt"/>
+        <line num="20" count="12" type="stmt"/>
+        <line num="21" count="12" type="stmt"/>
+        <line num="22" count="12" type="stmt"/>
+        <line num="23" count="12" type="stmt"/>
+        <line num="24" count="12" type="stmt"/>
+        <line num="25" count="12" type="stmt"/>
+        <line num="26" count="12" type="stmt"/>
+        <line num="27" count="12" type="stmt"/>
+        <line num="28" count="12" type="stmt"/>
+        <line num="49" count="16" type="stmt"/>
+        <line num="50" count="16" type="stmt"/>
+        <line num="51" count="16" type="stmt"/>
+        <line num="53" count="16" type="cond" truecount="2" falsecount="0"/>
+        <line num="54" count="16" type="stmt"/>
+        <line num="55" count="16" type="stmt"/>
+        <line num="56" count="16" type="stmt"/>
+        <line num="57" count="16" type="stmt"/>
+        <line num="58" count="16" type="stmt"/>
+        <line num="59" count="16" type="stmt"/>
+        <line num="60" count="16" type="stmt"/>
+      </file>
+      <file name="per-row-in-tile.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/constraints/per-row-in-tile.ts">
+        <metrics statements="63" coveredstatements="63" conditionals="10" coveredconditionals="10" methods="1" coveredmethods="1"/>
+        <line num="32" count="13" type="stmt"/>
+        <line num="33" count="13" type="stmt"/>
+        <line num="34" count="13" type="stmt"/>
+        <line num="35" count="13" type="cond" truecount="2" falsecount="0"/>
+        <line num="36" count="13" type="stmt"/>
+        <line num="39" count="13" type="stmt"/>
+        <line num="40" count="41541" type="stmt"/>
+        <line num="43" count="13" type="stmt"/>
+        <line num="44" count="13" type="stmt"/>
+        <line num="46" count="13" type="stmt"/>
+        <line num="47" count="63" type="stmt"/>
+        <line num="48" count="717" type="stmt"/>
+        <line num="49" count="717" type="stmt"/>
+        <line num="52" count="717" type="stmt"/>
+        <line num="53" count="5558" type="stmt"/>
+        <line num="54" count="5558" type="cond" truecount="2" falsecount="0"/>
+        <line num="57" count="5501" type="stmt"/>
+        <line num="58" count="5501" type="stmt"/>
+        <line num="60" count="5501" type="stmt"/>
+        <line num="61" count="41541" type="stmt"/>
+        <line num="62" count="41541" type="stmt"/>
+        <line num="63" count="41541" type="stmt"/>
+        <line num="71" count="5501" type="cond" truecount="2" falsecount="0"/>
+        <line num="72" count="8" type="stmt"/>
+        <line num="73" count="8" type="stmt"/>
+        <line num="74" count="64" type="stmt"/>
+        <line num="75" count="64" type="stmt"/>
+        <line num="76" count="64" type="stmt"/>
+        <line num="77" count="64" type="stmt"/>
+        <line num="78" count="64" type="stmt"/>
+        <line num="79" count="64" type="stmt"/>
+        <line num="81" count="8" type="stmt"/>
+        <line num="85" count="5493" type="stmt"/>
+        <line num="86" count="5493" type="stmt"/>
+        <line num="87" count="5493" type="stmt"/>
+        <line num="89" count="5493" type="stmt"/>
+        <line num="90" count="86865" type="stmt"/>
+        <line num="91" count="735795" type="stmt"/>
+        <line num="92" count="735795" type="stmt"/>
+        <line num="93" count="735795" type="stmt"/>
+        <line num="95" count="735795" type="stmt"/>
+        <line num="96" count="5558955" type="stmt"/>
+        <line num="97" count="5558955" type="stmt"/>
+        <line num="98" count="5558955" type="stmt"/>
+        <line num="99" count="5558955" type="stmt"/>
+        <line num="102" count="735795" type="cond" truecount="2" falsecount="0"/>
+        <line num="103" count="20060" type="stmt"/>
+        <line num="104" count="20060" type="stmt"/>
+        <line num="105" count="20060" type="stmt"/>
+        <line num="111" count="5493" type="stmt"/>
+        <line num="112" count="5493" type="stmt"/>
+        <line num="114" count="5493" type="stmt"/>
+        <line num="115" count="41477" type="stmt"/>
+        <line num="116" count="41477" type="stmt"/>
+        <line num="117" count="41477" type="stmt"/>
+        <line num="118" count="41477" type="stmt"/>
+        <line num="119" count="41477" type="cond" truecount="2" falsecount="0"/>
+        <line num="121" count="41477" type="stmt"/>
+        <line num="122" count="41477" type="stmt"/>
+        <line num="123" count="41477" type="stmt"/>
+        <line num="124" count="41477" type="stmt"/>
+        <line num="125" count="41477" type="stmt"/>
+        <line num="131" count="13" type="stmt"/>
+      </file>
+      <file name="scanline.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/constraints/scanline.ts">
+        <metrics statements="57" coveredstatements="57" conditionals="12" coveredconditionals="11" methods="4" coveredmethods="4"/>
+        <line num="28" count="9" type="stmt"/>
+        <line num="29" count="9" type="stmt"/>
+        <line num="30" count="9" type="stmt"/>
+        <line num="31" count="9" type="cond" truecount="2" falsecount="0"/>
+        <line num="32" count="9" type="stmt"/>
+        <line num="35" count="9" type="cond" truecount="2" falsecount="0"/>
+        <line num="36" count="1" type="stmt"/>
+        <line num="37" count="8" type="stmt"/>
+        <line num="38" count="64" type="stmt"/>
+        <line num="39" count="64" type="stmt"/>
+        <line num="45" count="64" type="stmt"/>
+        <line num="46" count="64" type="stmt"/>
+        <line num="47" count="64" type="stmt"/>
+        <line num="48" count="320" type="stmt"/>
+        <line num="49" count="320" type="cond" truecount="2" falsecount="0"/>
+        <line num="50" count="128" type="stmt"/>
+        <line num="51" count="128" type="stmt"/>
+        <line num="55" count="64" type="stmt"/>
+        <line num="56" count="64" type="stmt"/>
+        <line num="57" count="64" type="stmt"/>
+        <line num="58" count="64" type="stmt"/>
+        <line num="61" count="1" type="stmt"/>
+        <line num="64" count="8" type="stmt"/>
+        <line num="66" count="49" type="stmt"/>
+        <line num="67" count="49" type="stmt"/>
+        <line num="68" count="457" type="stmt"/>
+        <line num="69" count="457" type="stmt"/>
+        <line num="79" count="49" type="stmt"/>
+        <line num="82" count="49" type="stmt"/>
+        <line num="83" count="457" type="stmt"/>
+        <line num="84" count="457" type="stmt"/>
+        <line num="85" count="457" type="stmt"/>
+        <line num="87" count="457" type="stmt"/>
+        <line num="88" count="2285" type="stmt"/>
+        <line num="89" count="2285" type="cond" truecount="2" falsecount="0"/>
+        <line num="90" count="914" type="stmt"/>
+        <line num="91" count="914" type="stmt"/>
+        <line num="95" count="457" type="cond" truecount="1" falsecount="1"/>
+        <line num="99" count="245" type="stmt"/>
+        <line num="100" count="367" type="stmt"/>
+        <line num="101" count="49" type="stmt"/>
+        <line num="104" count="94" type="stmt"/>
+        <line num="107" count="49" type="stmt"/>
+        <line num="108" count="457" type="stmt"/>
+        <line num="109" count="457" type="stmt"/>
+        <line num="110" count="457" type="stmt"/>
+        <line num="112" count="457" type="stmt"/>
+        <line num="113" count="882" type="stmt"/>
+        <line num="114" count="882" type="cond" truecount="2" falsecount="0"/>
+        <line num="115" count="481" type="stmt"/>
+        <line num="116" count="481" type="stmt"/>
+        <line num="120" count="457" type="stmt"/>
+        <line num="121" count="457" type="stmt"/>
+        <line num="122" count="457" type="stmt"/>
+        <line num="123" count="457" type="stmt"/>
+        <line num="124" count="457" type="stmt"/>
+        <line num="128" count="49" type="stmt"/>
+      </file>
+      <file name="tile-palette.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/constraints/tile-palette.ts">
+        <metrics statements="76" coveredstatements="76" conditionals="10" coveredconditionals="10" methods="11" coveredmethods="11"/>
+        <line num="32" count="11" type="stmt"/>
+        <line num="33" count="11" type="stmt"/>
+        <line num="34" count="11" type="stmt"/>
+        <line num="35" count="11" type="stmt"/>
+        <line num="37" count="11" type="stmt"/>
+        <line num="38" count="25" type="stmt"/>
+        <line num="39" count="114" type="stmt"/>
+        <line num="40" count="114" type="stmt"/>
+        <line num="41" count="114" type="stmt"/>
+        <line num="42" count="114" type="stmt"/>
+        <line num="43" count="114" type="stmt"/>
+        <line num="45" count="114" type="stmt"/>
+        <line num="46" count="1509" type="stmt"/>
+        <line num="47" count="21205" type="stmt"/>
+        <line num="48" count="21205" type="stmt"/>
+        <line num="56" count="114" type="stmt"/>
+        <line num="60" count="11" type="stmt"/>
+        <line num="74" count="114" type="stmt"/>
+        <line num="76" count="114" type="stmt"/>
+        <line num="78" count="21205" type="stmt"/>
+        <line num="79" count="21205" type="stmt"/>
+        <line num="81" count="21205" type="stmt"/>
+        <line num="82" count="1313650" type="stmt"/>
+        <line num="83" count="1313650" type="cond" truecount="2" falsecount="0"/>
+        <line num="84" count="131526" type="stmt"/>
+        <line num="85" count="131526" type="stmt"/>
+        <line num="89" count="21205" type="cond" truecount="2" falsecount="0"/>
+        <line num="92" count="807" type="stmt"/>
+        <line num="96" count="1788" type="stmt"/>
+        <line num="98" count="114" type="stmt"/>
+        <line num="116" count="114" type="cond" truecount="2" falsecount="0"/>
+        <line num="118" count="99" type="stmt"/>
+        <line num="119" count="792" type="stmt"/>
+        <line num="120" count="99" type="stmt"/>
+        <line num="122" count="699" type="stmt"/>
+        <line num="124" count="699" type="stmt"/>
+        <line num="127" count="15" type="stmt"/>
+        <line num="129" count="15" type="stmt"/>
+        <line num="131" count="15" type="stmt"/>
+        <line num="170" count="12" type="stmt"/>
+        <line num="171" count="12" type="stmt"/>
+        <line num="172" count="12" type="cond" truecount="2" falsecount="0"/>
+        <line num="173" count="12" type="stmt"/>
+        <line num="177" count="12" type="cond" truecount="2" falsecount="0"/>
+        <line num="178" count="1" type="stmt"/>
+        <line num="179" count="1" type="stmt"/>
+        <line num="181" count="1" type="stmt"/>
+        <line num="182" count="64" type="stmt"/>
+        <line num="183" count="64" type="stmt"/>
+        <line num="188" count="64" type="stmt"/>
+        <line num="189" count="64" type="stmt"/>
+        <line num="190" count="64" type="stmt"/>
+        <line num="191" count="64" type="stmt"/>
+        <line num="192" count="64" type="stmt"/>
+        <line num="195" count="1" type="stmt"/>
+        <line num="199" count="11" type="stmt"/>
+        <line num="202" count="11" type="stmt"/>
+        <line num="204" count="11" type="stmt"/>
+        <line num="206" count="114" type="stmt"/>
+        <line num="209" count="114" type="stmt"/>
+        <line num="217" count="114" type="stmt"/>
+        <line num="218" count="114" type="stmt"/>
+        <line num="219" count="114" type="stmt"/>
+        <line num="220" count="114" type="stmt"/>
+        <line num="222" count="114" type="stmt"/>
+        <line num="223" count="114" type="stmt"/>
+        <line num="224" count="1509" type="stmt"/>
+        <line num="225" count="21205" type="stmt"/>
+        <line num="226" count="21205" type="stmt"/>
+        <line num="227" count="21205" type="stmt"/>
+        <line num="228" count="21205" type="stmt"/>
+        <line num="229" count="21205" type="stmt"/>
+        <line num="230" count="21205" type="stmt"/>
+        <line num="231" count="21205" type="stmt"/>
+        <line num="232" count="21205" type="stmt"/>
+        <line num="237" count="11" type="stmt"/>
+      </file>
+    </package>
+    <package name="core">
+      <metrics statements="298" coveredstatements="260" conditionals="102" coveredconditionals="70" methods="22" coveredmethods="21"/>
+      <file name="buffer.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/core/buffer.ts">
+        <metrics statements="24" coveredstatements="23" conditionals="3" coveredconditionals="2" methods="7" coveredmethods="7"/>
+        <line num="10" count="8" type="stmt"/>
+        <line num="11" count="8" type="stmt"/>
+        <line num="29" count="7759421" type="stmt"/>
+        <line num="30" count="7759421" type="stmt"/>
+        <line num="31" count="7759421" type="stmt"/>
+        <line num="32" count="7759421" type="stmt"/>
+        <line num="33" count="7759421" type="stmt"/>
+        <line num="42" count="3" type="stmt"/>
+        <line num="43" count="3" type="stmt"/>
+        <line num="45" count="3" type="cond" truecount="1" falsecount="1"/>
+        <line num="46" count="0" type="stmt"/>
+        <line num="49" count="3" type="stmt"/>
+        <line num="50" count="3" type="stmt"/>
+        <line num="51" count="3" type="stmt"/>
+        <line num="53" count="3" type="stmt"/>
+        <line num="54" count="21" type="stmt"/>
+        <line num="55" count="21" type="stmt"/>
+        <line num="56" count="21" type="stmt"/>
+        <line num="59" count="3" type="stmt"/>
+        <line num="73" count="777" type="stmt"/>
+        <line num="74" count="777" type="stmt"/>
+        <line num="83" count="66" type="stmt"/>
+        <line num="92" count="6" type="stmt"/>
+        <line num="106" count="1016" type="stmt"/>
+      </file>
+      <file name="index.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/core/index.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+      <file name="pipeline.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/core/pipeline.ts">
+        <metrics statements="104" coveredstatements="94" conditionals="58" coveredconditionals="46" methods="6" coveredmethods="6"/>
+        <line num="29" count="3" type="stmt"/>
+        <line num="40" count="125" type="stmt"/>
+        <line num="41" count="125" type="stmt"/>
+        <line num="42" count="11456" type="stmt"/>
+        <line num="43" count="1163216" type="stmt"/>
+        <line num="44" count="1163216" type="stmt"/>
+        <line num="45" count="1163216" type="stmt"/>
+        <line num="46" count="1163216" type="stmt"/>
+        <line num="47" count="1163216" type="stmt"/>
+        <line num="48" count="1163216" type="stmt"/>
+        <line num="51" count="125" type="stmt"/>
+        <line num="56" count="118" type="stmt"/>
+        <line num="57" count="118" type="stmt"/>
+        <line num="58" count="118" type="stmt"/>
+        <line num="59" count="10852" type="stmt"/>
+        <line num="60" count="10852" type="stmt"/>
+        <line num="61" count="1102000" type="stmt"/>
+        <line num="62" count="1102000" type="stmt"/>
+        <line num="68" count="10852" type="stmt"/>
+        <line num="70" count="118" type="stmt"/>
+        <line num="108" count="130" type="stmt"/>
+        <line num="112" count="130" type="cond" truecount="2" falsecount="2"/>
+        <line num="116" count="130" type="cond" truecount="2" falsecount="0"/>
+        <line num="117" count="3" type="stmt"/>
+        <line num="123" count="3" type="stmt"/>
+        <line num="129" count="130" type="stmt"/>
+        <line num="132" count="130" type="stmt"/>
+        <line num="135" count="130" type="cond" truecount="1" falsecount="1"/>
+        <line num="136" count="0" type="stmt"/>
+        <line num="137" count="0" type="stmt"/>
+        <line num="147" count="130" type="cond" truecount="4" falsecount="0"/>
+        <line num="148" count="2" type="stmt"/>
+        <line num="154" count="2" type="stmt"/>
+        <line num="155" count="2" type="stmt"/>
+        <line num="161" count="2" type="stmt"/>
+        <line num="162" count="2" type="stmt"/>
+        <line num="166" count="2" type="stmt"/>
+        <line num="171" count="2" type="stmt"/>
+        <line num="183" count="128" type="cond" truecount="2" falsecount="0"/>
+        <line num="189" count="30" type="stmt"/>
+        <line num="191" count="30" type="stmt"/>
+        <line num="197" count="30" type="cond" truecount="4" falsecount="2"/>
+        <line num="199" count="8" type="cond" truecount="1" falsecount="1"/>
+        <line num="200" count="8" type="stmt"/>
+        <line num="207" count="8" type="stmt"/>
+        <line num="210" count="8" type="cond" truecount="2" falsecount="0"/>
+        <line num="211" count="2" type="stmt"/>
+        <line num="218" count="8" type="stmt"/>
+        <line num="221" count="4" type="cond" truecount="1" falsecount="1"/>
+        <line num="222" count="4" type="stmt"/>
+        <line num="230" count="4" type="stmt"/>
+        <line num="233" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="234" count="0" type="stmt"/>
+        <line num="241" count="0" type="stmt"/>
+        <line num="244" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="245" count="0" type="stmt"/>
+        <line num="252" count="0" type="stmt"/>
+        <line num="255" count="10" type="stmt"/>
+        <line num="260" count="10" type="stmt"/>
+        <line num="264" count="30" type="cond" truecount="2" falsecount="0"/>
+        <line num="265" count="24" type="stmt"/>
+        <line num="266" count="24" type="stmt"/>
+        <line num="270" count="24" type="stmt"/>
+        <line num="275" count="24" type="stmt"/>
+        <line num="286" count="104" type="stmt"/>
+        <line num="287" count="1675672" type="stmt"/>
+        <line num="290" count="104" type="stmt"/>
+        <line num="291" count="838920" type="stmt"/>
+        <line num="294" count="104" type="stmt"/>
+        <line num="300" count="104" type="stmt"/>
+        <line num="304" count="104" type="stmt"/>
+        <line num="306" count="104" type="cond" truecount="2" falsecount="0"/>
+        <line num="307" count="11" type="stmt"/>
+        <line num="311" count="93" type="stmt"/>
+        <line num="319" count="93" type="cond" truecount="11" falsecount="1"/>
+        <line num="321" count="85" type="stmt"/>
+        <line num="322" count="85" type="stmt"/>
+        <line num="324" count="2" type="stmt"/>
+        <line num="325" count="2" type="stmt"/>
+        <line num="327" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="328" count="1" type="stmt"/>
+        <line num="332" count="1" type="stmt"/>
+        <line num="338" count="1" type="stmt"/>
+        <line num="346" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="347" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="348" count="2" type="stmt"/>
+        <line num="349" count="2" type="stmt"/>
+        <line num="353" count="2" type="stmt"/>
+        <line num="356" count="2" type="stmt"/>
+        <line num="357" count="2" type="stmt"/>
+        <line num="358" count="2" type="stmt"/>
+        <line num="359" count="32" type="stmt"/>
+        <line num="364" count="32" type="stmt"/>
+        <line num="365" count="32" type="stmt"/>
+        <line num="366" count="32" type="stmt"/>
+        <line num="368" count="2" type="stmt"/>
+        <line num="373" count="2" type="stmt"/>
+        <line num="376" count="0" type="stmt"/>
+        <line num="377" count="0" type="stmt"/>
+        <line num="382" count="92" type="stmt"/>
+        <line num="383" count="92" type="stmt"/>
+        <line num="384" count="92" type="stmt"/>
+        <line num="388" count="92" type="stmt"/>
+        <line num="391" count="103" type="stmt"/>
+      </file>
+      <file name="pixelate.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/core/pixelate.ts">
+        <metrics statements="91" coveredstatements="64" conditionals="28" coveredconditionals="9" methods="5" coveredmethods="4"/>
+        <line num="15" count="30" type="stmt"/>
+        <line num="16" count="30" type="stmt"/>
+        <line num="17" count="30" type="stmt"/>
+        <line num="18" count="30" type="stmt"/>
+        <line num="19" count="30" type="stmt"/>
+        <line num="21" count="30" type="stmt"/>
+        <line num="22" count="94" type="stmt"/>
+        <line num="23" count="322" type="stmt"/>
+        <line num="24" count="322" type="stmt"/>
+        <line num="25" count="322" type="stmt"/>
+        <line num="26" count="322" type="stmt"/>
+        <line num="30" count="30" type="stmt"/>
+        <line num="50" count="8" type="cond" truecount="1" falsecount="1"/>
+        <line num="51" count="0" type="stmt"/>
+        <line num="53" count="8" type="stmt"/>
+        <line num="54" count="8" type="stmt"/>
+        <line num="55" count="8" type="stmt"/>
+        <line num="57" count="8" type="stmt"/>
+        <line num="58" count="8" type="stmt"/>
+        <line num="60" count="8" type="stmt"/>
+        <line num="61" count="14" type="stmt"/>
+        <line num="62" count="14" type="stmt"/>
+        <line num="63" count="30" type="stmt"/>
+        <line num="64" count="30" type="stmt"/>
+        <line num="65" count="30" type="stmt"/>
+        <line num="66" count="30" type="stmt"/>
+        <line num="68" count="30" type="stmt"/>
+        <line num="76" count="30" type="stmt"/>
+        <line num="77" count="30" type="stmt"/>
+        <line num="79" count="14" type="stmt"/>
+        <line num="82" count="8" type="stmt"/>
+        <line num="101" count="137" type="cond" truecount="2" falsecount="0"/>
+        <line num="102" count="1" type="stmt"/>
+        <line num="104" count="136" type="stmt"/>
+        <line num="105" count="136" type="stmt"/>
+        <line num="106" count="136" type="stmt"/>
+        <line num="111" count="136" type="stmt"/>
+        <line num="112" count="136" type="cond" truecount="2" falsecount="0"/>
+        <line num="113" count="15" type="stmt"/>
+        <line num="114" count="15" type="stmt"/>
+        <line num="115" count="15" type="stmt"/>
+        <line num="119" count="136" type="cond" truecount="4" falsecount="0"/>
+        <line num="124" count="137" type="stmt"/>
+        <line num="125" count="137" type="stmt"/>
+        <line num="126" count="137" type="stmt"/>
+        <line num="127" count="10951" type="stmt"/>
+        <line num="128" count="10951" type="stmt"/>
+        <line num="129" count="1104145" type="stmt"/>
+        <line num="130" count="1104145" type="stmt"/>
+        <line num="135" count="1104145" type="stmt"/>
+        <line num="136" count="1104145" type="stmt"/>
+        <line num="138" count="10951" type="stmt"/>
+        <line num="141" count="136" type="stmt"/>
+        <line num="159" count="0" type="stmt"/>
+        <line num="160" count="0" type="stmt"/>
+        <line num="161" count="0" type="stmt"/>
+        <line num="165" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="169" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="170" count="0" type="stmt"/>
+        <line num="171" count="0" type="stmt"/>
+        <line num="174" count="0" type="stmt"/>
+        <line num="177" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="181" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="185" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="186" count="0" type="stmt"/>
+        <line num="187" count="0" type="stmt"/>
+        <line num="190" count="0" type="stmt"/>
+        <line num="193" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="195" count="0" type="stmt"/>
+        <line num="198" count="0" type="stmt"/>
+        <line num="208" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="212" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="213" count="0" type="stmt"/>
+        <line num="214" count="0" type="stmt"/>
+        <line num="217" count="0" type="stmt"/>
+        <line num="220" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="222" count="0" type="stmt"/>
+        <line num="223" count="0" type="stmt"/>
+        <line num="225" count="0" type="stmt"/>
+        <line num="242" count="226" type="stmt"/>
+        <line num="244" count="226" type="stmt"/>
+        <line num="245" count="19198" type="stmt"/>
+        <line num="246" count="1940931" type="stmt"/>
+        <line num="247" count="1940931" type="stmt"/>
+        <line num="248" count="1940931" type="stmt"/>
+        <line num="249" count="1940931" type="stmt"/>
+        <line num="250" count="1940931" type="stmt"/>
+        <line num="252" count="1940931" type="stmt"/>
+        <line num="253" count="3880120" type="stmt"/>
+        <line num="254" count="7759413" type="stmt"/>
+        <line num="260" count="226" type="stmt"/>
+      </file>
+      <file name="resize.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/core/resize.ts">
+        <metrics statements="79" coveredstatements="79" conditionals="13" coveredconditionals="13" methods="4" coveredmethods="4"/>
+        <line num="12" count="13" type="stmt"/>
+        <line num="13" count="13" type="stmt"/>
+        <line num="14" count="13" type="stmt"/>
+        <line num="15" count="13" type="stmt"/>
+        <line num="17" count="13" type="stmt"/>
+        <line num="18" count="714" type="stmt"/>
+        <line num="19" count="714" type="stmt"/>
+        <line num="20" count="714" type="stmt"/>
+        <line num="21" count="714" type="stmt"/>
+        <line num="22" count="103132" type="stmt"/>
+        <line num="23" count="103132" type="stmt"/>
+        <line num="27" count="13" type="stmt"/>
+        <line num="39" count="151" type="stmt"/>
+        <line num="40" count="151" type="stmt"/>
+        <line num="41" count="151" type="stmt"/>
+        <line num="43" count="151" type="stmt"/>
+        <line num="44" count="10971" type="stmt"/>
+        <line num="45" count="10971" type="stmt"/>
+        <line num="46" count="10971" type="stmt"/>
+        <line num="47" count="10971" type="stmt"/>
+        <line num="49" count="10971" type="stmt"/>
+        <line num="50" count="1102593" type="stmt"/>
+        <line num="51" count="1102593" type="stmt"/>
+        <line num="52" count="1102593" type="stmt"/>
+        <line num="53" count="1102593" type="stmt"/>
+        <line num="55" count="1102593" type="stmt"/>
+        <line num="56" count="1102593" type="stmt"/>
+        <line num="57" count="1102593" type="stmt"/>
+        <line num="58" count="1102593" type="stmt"/>
+        <line num="60" count="1102593" type="stmt"/>
+        <line num="62" count="1102593" type="stmt"/>
+        <line num="63" count="3307779" type="stmt"/>
+        <line num="64" count="3307779" type="stmt"/>
+        <line num="65" count="3307779" type="stmt"/>
+        <line num="67" count="1102593" type="stmt"/>
+        <line num="71" count="151" type="stmt"/>
+        <line num="87" count="167" type="cond" truecount="4" falsecount="0"/>
+        <line num="89" count="3" type="stmt"/>
+        <line num="90" count="3" type="stmt"/>
+        <line num="92" count="3" type="stmt"/>
+        <line num="93" count="160016" type="stmt"/>
+        <line num="95" count="3" type="stmt"/>
+        <line num="98" count="164" type="cond" truecount="2" falsecount="0"/>
+        <line num="99" count="151" type="stmt"/>
+        <line num="101" count="13" type="stmt"/>
+        <line num="117" count="10" type="stmt"/>
+        <line num="118" count="10" type="stmt"/>
+        <line num="120" count="10" type="cond" truecount="2" falsecount="0"/>
+        <line num="121" count="2" type="stmt"/>
+        <line num="124" count="8" type="cond" truecount="2" falsecount="0"/>
+        <line num="126" count="2" type="stmt"/>
+        <line num="127" count="2" type="stmt"/>
+        <line num="128" count="2" type="stmt"/>
+        <line num="129" count="2" type="stmt"/>
+        <line num="132" count="2" type="stmt"/>
+        <line num="133" count="2" type="stmt"/>
+        <line num="134" count="2" type="stmt"/>
+        <line num="135" count="2" type="stmt"/>
+        <line num="136" count="2" type="stmt"/>
+        <line num="138" count="2" type="stmt"/>
+        <line num="139" count="400" type="stmt"/>
+        <line num="140" count="80000" type="stmt"/>
+        <line num="144" count="2" type="stmt"/>
+        <line num="148" count="6" type="stmt"/>
+        <line num="149" count="6" type="stmt"/>
+        <line num="150" count="6" type="stmt"/>
+        <line num="151" count="6" type="stmt"/>
+        <line num="154" count="6" type="stmt"/>
+        <line num="156" count="6" type="stmt"/>
+        <line num="157" count="6" type="stmt"/>
+        <line num="158" count="123072" type="stmt"/>
+        <line num="161" count="6" type="stmt"/>
+        <line num="162" count="6" type="stmt"/>
+        <line num="163" count="6" type="stmt"/>
+        <line num="164" count="6" type="stmt"/>
+        <line num="166" count="6" type="stmt"/>
+        <line num="167" count="496" type="stmt"/>
+        <line num="168" count="63072" type="stmt"/>
+        <line num="173" count="6" type="stmt"/>
+      </file>
+    </package>
+    <package name="dither">
+      <metrics statements="128" coveredstatements="128" conditionals="40" coveredconditionals="40" methods="8" coveredmethods="8"/>
+      <file name="atkinson.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/dither/atkinson.ts">
+        <metrics statements="31" coveredstatements="31" conditionals="6" coveredconditionals="6" methods="1" coveredmethods="1"/>
+        <line num="29" count="11" type="stmt"/>
+        <line num="30" count="11" type="stmt"/>
+        <line num="33" count="11" type="stmt"/>
+        <line num="34" count="11" type="stmt"/>
+        <line num="35" count="369" type="stmt"/>
+        <line num="36" count="369" type="stmt"/>
+        <line num="37" count="369" type="stmt"/>
+        <line num="40" count="11" type="stmt"/>
+        <line num="41" count="57" type="stmt"/>
+        <line num="42" count="369" type="stmt"/>
+        <line num="43" count="369" type="stmt"/>
+        <line num="46" count="369" type="stmt"/>
+        <line num="47" count="369" type="stmt"/>
+        <line num="48" count="369" type="stmt"/>
+        <line num="50" count="369" type="stmt"/>
+        <line num="57" count="369" type="stmt"/>
+        <line num="58" count="369" type="stmt"/>
+        <line num="59" count="369" type="stmt"/>
+        <line num="60" count="369" type="stmt"/>
+        <line num="61" count="369" type="stmt"/>
+        <line num="64" count="369" type="stmt"/>
+        <line num="65" count="369" type="stmt"/>
+        <line num="66" count="369" type="stmt"/>
+        <line num="69" count="369" type="stmt"/>
+        <line num="78" count="369" type="stmt"/>
+        <line num="79" count="2214" type="cond" truecount="6" falsecount="0"/>
+        <line num="80" count="1658" type="stmt"/>
+        <line num="81" count="1658" type="stmt"/>
+        <line num="82" count="1658" type="stmt"/>
+        <line num="83" count="1658" type="stmt"/>
+        <line num="89" count="11" type="stmt"/>
+      </file>
+      <file name="bayer.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/dither/bayer.ts">
+        <metrics statements="16" coveredstatements="16" conditionals="13" coveredconditionals="13" methods="2" coveredmethods="2"/>
+        <line num="15" count="14" type="cond" truecount="4" falsecount="0"/>
+        <line num="16" count="4" type="stmt"/>
+        <line num="21" count="10" type="cond" truecount="2" falsecount="0"/>
+        <line num="22" count="5" type="stmt"/>
+        <line num="28" count="5" type="stmt"/>
+        <line num="29" count="5" type="stmt"/>
+        <line num="30" count="5" type="stmt"/>
+        <line num="32" count="5" type="stmt"/>
+        <line num="33" count="24" type="stmt"/>
+        <line num="34" count="24" type="stmt"/>
+        <line num="35" count="128" type="stmt"/>
+        <line num="36" count="128" type="cond" truecount="6" falsecount="0"/>
+        <line num="37" count="128" type="stmt"/>
+        <line num="41" count="5" type="stmt"/>
+        <line num="63" count="8" type="stmt"/>
+        <line num="64" count="8" type="stmt"/>
+      </file>
+      <file name="floyd-steinberg.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/dither/floyd-steinberg.ts">
+        <metrics statements="44" coveredstatements="44" conditionals="12" coveredconditionals="12" methods="1" coveredmethods="1"/>
+        <line num="25" count="93" type="stmt"/>
+        <line num="26" count="93" type="stmt"/>
+        <line num="29" count="93" type="stmt"/>
+        <line num="30" count="93" type="stmt"/>
+        <line num="31" count="836961" type="stmt"/>
+        <line num="32" count="836961" type="stmt"/>
+        <line num="33" count="836961" type="stmt"/>
+        <line num="36" count="93" type="stmt"/>
+        <line num="37" count="8265" type="stmt"/>
+        <line num="38" count="836961" type="stmt"/>
+        <line num="39" count="836961" type="stmt"/>
+        <line num="42" count="836961" type="stmt"/>
+        <line num="43" count="836961" type="stmt"/>
+        <line num="44" count="836961" type="stmt"/>
+        <line num="46" count="836961" type="stmt"/>
+        <line num="53" count="836961" type="stmt"/>
+        <line num="54" count="836961" type="stmt"/>
+        <line num="55" count="836961" type="stmt"/>
+        <line num="56" count="836961" type="stmt"/>
+        <line num="57" count="836961" type="stmt"/>
+        <line num="60" count="836961" type="stmt"/>
+        <line num="61" count="836961" type="stmt"/>
+        <line num="62" count="836961" type="stmt"/>
+        <line num="66" count="836961" type="cond" truecount="2" falsecount="0"/>
+        <line num="67" count="828696" type="stmt"/>
+        <line num="68" count="828696" type="stmt"/>
+        <line num="69" count="828696" type="stmt"/>
+        <line num="70" count="828696" type="stmt"/>
+        <line num="74" count="836961" type="cond" truecount="4" falsecount="0"/>
+        <line num="75" count="820358" type="stmt"/>
+        <line num="76" count="820358" type="stmt"/>
+        <line num="77" count="820358" type="stmt"/>
+        <line num="78" count="820358" type="stmt"/>
+        <line num="82" count="836961" type="cond" truecount="2" falsecount="0"/>
+        <line num="83" count="828530" type="stmt"/>
+        <line num="84" count="828530" type="stmt"/>
+        <line num="85" count="828530" type="stmt"/>
+        <line num="86" count="828530" type="stmt"/>
+        <line num="90" count="836961" type="cond" truecount="4" falsecount="0"/>
+        <line num="91" count="820358" type="stmt"/>
+        <line num="92" count="820358" type="stmt"/>
+        <line num="93" count="820358" type="stmt"/>
+        <line num="94" count="820358" type="stmt"/>
+        <line num="99" count="93" type="stmt"/>
+      </file>
+      <file name="index.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/dither/index.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+      <file name="ordered-dither.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/dither/ordered-dither.ts">
+        <metrics statements="23" coveredstatements="23" conditionals="9" coveredconditionals="9" methods="3" coveredmethods="3"/>
+        <line num="33" count="24" type="cond" truecount="4" falsecount="0"/>
+        <line num="34" count="1" type="stmt"/>
+        <line num="37" count="23" type="stmt"/>
+        <line num="38" count="23" type="stmt"/>
+        <line num="39" count="23" type="stmt"/>
+        <line num="40" count="23" type="stmt"/>
+        <line num="41" count="23" type="stmt"/>
+        <line num="42" count="23" type="stmt"/>
+        <line num="43" count="23" type="stmt"/>
+        <line num="45" count="23" type="stmt"/>
+        <line num="46" count="141" type="stmt"/>
+        <line num="47" count="1009" type="stmt"/>
+        <line num="50" count="1009" type="stmt"/>
+        <line num="52" count="1009" type="stmt"/>
+        <line num="53" count="1009" type="stmt"/>
+        <line num="54" count="1009" type="stmt"/>
+        <line num="56" count="1009" type="stmt"/>
+        <line num="57" count="1009" type="stmt"/>
+        <line num="61" count="23" type="stmt"/>
+        <line num="89" count="16" type="cond" truecount="4" falsecount="0"/>
+        <line num="90" count="16" type="stmt"/>
+        <line num="91" count="736" type="stmt"/>
+        <line num="92" count="16" type="stmt"/>
+      </file>
+      <file name="ps1.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/dither/ps1.ts">
+        <metrics statements="14" coveredstatements="14" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="6" count="5" type="stmt"/>
+        <line num="18" count="9" type="stmt"/>
+        <line num="19" count="9" type="stmt"/>
+        <line num="20" count="9" type="stmt"/>
+        <line num="21" count="24" type="stmt"/>
+        <line num="22" count="87" type="stmt"/>
+        <line num="23" count="87" type="stmt"/>
+        <line num="25" count="87" type="stmt"/>
+        <line num="26" count="87" type="stmt"/>
+        <line num="27" count="87" type="stmt"/>
+        <line num="29" count="87" type="stmt"/>
+        <line num="30" count="87" type="stmt"/>
+        <line num="31" count="87" type="stmt"/>
+        <line num="34" count="9" type="stmt"/>
+      </file>
+    </package>
+    <package name="dither.matrices">
+      <metrics statements="184" coveredstatements="182" conditionals="63" coveredconditionals="57" methods="25" coveredmethods="25"/>
+      <file name="bayer.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/dither/matrices/bayer.ts">
+        <metrics statements="17" coveredstatements="17" conditionals="12" coveredconditionals="12" methods="4" coveredmethods="4"/>
+        <line num="12" count="23" type="cond" truecount="4" falsecount="0"/>
+        <line num="13" count="3" type="stmt"/>
+        <line num="18" count="20" type="stmt"/>
+        <line num="19" count="20" type="stmt"/>
+        <line num="20" count="536" type="stmt"/>
+        <line num="24" count="43" type="cond" truecount="2" falsecount="0"/>
+        <line num="25" count="20" type="stmt"/>
+        <line num="31" count="23" type="stmt"/>
+        <line num="32" count="23" type="stmt"/>
+        <line num="33" count="23" type="stmt"/>
+        <line num="35" count="23" type="stmt"/>
+        <line num="36" count="112" type="stmt"/>
+        <line num="37" count="112" type="stmt"/>
+        <line num="38" count="608" type="stmt"/>
+        <line num="39" count="608" type="cond" truecount="6" falsecount="0"/>
+        <line num="40" count="608" type="stmt"/>
+        <line num="44" count="23" type="stmt"/>
+      </file>
+      <file name="blue-noise.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/dither/matrices/blue-noise.ts">
+        <metrics statements="111" coveredstatements="111" conditionals="37" coveredconditionals="33" methods="6" coveredmethods="6"/>
+        <line num="17" count="7" type="cond" truecount="2" falsecount="0"/>
+        <line num="18" count="1" type="stmt"/>
+        <line num="21" count="6" type="stmt"/>
+        <line num="23" count="6" type="stmt"/>
+        <line num="24" count="6" type="stmt"/>
+        <line num="25" count="192" type="stmt"/>
+        <line num="26" count="192" type="stmt"/>
+        <line num="27" count="9216" type="stmt"/>
+        <line num="31" count="6" type="stmt"/>
+        <line num="35" count="6" type="stmt"/>
+        <line num="38" count="6" type="cond" truecount="2" falsecount="0"/>
+        <line num="39" count="2" type="stmt"/>
+        <line num="40" count="2" type="stmt"/>
+        <line num="48" count="2" type="stmt"/>
+        <line num="49" count="2" type="stmt"/>
+        <line num="50" count="2" type="stmt"/>
+        <line num="53" count="2" type="stmt"/>
+        <line num="54" count="2" type="stmt"/>
+        <line num="57" count="2" type="stmt"/>
+        <line num="58" count="2" type="stmt"/>
+        <line num="59" count="874" type="stmt"/>
+        <line num="60" count="874" type="stmt"/>
+        <line num="63" count="2" type="stmt"/>
+        <line num="64" count="2" type="stmt"/>
+        <line num="65" count="874" type="stmt"/>
+        <line num="66" count="874" type="cond" truecount="2" falsecount="0"/>
+        <line num="67" count="818" type="stmt"/>
+        <line num="68" count="818" type="stmt"/>
+        <line num="73" count="2" type="stmt"/>
+        <line num="74" count="2" type="stmt"/>
+        <line num="75" count="2" type="stmt"/>
+        <line num="76" count="42" type="stmt"/>
+        <line num="77" count="42" type="stmt"/>
+        <line num="78" count="882" type="stmt"/>
+        <line num="80" count="42" type="stmt"/>
+        <line num="85" count="6" type="stmt"/>
+        <line num="86" count="6" type="stmt"/>
+        <line num="87" count="24576" type="cond" truecount="2" falsecount="0"/>
+        <line num="88" count="2454" type="stmt"/>
+        <line num="89" count="2454" type="stmt"/>
+        <line num="90" count="2454" type="stmt"/>
+        <line num="91" count="51534" type="stmt"/>
+        <line num="92" count="1082214" type="stmt"/>
+        <line num="93" count="1082214" type="stmt"/>
+        <line num="94" count="1082214" type="stmt"/>
+        <line num="95" count="1082214" type="stmt"/>
+        <line num="100" count="6" type="stmt"/>
+        <line num="105" count="24576" type="stmt"/>
+        <line num="106" count="24576" type="stmt"/>
+        <line num="107" count="24576" type="stmt"/>
+        <line num="108" count="516096" type="stmt"/>
+        <line num="109" count="10838016" type="stmt"/>
+        <line num="110" count="10838016" type="stmt"/>
+        <line num="111" count="10838016" type="stmt"/>
+        <line num="112" count="10838016" type="stmt"/>
+        <line num="119" count="2" type="stmt"/>
+        <line num="121" count="2" type="stmt"/>
+        <line num="123" count="8192" type="stmt"/>
+        <line num="124" count="8192" type="stmt"/>
+        <line num="125" count="8192" type="stmt"/>
+        <line num="126" count="33554432" type="cond" truecount="4" falsecount="0"/>
+        <line num="127" count="49526" type="stmt"/>
+        <line num="128" count="49526" type="stmt"/>
+        <line num="133" count="8192" type="stmt"/>
+        <line num="134" count="8192" type="stmt"/>
+        <line num="135" count="8192" type="stmt"/>
+        <line num="136" count="33554432" type="cond" truecount="4" falsecount="0"/>
+        <line num="137" count="105662" type="stmt"/>
+        <line num="138" count="105662" type="stmt"/>
+        <line num="142" count="8192" type="cond" truecount="4" falsecount="1"/>
+        <line num="145" count="8192" type="cond" truecount="1" falsecount="1"/>
+        <line num="148" count="8192" type="stmt"/>
+        <line num="149" count="8192" type="stmt"/>
+        <line num="150" count="8192" type="stmt"/>
+        <line num="151" count="8192" type="stmt"/>
+        <line num="155" count="2" type="stmt"/>
+        <line num="156" count="2" type="stmt"/>
+        <line num="160" count="2" type="stmt"/>
+        <line num="161" count="2" type="stmt"/>
+        <line num="162" count="2" type="stmt"/>
+        <line num="163" count="8192" type="cond" truecount="2" falsecount="0"/>
+        <line num="166" count="2" type="stmt"/>
+        <line num="168" count="818" type="stmt"/>
+        <line num="169" count="818" type="stmt"/>
+        <line num="170" count="818" type="stmt"/>
+        <line num="171" count="3350528" type="cond" truecount="4" falsecount="0"/>
+        <line num="172" count="4794" type="stmt"/>
+        <line num="173" count="4794" type="stmt"/>
+        <line num="176" count="818" type="cond" truecount="1" falsecount="1"/>
+        <line num="178" count="818" type="stmt"/>
+        <line num="179" count="818" type="stmt"/>
+        <line num="180" count="818" type="stmt"/>
+        <line num="185" count="2" type="stmt"/>
+        <line num="186" count="2" type="stmt"/>
+        <line num="188" count="2" type="stmt"/>
+        <line num="190" count="7374" type="stmt"/>
+        <line num="191" count="7374" type="stmt"/>
+        <line num="192" count="7374" type="stmt"/>
+        <line num="193" count="30203904" type="cond" truecount="4" falsecount="0"/>
+        <line num="194" count="64218" type="stmt"/>
+        <line num="195" count="64218" type="stmt"/>
+        <line num="198" count="7374" type="cond" truecount="1" falsecount="1"/>
+        <line num="200" count="7374" type="stmt"/>
+        <line num="201" count="7374" type="stmt"/>
+        <line num="202" count="7374" type="stmt"/>
+        <line num="206" count="2" type="stmt"/>
+        <line num="207" count="2" type="stmt"/>
+        <line num="208" count="128" type="stmt"/>
+        <line num="209" count="128" type="stmt"/>
+        <line num="210" count="8192" type="stmt"/>
+        <line num="214" count="2" type="stmt"/>
+      </file>
+      <file name="checkerboard.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/dither/matrices/checkerboard.ts">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="10" count="6" type="stmt"/>
+      </file>
+      <file name="clustered-dot.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/dither/matrices/clustered-dot.ts">
+        <metrics statements="9" coveredstatements="9" conditionals="2" coveredconditionals="2" methods="1" coveredmethods="1"/>
+        <line num="7" count="6" type="stmt"/>
+        <line num="23" count="6" type="cond" truecount="2" falsecount="0"/>
+        <line num="24" count="1" type="stmt"/>
+        <line num="27" count="5" type="stmt"/>
+        <line num="28" count="5" type="stmt"/>
+        <line num="29" count="28" type="stmt"/>
+        <line num="30" count="28" type="stmt"/>
+        <line num="31" count="176" type="stmt"/>
+        <line num="35" count="5" type="stmt"/>
+      </file>
+      <file name="index.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/dither/matrices/index.ts">
+        <metrics statements="8" coveredstatements="8" conditionals="6" coveredconditionals="6" methods="7" coveredmethods="7"/>
+        <line num="29" count="5" type="stmt"/>
+        <line num="30" count="6" type="cond" truecount="1" falsecount="0"/>
+        <line num="31" count="1" type="cond" truecount="1" falsecount="0"/>
+        <line num="32" count="1" type="cond" truecount="1" falsecount="0"/>
+        <line num="33" count="1" type="cond" truecount="1" falsecount="0"/>
+        <line num="34" count="1" type="cond" truecount="1" falsecount="0"/>
+        <line num="35" count="1" type="stmt"/>
+        <line num="36" count="1" type="cond" truecount="1" falsecount="0"/>
+      </file>
+      <file name="line.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/dither/matrices/line.ts">
+        <metrics statements="38" coveredstatements="36" conditionals="6" coveredconditionals="4" methods="6" coveredmethods="6"/>
+        <line num="8" count="12" type="stmt"/>
+        <line num="9" count="96" type="stmt"/>
+        <line num="10" count="192" type="stmt"/>
+        <line num="11" count="12" type="stmt"/>
+        <line num="23" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="24" count="1" type="stmt"/>
+        <line num="27" count="4" type="stmt"/>
+        <line num="29" count="4" type="stmt"/>
+        <line num="30" count="4" type="stmt"/>
+        <line num="31" count="32" type="stmt"/>
+        <line num="34" count="4" type="stmt"/>
+        <line num="35" count="4" type="stmt"/>
+        <line num="36" count="32" type="stmt"/>
+        <line num="39" count="4" type="stmt"/>
+        <line num="51" count="4" type="cond" truecount="1" falsecount="1"/>
+        <line num="52" count="0" type="stmt"/>
+        <line num="55" count="4" type="stmt"/>
+        <line num="56" count="4" type="stmt"/>
+        <line num="57" count="4" type="stmt"/>
+        <line num="58" count="32" type="stmt"/>
+        <line num="61" count="4" type="stmt"/>
+        <line num="62" count="4" type="stmt"/>
+        <line num="63" count="32" type="stmt"/>
+        <line num="64" count="32" type="stmt"/>
+        <line num="65" count="256" type="stmt"/>
+        <line num="69" count="4" type="stmt"/>
+        <line num="81" count="4" type="cond" truecount="1" falsecount="1"/>
+        <line num="82" count="0" type="stmt"/>
+        <line num="85" count="4" type="stmt"/>
+        <line num="86" count="4" type="stmt"/>
+        <line num="87" count="4" type="stmt"/>
+        <line num="88" count="32" type="stmt"/>
+        <line num="91" count="4" type="stmt"/>
+        <line num="92" count="4" type="stmt"/>
+        <line num="93" count="32" type="stmt"/>
+        <line num="94" count="32" type="stmt"/>
+        <line num="95" count="256" type="stmt"/>
+        <line num="99" count="4" type="stmt"/>
+      </file>
+    </package>
+    <package name="export">
+      <metrics statements="39" coveredstatements="31" conditionals="11" coveredconditionals="10" methods="7" coveredmethods="4"/>
+      <file name="helpers.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/export/helpers.ts">
+        <metrics statements="8" coveredstatements="2" conditionals="0" coveredconditionals="0" methods="3" coveredmethods="1"/>
+        <line num="3" count="4" type="stmt"/>
+        <line num="4" count="4" type="stmt"/>
+        <line num="12" count="0" type="stmt"/>
+        <line num="13" count="0" type="stmt"/>
+        <line num="14" count="0" type="stmt"/>
+        <line num="15" count="0" type="stmt"/>
+        <line num="16" count="0" type="stmt"/>
+        <line num="17" count="0" type="stmt"/>
+      </file>
+      <file name="svg.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/export/svg.ts">
+        <metrics statements="31" coveredstatements="29" conditionals="11" coveredconditionals="10" methods="4" coveredmethods="3"/>
+        <line num="4" count="27" type="stmt"/>
+        <line num="12" count="15" type="stmt"/>
+        <line num="13" count="15" type="stmt"/>
+        <line num="15" count="15" type="stmt"/>
+        <line num="16" count="23" type="stmt"/>
+        <line num="17" count="23" type="stmt"/>
+        <line num="18" count="33" type="stmt"/>
+        <line num="19" count="33" type="stmt"/>
+        <line num="20" count="33" type="stmt"/>
+        <line num="21" count="33" type="stmt"/>
+        <line num="22" count="33" type="stmt"/>
+        <line num="25" count="33" type="stmt"/>
+        <line num="26" count="33" type="stmt"/>
+        <line num="27" count="30" type="stmt"/>
+        <line num="28" count="30" type="cond" truecount="2" falsecount="0"/>
+        <line num="34" count="20" type="stmt"/>
+        <line num="36" count="10" type="stmt"/>
+        <line num="41" count="33" type="cond" truecount="2" falsecount="0"/>
+        <line num="42" count="6" type="stmt"/>
+        <line num="43" count="6" type="stmt"/>
+        <line num="46" count="27" type="stmt"/>
+        <line num="47" count="27" type="cond" truecount="2" falsecount="0"/>
+        <line num="48" count="1" type="stmt"/>
+        <line num="49" count="1" type="stmt"/>
+        <line num="53" count="26" type="stmt"/>
+        <line num="57" count="27" type="stmt"/>
+        <line num="61" count="15" type="stmt"/>
+        <line num="70" count="3" type="stmt"/>
+        <line num="71" count="3" type="stmt"/>
+        <line num="79" count="0" type="stmt"/>
+        <line num="80" count="0" type="stmt"/>
+      </file>
+    </package>
+    <package name="palette">
+      <metrics statements="126" coveredstatements="125" conditionals="63" coveredconditionals="57" methods="9" coveredmethods="9"/>
+      <file name="extract.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/palette/extract.ts">
+        <metrics statements="65" coveredstatements="65" conditionals="31" coveredconditionals="31" methods="6" coveredmethods="6"/>
+        <line num="11" count="394" type="stmt"/>
+        <line num="12" count="394" type="stmt"/>
+        <line num="13" count="394" type="stmt"/>
+        <line num="14" count="394" type="stmt"/>
+        <line num="15" count="394" type="stmt"/>
+        <line num="16" count="394" type="stmt"/>
+        <line num="18" count="394" type="stmt"/>
+        <line num="19" count="429498" type="cond" truecount="2" falsecount="0"/>
+        <line num="20" count="429498" type="cond" truecount="2" falsecount="0"/>
+        <line num="21" count="429498" type="cond" truecount="2" falsecount="0"/>
+        <line num="22" count="429498" type="cond" truecount="2" falsecount="0"/>
+        <line num="23" count="429498" type="cond" truecount="2" falsecount="0"/>
+        <line num="24" count="429498" type="cond" truecount="2" falsecount="0"/>
+        <line num="27" count="394" type="stmt"/>
+        <line num="28" count="394" type="stmt"/>
+        <line num="29" count="394" type="stmt"/>
+        <line num="31" count="394" type="cond" truecount="4" falsecount="0"/>
+        <line num="32" count="264" type="cond" truecount="2" falsecount="0"/>
+        <line num="33" count="135" type="stmt"/>
+        <line num="40" count="63" type="stmt"/>
+        <line num="41" count="63" type="stmt"/>
+        <line num="42" count="63" type="stmt"/>
+        <line num="44" count="63" type="stmt"/>
+        <line num="45" count="34101" type="stmt"/>
+        <line num="46" count="34101" type="stmt"/>
+        <line num="47" count="34101" type="stmt"/>
+        <line num="50" count="63" type="stmt"/>
+        <line num="51" count="63" type="stmt"/>
+        <line num="73" count="10" type="stmt"/>
+        <line num="74" count="10" type="stmt"/>
+        <line num="77" count="10" type="cond" truecount="2" falsecount="0"/>
+        <line num="78" count="10" type="stmt"/>
+        <line num="80" count="10" type="stmt"/>
+        <line num="81" count="34101" type="stmt"/>
+        <line num="82" count="34101" type="stmt"/>
+        <line num="90" count="10" type="stmt"/>
+        <line num="93" count="10" type="stmt"/>
+        <line num="95" count="58" type="stmt"/>
+        <line num="96" count="58" type="stmt"/>
+        <line num="98" count="58" type="stmt"/>
+        <line num="100" count="58" type="stmt"/>
+        <line num="101" count="395" type="stmt"/>
+        <line num="102" count="395" type="cond" truecount="2" falsecount="0"/>
+        <line num="104" count="394" type="stmt"/>
+        <line num="105" count="394" type="stmt"/>
+        <line num="106" count="394" type="stmt"/>
+        <line num="107" count="394" type="stmt"/>
+        <line num="108" count="429498" type="cond" truecount="2" falsecount="0"/>
+        <line num="109" count="429498" type="cond" truecount="2" falsecount="0"/>
+        <line num="111" count="394" type="stmt"/>
+        <line num="112" count="394" type="cond" truecount="2" falsecount="0"/>
+        <line num="113" count="125" type="stmt"/>
+        <line num="114" count="125" type="stmt"/>
+        <line num="115" count="125" type="stmt"/>
+        <line num="120" count="58" type="cond" truecount="2" falsecount="0"/>
+        <line num="122" count="53" type="stmt"/>
+        <line num="123" count="53" type="stmt"/>
+        <line num="126" count="632622" type="stmt"/>
+        <line num="127" count="53" type="stmt"/>
+        <line num="129" count="53" type="stmt"/>
+        <line num="130" count="53" type="stmt"/>
+        <line num="132" count="53" type="stmt"/>
+        <line num="136" count="10" type="stmt"/>
+        <line num="137" count="63" type="stmt"/>
+        <line num="138" count="63" type="stmt"/>
+      </file>
+      <file name="index.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/palette/index.ts">
+        <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      </file>
+      <file name="parse-ase.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/palette/parse-ase.ts">
+        <metrics statements="35" coveredstatements="35" conditionals="22" coveredconditionals="17" methods="1" coveredmethods="1"/>
+        <line num="13" count="11" type="cond" truecount="2" falsecount="0"/>
+        <line num="14" count="2" type="stmt"/>
+        <line num="19" count="9" type="stmt"/>
+        <line num="20" count="9" type="stmt"/>
+        <line num="23" count="9" type="stmt"/>
+        <line num="30" count="9" type="cond" truecount="2" falsecount="0"/>
+        <line num="31" count="1" type="stmt"/>
+        <line num="37" count="8" type="stmt"/>
+        <line num="38" count="8" type="stmt"/>
+        <line num="40" count="8" type="stmt"/>
+        <line num="41" count="10" type="cond" truecount="2" falsecount="0"/>
+        <line num="43" count="9" type="stmt"/>
+        <line num="44" count="9" type="stmt"/>
+        <line num="45" count="9" type="stmt"/>
+        <line num="47" count="9" type="cond" truecount="3" falsecount="1"/>
+        <line num="49" count="9" type="stmt"/>
+        <line num="52" count="9" type="cond" truecount="1" falsecount="1"/>
+        <line num="53" count="9" type="stmt"/>
+        <line num="54" count="9" type="stmt"/>
+        <line num="57" count="9" type="cond" truecount="1" falsecount="1"/>
+        <line num="58" count="9" type="stmt"/>
+        <line num="59" count="9" type="stmt"/>
+        <line num="60" count="37" type="stmt"/>
+        <line num="62" count="9" type="stmt"/>
+        <line num="65" count="9" type="cond" truecount="1" falsecount="1"/>
+        <line num="66" count="9" type="stmt"/>
+        <line num="72" count="9" type="stmt"/>
+        <line num="74" count="9" type="cond" truecount="2" falsecount="0"/>
+        <line num="75" count="8" type="cond" truecount="1" falsecount="1"/>
+        <line num="76" count="8" type="stmt"/>
+        <line num="77" count="8" type="stmt"/>
+        <line num="78" count="8" type="stmt"/>
+        <line num="80" count="8" type="stmt"/>
+        <line num="93" count="9" type="stmt"/>
+        <line num="96" count="8" type="stmt"/>
+      </file>
+      <file name="parse-gpl.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/palette/parse-gpl.ts">
+        <metrics statements="12" coveredstatements="12" conditionals="6" coveredconditionals="6" methods="1" coveredmethods="1"/>
+        <line num="13" count="10" type="stmt"/>
+        <line num="14" count="10" type="stmt"/>
+        <line num="15" count="10" type="stmt"/>
+        <line num="17" count="10" type="stmt"/>
+        <line num="18" count="61" type="stmt"/>
+        <line num="19" count="61" type="cond" truecount="2" falsecount="0"/>
+        <line num="21" count="32" type="stmt"/>
+        <line num="22" count="32" type="stmt"/>
+        <line num="23" count="32" type="stmt"/>
+        <line num="24" count="32" type="cond" truecount="2" falsecount="0"/>
+        <line num="26" count="61" type="stmt"/>
+        <line num="32" count="10" type="stmt"/>
+      </file>
+      <file name="parse-hex.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/palette/parse-hex.ts">
+        <metrics statements="14" coveredstatements="13" conditionals="4" coveredconditionals="3" methods="1" coveredmethods="1"/>
+        <line num="13" count="12" type="stmt"/>
+        <line num="14" count="12" type="stmt"/>
+        <line num="17" count="12" type="stmt"/>
+        <line num="20" count="26" type="cond" truecount="2" falsecount="0"/>
+        <line num="22" count="19" type="stmt"/>
+        <line num="23" count="7" type="cond" truecount="1" falsecount="1"/>
+        <line num="25" count="7" type="stmt"/>
+        <line num="26" count="7" type="stmt"/>
+        <line num="28" count="0" type="stmt"/>
+        <line num="31" count="26" type="stmt"/>
+        <line num="32" count="26" type="stmt"/>
+        <line num="33" count="26" type="stmt"/>
+        <line num="35" count="26" type="stmt"/>
+        <line num="38" count="12" type="stmt"/>
+      </file>
+    </package>
+    <package name="preprocess">
+      <metrics statements="35" coveredstatements="21" conditionals="18" coveredconditionals="13" methods="4" coveredmethods="4"/>
+      <file name="apply-filters.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/preprocess/apply-filters.ts">
+        <metrics statements="23" coveredstatements="9" conditionals="10" coveredconditionals="5" methods="2" coveredmethods="2"/>
+        <line num="13" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="14" count="0" type="stmt"/>
+        <line num="16" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="17" count="0" type="stmt"/>
+        <line num="18" count="0" type="stmt"/>
+        <line num="19" count="0" type="stmt"/>
+        <line num="20" count="0" type="stmt"/>
+        <line num="22" count="1" type="stmt"/>
+        <line num="42" count="3" type="stmt"/>
+        <line num="45" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="46" count="2" type="stmt"/>
+        <line num="50" count="1" type="stmt"/>
+        <line num="51" count="1" type="stmt"/>
+        <line num="54" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="55" count="0" type="stmt"/>
+        <line num="59" count="0" type="stmt"/>
+        <line num="62" count="0" type="stmt"/>
+        <line num="63" count="0" type="stmt"/>
+        <line num="66" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="67" count="0" type="stmt"/>
+        <line num="71" count="0" type="stmt"/>
+        <line num="72" count="0" type="stmt"/>
+        <line num="74" count="0" type="stmt"/>
+      </file>
+      <file name="build-filter-string.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/preprocess/build-filter-string.ts">
+        <metrics statements="7" coveredstatements="7" conditionals="4" coveredconditionals="4" methods="1" coveredmethods="1"/>
+        <line num="9" count="5" type="stmt"/>
+        <line num="26" count="8" type="stmt"/>
+        <line num="28" count="8" type="stmt"/>
+        <line num="29" count="64" type="stmt"/>
+        <line num="30" count="64" type="cond" truecount="4" falsecount="0"/>
+        <line num="31" count="15" type="stmt"/>
+        <line num="35" count="8" type="stmt"/>
+      </file>
+      <file name="defaults.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/preprocess/defaults.ts">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="6" count="6" type="stmt"/>
+      </file>
+      <file name="has-active-filters.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/preprocess/has-active-filters.ts">
+        <metrics statements="4" coveredstatements="4" conditionals="4" coveredconditionals="4" methods="1" coveredmethods="1"/>
+        <line num="9" count="7" type="stmt"/>
+        <line num="10" count="42" type="cond" truecount="4" falsecount="0"/>
+        <line num="11" count="3" type="stmt"/>
+        <line num="14" count="4" type="stmt"/>
+      </file>
+    </package>
+    <package name="presets">
+      <metrics statements="71" coveredstatements="70" conditionals="22" coveredconditionals="18" methods="11" coveredmethods="11"/>
+      <file name="quantize.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/quantize.ts">
+        <metrics statements="65" coveredstatements="64" conditionals="22" coveredconditionals="18" methods="6" coveredmethods="6"/>
+        <line num="9" count="90957" type="cond" truecount="1" falsecount="1"/>
+        <line num="10" count="90957" type="cond" truecount="1" falsecount="1"/>
+        <line num="12" count="90957" type="stmt"/>
+        <line num="13" count="90957" type="stmt"/>
+        <line num="14" count="90957" type="stmt"/>
+        <line num="15" count="194733" type="stmt"/>
+        <line num="16" count="194733" type="stmt"/>
+        <line num="17" count="194733" type="stmt"/>
+        <line num="19" count="90957" type="stmt"/>
+        <line num="27" count="2054" type="stmt"/>
+        <line num="28" count="6162" type="stmt"/>
+        <line num="29" count="6162" type="stmt"/>
+        <line num="30" count="6162" type="stmt"/>
+        <line num="31" count="43134" type="stmt"/>
+        <line num="32" count="43134" type="cond" truecount="2" falsecount="0"/>
+        <line num="33" count="21543" type="stmt"/>
+        <line num="34" count="21543" type="stmt"/>
+        <line num="37" count="6162" type="stmt"/>
+        <line num="39" count="2054" type="stmt"/>
+        <line num="52" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="53" count="1" type="stmt"/>
+        <line num="56" count="2" type="stmt"/>
+        <line num="57" count="2" type="stmt"/>
+        <line num="58" count="2" type="stmt"/>
+        <line num="59" count="2" type="stmt"/>
+        <line num="61" count="2" type="stmt"/>
+        <line num="77" count="30" type="stmt"/>
+        <line num="78" count="30" type="stmt"/>
+        <line num="80" count="30" type="cond" truecount="2" falsecount="0"/>
+        <line num="81" count="1" type="stmt"/>
+        <line num="84" count="29" type="cond" truecount="2" falsecount="0"/>
+        <line num="85" count="1" type="stmt"/>
+        <line num="88" count="28" type="stmt"/>
+        <line num="90" count="28" type="stmt"/>
+        <line num="91" count="28" type="stmt"/>
+        <line num="92" count="114" type="stmt"/>
+        <line num="97" count="28" type="stmt"/>
+        <line num="98" count="28" type="stmt"/>
+        <line num="99" count="114" type="stmt"/>
+        <line num="100" count="510" type="stmt"/>
+        <line num="101" count="2538" type="cond" truecount="1" falsecount="1"/>
+        <line num="102" count="0" type="stmt"/>
+        <line num="110" count="2538" type="stmt"/>
+        <line num="120" count="28" type="cond" truecount="2" falsecount="0"/>
+        <line num="121" count="4" type="stmt"/>
+        <line num="125" count="24" type="stmt"/>
+        <line num="126" count="24" type="stmt"/>
+        <line num="127" count="24" type="stmt"/>
+        <line num="128" count="24" type="stmt"/>
+        <line num="129" count="24" type="stmt"/>
+        <line num="131" count="24" type="cond" truecount="3" falsecount="1"/>
+        <line num="132" count="24" type="stmt"/>
+        <line num="133" count="24" type="stmt"/>
+        <line num="134" count="1528" type="stmt"/>
+        <line num="138" count="24" type="stmt"/>
+        <line num="139" count="24" type="stmt"/>
+        <line num="146" count="16" type="stmt"/>
+        <line num="147" count="16" type="stmt"/>
+        <line num="149" count="16" type="stmt"/>
+        <line num="150" count="152" type="stmt"/>
+        <line num="151" count="1888" type="stmt"/>
+        <line num="152" count="27008" type="cond" truecount="2" falsecount="0"/>
+        <line num="153" count="2048" type="stmt"/>
+        <line num="161" count="24960" type="stmt"/>
+        <line num="171" count="16" type="stmt"/>
+      </file>
+      <file name="registry.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/registry.ts">
+        <metrics statements="6" coveredstatements="6" conditionals="0" coveredconditionals="0" methods="5" coveredmethods="5"/>
+        <line num="65" count="3" type="stmt"/>
+        <line num="129" count="3" type="stmt"/>
+        <line num="130" count="162" type="stmt"/>
+        <line num="135" count="6" type="stmt"/>
+        <line num="140" count="7" type="stmt"/>
+        <line num="147" count="540" type="stmt"/>
+      </file>
+    </package>
+    <package name="presets.arcade">
+      <metrics statements="39" coveredstatements="39" conditionals="0" coveredconditionals="0" methods="6" coveredmethods="6"/>
+      <file name="cps1.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/arcade/cps1.ts">
+        <metrics statements="11" coveredstatements="11" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="6" count="3" type="stmt"/>
+        <line num="7" count="3" type="stmt"/>
+        <line num="8" count="3" type="stmt"/>
+        <line num="9" count="12" type="stmt"/>
+        <line num="10" count="48" type="stmt"/>
+        <line num="11" count="192" type="stmt"/>
+        <line num="12" count="192" type="stmt"/>
+        <line num="13" count="192" type="stmt"/>
+        <line num="14" count="192" type="stmt"/>
+        <line num="18" count="3" type="stmt"/>
+        <line num="21" count="3" type="stmt"/>
+      </file>
+      <file name="cps2.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/arcade/cps2.ts">
+        <metrics statements="11" coveredstatements="11" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="6" count="3" type="stmt"/>
+        <line num="7" count="3" type="stmt"/>
+        <line num="8" count="3" type="stmt"/>
+        <line num="9" count="12" type="stmt"/>
+        <line num="10" count="48" type="stmt"/>
+        <line num="11" count="192" type="stmt"/>
+        <line num="12" count="192" type="stmt"/>
+        <line num="13" count="192" type="stmt"/>
+        <line num="14" count="192" type="stmt"/>
+        <line num="18" count="3" type="stmt"/>
+        <line num="21" count="3" type="stmt"/>
+      </file>
+      <file name="cps3.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/arcade/cps3.ts">
+        <metrics statements="11" coveredstatements="11" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="6" count="3" type="stmt"/>
+        <line num="7" count="3" type="stmt"/>
+        <line num="8" count="3" type="stmt"/>
+        <line num="9" count="12" type="stmt"/>
+        <line num="10" count="48" type="stmt"/>
+        <line num="11" count="192" type="stmt"/>
+        <line num="12" count="192" type="stmt"/>
+        <line num="13" count="192" type="stmt"/>
+        <line num="14" count="192" type="stmt"/>
+        <line num="18" count="3" type="stmt"/>
+        <line num="21" count="3" type="stmt"/>
+      </file>
+      <file name="namco-galaxian.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/arcade/namco-galaxian.ts">
+        <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="4" count="24" type="stmt"/>
+        <line num="12" count="3" type="stmt"/>
+        <line num="23" count="3" type="stmt"/>
+      </file>
+      <file name="sega-system16.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/arcade/sega-system16.ts">
+        <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2"/>
+        <line num="4" count="3" type="stmt"/>
+        <line num="14" count="12288" type="stmt"/>
+        <line num="17" count="3" type="stmt"/>
+      </file>
+    </package>
+    <package name="presets.computers">
+      <metrics statements="64" coveredstatements="64" conditionals="0" coveredconditionals="0" methods="24" coveredmethods="24"/>
+      <file name="amiga-ehb.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/computers/amiga-ehb.ts">
+        <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="4" count="3" type="stmt"/>
+        <line num="12" count="3" type="stmt"/>
+        <line num="19" count="192" type="stmt"/>
+      </file>
+      <file name="amiga-ham.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/computers/amiga-ham.ts">
+        <metrics statements="2" coveredstatements="2" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="3" count="3" type="stmt"/>
+        <line num="11" count="3" type="stmt"/>
+      </file>
+      <file name="amiga.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/computers/amiga.ts">
+        <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="4" count="3" type="stmt"/>
+        <line num="12" count="3" type="stmt"/>
+        <line num="19" count="96" type="stmt"/>
+      </file>
+      <file name="amstrad-cpc.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/computers/amstrad-cpc.ts">
+        <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2"/>
+        <line num="5" count="81" type="stmt"/>
+        <line num="13" count="81" type="stmt"/>
+        <line num="17" count="3" type="stmt"/>
+        <line num="33" count="3" type="stmt"/>
+        <line num="45" count="3" type="stmt"/>
+      </file>
+      <file name="apple-ii.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/computers/apple-ii.ts">
+        <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="4" count="66" type="stmt"/>
+        <line num="11" count="3" type="stmt"/>
+        <line num="30" count="3" type="stmt"/>
+        <line num="39" count="3" type="stmt"/>
+        <line num="60" count="3" type="stmt"/>
+      </file>
+      <file name="atari-st.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/computers/atari-st.ts">
+        <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="4" count="3" type="stmt"/>
+        <line num="12" count="3" type="stmt"/>
+        <line num="18" count="48" type="stmt"/>
+      </file>
+      <file name="atari-ste.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/computers/atari-ste.ts">
+        <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="4" count="3" type="stmt"/>
+        <line num="12" count="3" type="stmt"/>
+        <line num="18" count="48" type="stmt"/>
+      </file>
+      <file name="bbc-micro.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/computers/bbc-micro.ts">
+        <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2"/>
+        <line num="5" count="24" type="stmt"/>
+        <line num="12" count="24" type="stmt"/>
+        <line num="16" count="3" type="stmt"/>
+      </file>
+      <file name="c64-hires.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/computers/c64-hires.ts">
+        <metrics statements="4" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2"/>
+        <line num="5" count="48" type="stmt"/>
+        <line num="12" count="3" type="stmt"/>
+        <line num="31" count="48" type="stmt"/>
+        <line num="36" count="3" type="stmt"/>
+      </file>
+      <file name="c64-multicolor.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/computers/c64-multicolor.ts">
+        <metrics statements="4" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2"/>
+        <line num="5" count="48" type="stmt"/>
+        <line num="12" count="3" type="stmt"/>
+        <line num="31" count="48" type="stmt"/>
+        <line num="36" count="3" type="stmt"/>
+      </file>
+      <file name="c64.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/computers/c64.ts">
+        <metrics statements="9" coveredstatements="9" conditionals="0" coveredconditionals="0" methods="3" coveredmethods="3"/>
+        <line num="4" count="96" type="stmt"/>
+        <line num="11" count="3" type="stmt"/>
+        <line num="30" count="3" type="stmt"/>
+        <line num="49" count="3" type="stmt"/>
+        <line num="68" count="3" type="stmt"/>
+        <line num="85" count="3" type="stmt"/>
+        <line num="89" count="48" type="stmt"/>
+        <line num="93" count="3" type="stmt"/>
+        <line num="97" count="48" type="stmt"/>
+      </file>
+      <file name="macintosh.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/computers/macintosh.ts">
+        <metrics statements="4" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="4" count="6" type="stmt"/>
+        <line num="11" count="3" type="stmt"/>
+        <line num="16" count="3" type="stmt"/>
+        <line num="18" count="3" type="stmt"/>
+      </file>
+      <file name="msx.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/computers/msx.ts">
+        <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2"/>
+        <line num="5" count="48" type="stmt"/>
+        <line num="12" count="48" type="stmt"/>
+        <line num="16" count="3" type="stmt"/>
+      </file>
+      <file name="msx2.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/computers/msx2.ts">
+        <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="4" count="3" type="stmt"/>
+        <line num="12" count="3" type="stmt"/>
+        <line num="18" count="768" type="stmt"/>
+      </file>
+      <file name="thomson-mo5.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/computers/thomson-mo5.ts">
+        <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2"/>
+        <line num="5" count="48" type="stmt"/>
+        <line num="12" count="48" type="stmt"/>
+        <line num="16" count="3" type="stmt"/>
+      </file>
+      <file name="vic20.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/computers/vic20.ts">
+        <metrics statements="4" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="4" count="48" type="stmt"/>
+        <line num="11" count="3" type="stmt"/>
+        <line num="30" count="3" type="stmt"/>
+        <line num="49" count="3" type="stmt"/>
+      </file>
+      <file name="zx-spectrum.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/computers/zx-spectrum.ts">
+        <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="4" count="45" type="stmt"/>
+        <line num="11" count="3" type="stmt"/>
+        <line num="31" count="3" type="stmt"/>
+      </file>
+    </package>
+    <package name="presets.fantasy">
+      <metrics statements="14" coveredstatements="14" conditionals="0" coveredconditionals="0" methods="5" coveredmethods="5"/>
+      <file name="pico8.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/fantasy/pico8.ts">
+        <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2"/>
+        <line num="5" count="48" type="stmt"/>
+        <line num="13" count="48" type="stmt"/>
+        <line num="18" count="3" type="stmt"/>
+      </file>
+      <file name="picotron.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/fantasy/picotron.ts">
+        <metrics statements="8" coveredstatements="8" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="5" count="3" type="stmt"/>
+        <line num="6" count="3" type="stmt"/>
+        <line num="7" count="3" type="stmt"/>
+        <line num="8" count="12" type="stmt"/>
+        <line num="9" count="48" type="stmt"/>
+        <line num="10" count="192" type="stmt"/>
+        <line num="14" count="3" type="stmt"/>
+        <line num="17" count="3" type="stmt"/>
+      </file>
+      <file name="tic80.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/fantasy/tic80.ts">
+        <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2"/>
+        <line num="5" count="48" type="stmt"/>
+        <line num="13" count="48" type="stmt"/>
+        <line num="18" count="3" type="stmt"/>
+      </file>
+    </package>
+    <package name="presets.ibm-pc">
+      <metrics statements="50" coveredstatements="50" conditionals="2" coveredconditionals="1" methods="15" coveredmethods="15"/>
+      <file name="cga-composite.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/ibm-pc/cga-composite.ts">
+        <metrics statements="4" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2"/>
+        <line num="5" count="48" type="stmt"/>
+        <line num="12" count="3" type="stmt"/>
+        <line num="31" count="3" type="stmt"/>
+        <line num="41" count="48" type="stmt"/>
+      </file>
+      <file name="cga-mode4-pal0.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/ibm-pc/cga-mode4-pal0.ts">
+        <metrics statements="8" coveredstatements="8" conditionals="0" coveredconditionals="0" methods="3" coveredmethods="3"/>
+        <line num="8" count="24" type="stmt"/>
+        <line num="15" count="3" type="stmt"/>
+        <line num="16" count="3" type="stmt"/>
+        <line num="18" count="3" type="stmt"/>
+        <line num="39" count="3" type="stmt"/>
+        <line num="45" count="9" type="stmt"/>
+        <line num="54" count="3" type="stmt"/>
+        <line num="60" count="9" type="stmt"/>
+      </file>
+      <file name="cga-mode4-pal1.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/ibm-pc/cga-mode4-pal1.ts">
+        <metrics statements="8" coveredstatements="8" conditionals="0" coveredconditionals="0" methods="3" coveredmethods="3"/>
+        <line num="8" count="24" type="stmt"/>
+        <line num="15" count="3" type="stmt"/>
+        <line num="16" count="3" type="stmt"/>
+        <line num="18" count="3" type="stmt"/>
+        <line num="39" count="3" type="stmt"/>
+        <line num="45" count="9" type="stmt"/>
+        <line num="54" count="3" type="stmt"/>
+        <line num="60" count="9" type="stmt"/>
+      </file>
+      <file name="ega.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/ibm-pc/ega.ts">
+        <metrics statements="4" coveredstatements="4" conditionals="2" coveredconditionals="1" methods="3" coveredmethods="3"/>
+        <line num="8" count="48" type="stmt"/>
+        <line num="17" count="3" type="stmt"/>
+        <line num="18" count="48" type="stmt"/>
+        <line num="23" count="3" type="stmt"/>
+      </file>
+      <file name="tandy.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/ibm-pc/tandy.ts">
+        <metrics statements="4" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2"/>
+        <line num="5" count="48" type="stmt"/>
+        <line num="12" count="3" type="stmt"/>
+        <line num="31" count="3" type="stmt"/>
+        <line num="41" count="48" type="stmt"/>
+      </file>
+      <file name="vga-mode12h.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/ibm-pc/vga-mode12h.ts">
+        <metrics statements="11" coveredstatements="11" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="5" count="3" type="stmt"/>
+        <line num="6" count="3" type="stmt"/>
+        <line num="7" count="3" type="stmt"/>
+        <line num="8" count="12" type="stmt"/>
+        <line num="9" count="48" type="stmt"/>
+        <line num="10" count="192" type="stmt"/>
+        <line num="11" count="192" type="stmt"/>
+        <line num="12" count="192" type="stmt"/>
+        <line num="13" count="192" type="stmt"/>
+        <line num="17" count="3" type="stmt"/>
+        <line num="20" count="3" type="stmt"/>
+      </file>
+      <file name="vga-mode13h.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/ibm-pc/vga-mode13h.ts">
+        <metrics statements="11" coveredstatements="11" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="5" count="3" type="stmt"/>
+        <line num="6" count="3" type="stmt"/>
+        <line num="7" count="3" type="stmt"/>
+        <line num="8" count="12" type="stmt"/>
+        <line num="9" count="48" type="stmt"/>
+        <line num="10" count="192" type="stmt"/>
+        <line num="11" count="192" type="stmt"/>
+        <line num="12" count="192" type="stmt"/>
+        <line num="13" count="192" type="stmt"/>
+        <line num="17" count="3" type="stmt"/>
+        <line num="20" count="3" type="stmt"/>
+      </file>
+    </package>
+    <package name="presets.nintendo">
+      <metrics statements="41" coveredstatements="41" conditionals="0" coveredconditionals="0" methods="7" coveredmethods="7"/>
+      <file name="game-boy.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/nintendo/game-boy.ts">
+        <metrics statements="9" coveredstatements="9" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2"/>
+        <line num="5" count="24" type="stmt"/>
+        <line num="12" count="3" type="stmt"/>
+        <line num="19" count="3" type="stmt"/>
+        <line num="26" count="3" type="stmt"/>
+        <line num="34" count="3" type="stmt"/>
+        <line num="41" count="3" type="stmt"/>
+        <line num="60" count="3" type="stmt"/>
+        <line num="78" count="3" type="stmt"/>
+        <line num="83" count="168" type="stmt"/>
+      </file>
+      <file name="gba.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/nintendo/gba.ts">
+        <metrics statements="12" coveredstatements="12" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="3" count="3" type="stmt"/>
+        <line num="13" count="3" type="stmt"/>
+        <line num="14" count="3" type="stmt"/>
+        <line num="15" count="3" type="stmt"/>
+        <line num="16" count="12" type="stmt"/>
+        <line num="17" count="48" type="stmt"/>
+        <line num="18" count="192" type="stmt"/>
+        <line num="19" count="192" type="stmt"/>
+        <line num="20" count="192" type="stmt"/>
+        <line num="21" count="192" type="stmt"/>
+        <line num="25" count="3" type="stmt"/>
+        <line num="28" count="3" type="stmt"/>
+      </file>
+      <file name="nes.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/nintendo/nes.ts">
+        <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="4" count="192" type="stmt"/>
+        <line num="12" count="3" type="stmt"/>
+        <line num="83" count="3" type="stmt"/>
+        <line num="96" count="3" type="stmt"/>
+        <line num="118" count="3" type="stmt"/>
+      </file>
+      <file name="snes.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/nintendo/snes.ts">
+        <metrics statements="12" coveredstatements="12" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="3" count="3" type="stmt"/>
+        <line num="14" count="3" type="stmt"/>
+        <line num="15" count="3" type="stmt"/>
+        <line num="16" count="3" type="stmt"/>
+        <line num="17" count="12" type="stmt"/>
+        <line num="18" count="48" type="stmt"/>
+        <line num="19" count="192" type="stmt"/>
+        <line num="20" count="192" type="stmt"/>
+        <line num="21" count="192" type="stmt"/>
+        <line num="22" count="192" type="stmt"/>
+        <line num="26" count="3" type="stmt"/>
+        <line num="29" count="3" type="stmt"/>
+      </file>
+      <file name="virtual-boy.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/nintendo/virtual-boy.ts">
+        <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2"/>
+        <line num="5" count="12" type="stmt"/>
+        <line num="13" count="12" type="stmt"/>
+        <line num="18" count="3" type="stmt"/>
+      </file>
+    </package>
+    <package name="presets.other">
+      <metrics statements="39" coveredstatements="35" conditionals="0" coveredconditionals="0" methods="8" coveredmethods="7"/>
+      <file name="atari-2600.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/other/atari-2600.ts">
+        <metrics statements="8" coveredstatements="8" conditionals="0" coveredconditionals="0" methods="3" coveredmethods="3"/>
+        <line num="4" count="696" type="stmt"/>
+        <line num="12" count="3" type="stmt"/>
+        <line num="160" count="3" type="stmt"/>
+        <line num="280" count="3" type="stmt"/>
+        <line num="292" count="3" type="stmt"/>
+        <line num="297" count="384" type="stmt"/>
+        <line num="311" count="3" type="stmt"/>
+        <line num="316" count="312" type="stmt"/>
+      </file>
+      <file name="colecovision.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/other/colecovision.ts">
+        <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2"/>
+        <line num="5" count="48" type="stmt"/>
+        <line num="13" count="48" type="stmt"/>
+        <line num="18" count="3" type="stmt"/>
+      </file>
+      <file name="neo-geo.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/other/neo-geo.ts">
+        <metrics statements="16" coveredstatements="12" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="1"/>
+        <line num="4" count="3" type="stmt"/>
+        <line num="15" count="0" type="stmt"/>
+        <line num="16" count="0" type="stmt"/>
+        <line num="17" count="0" type="stmt"/>
+        <line num="18" count="0" type="stmt"/>
+        <line num="27" count="3" type="stmt"/>
+        <line num="28" count="3" type="stmt"/>
+        <line num="30" count="3" type="stmt"/>
+        <line num="31" count="12" type="stmt"/>
+        <line num="32" count="48" type="stmt"/>
+        <line num="33" count="192" type="stmt"/>
+        <line num="34" count="192" type="stmt"/>
+        <line num="35" count="192" type="stmt"/>
+        <line num="36" count="192" type="stmt"/>
+        <line num="40" count="3" type="stmt"/>
+        <line num="43" count="3" type="stmt"/>
+      </file>
+      <file name="ps1.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/other/ps1.ts">
+        <metrics statements="12" coveredstatements="12" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="3" count="3" type="stmt"/>
+        <line num="13" count="3" type="stmt"/>
+        <line num="14" count="3" type="stmt"/>
+        <line num="15" count="3" type="stmt"/>
+        <line num="16" count="12" type="stmt"/>
+        <line num="17" count="48" type="stmt"/>
+        <line num="18" count="192" type="stmt"/>
+        <line num="19" count="192" type="stmt"/>
+        <line num="20" count="192" type="stmt"/>
+        <line num="21" count="192" type="stmt"/>
+        <line num="25" count="3" type="stmt"/>
+        <line num="28" count="3" type="stmt"/>
+      </file>
+    </package>
+    <package name="presets.palettes">
+      <metrics statements="37" coveredstatements="37" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+      <file name="c64-palettes.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/palettes/c64-palettes.ts">
+        <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="6" count="3" type="stmt"/>
+        <line num="26" count="3" type="stmt"/>
+        <line num="46" count="3" type="stmt"/>
+      </file>
+      <file name="cga-palettes.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/palettes/cga-palettes.ts">
+        <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="8" count="3" type="stmt"/>
+        <line num="28" count="3" type="stmt"/>
+        <line num="33" count="3" type="stmt"/>
+        <line num="38" count="3" type="stmt"/>
+        <line num="43" count="3" type="stmt"/>
+      </file>
+      <file name="cpc-palette.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/palettes/cpc-palette.ts">
+        <metrics statements="2" coveredstatements="2" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="8" count="3" type="stmt"/>
+        <line num="39" count="3" type="stmt"/>
+      </file>
+      <file name="ega-palette.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/palettes/ega-palette.ts">
+        <metrics statements="14" coveredstatements="14" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="11" count="3" type="stmt"/>
+        <line num="12" count="3" type="stmt"/>
+        <line num="13" count="192" type="stmt"/>
+        <line num="14" count="192" type="stmt"/>
+        <line num="15" count="192" type="stmt"/>
+        <line num="16" count="192" type="stmt"/>
+        <line num="17" count="192" type="stmt"/>
+        <line num="18" count="192" type="stmt"/>
+        <line num="20" count="192" type="stmt"/>
+        <line num="21" count="192" type="stmt"/>
+        <line num="22" count="192" type="stmt"/>
+        <line num="24" count="192" type="stmt"/>
+        <line num="28" count="3" type="stmt"/>
+        <line num="35" count="3" type="stmt"/>
+      </file>
+      <file name="misc-palettes.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/palettes/misc-palettes.ts">
+        <metrics statements="10" coveredstatements="10" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="2" count="3" type="stmt"/>
+        <line num="14" count="3" type="stmt"/>
+        <line num="22" count="3" type="stmt"/>
+        <line num="46" count="3" type="stmt"/>
+        <line num="66" count="3" type="stmt"/>
+        <line num="72" count="3" type="stmt"/>
+        <line num="80" count="3" type="stmt"/>
+        <line num="100" count="3" type="stmt"/>
+        <line num="108" count="3" type="stmt"/>
+        <line num="116" count="3" type="stmt"/>
+      </file>
+      <file name="pico8-palette.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/palettes/pico8-palette.ts">
+        <metrics statements="2" coveredstatements="2" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="2" count="3" type="stmt"/>
+        <line num="22" count="3" type="stmt"/>
+      </file>
+      <file name="tms9918a-palette.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/palettes/tms9918a-palette.ts">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="6" count="3" type="stmt"/>
+      </file>
+    </package>
+    <package name="presets.sega">
+      <metrics statements="11" coveredstatements="11" conditionals="0" coveredconditionals="0" methods="5" coveredmethods="5"/>
+      <file name="game-gear.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/sega/game-gear.ts">
+        <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="4" count="3" type="stmt"/>
+        <line num="12" count="3" type="stmt"/>
+        <line num="18" count="96" type="stmt"/>
+      </file>
+      <file name="genesis.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/sega/genesis.ts">
+        <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2"/>
+        <line num="4" count="3" type="stmt"/>
+        <line num="15" count="1536" type="stmt"/>
+        <line num="18" count="3" type="stmt"/>
+        <line num="25" count="3" type="stmt"/>
+        <line num="47" count="3" type="stmt"/>
+      </file>
+      <file name="master-system.ts" path="/Users/denisefan/dev/bitmapped/bitmapped/packages/bitmapped/src/presets/sega/master-system.ts">
+        <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2"/>
+        <line num="4" count="3" type="stmt"/>
+        <line num="14" count="192" type="stmt"/>
+        <line num="17" count="3" type="stmt"/>
+      </file>
+    </package>
+  </project>
+</coverage>
