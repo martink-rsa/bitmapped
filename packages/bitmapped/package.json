@@ -1,6 +1,6 @@
 {
   "name": "bitmapped",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Palette-aware image pixelation library for pixel artists and game developers",
   "type": "module",
   "sideEffects": false,
