@@ -173,3 +173,39 @@ pnpm --filter bitmapped test:snapshot-report   # Generate snapshot comparison re
 Tests use Vitest. Node doesn't have `ImageData`, so a polyfill is provided in the test setup. Visual regression tests use `pixelmatch` and `pngjs`. Preset snapshots live in `src/__fixtures__/snapshots/` (54 directories, one per preset).
 
 The demo app has Playwright as a dev dependency for e2e testing.
+
+## End-of-session protocol (lidema)
+
+This repo is part of the lidema system (`~/dev/lidema/`). Marker file at root: `lidema.config.json`.
+
+At the end of every working session, run through these steps in order:
+
+1. **Did the library ship anything?** If a packages/bitmapped change is user-visible, run `pnpm changeset` to record it. Do NOT manually edit `packages/bitmapped/CHANGELOG.md` — Changesets generates it on release.
+
+2. **Did the apps/site/infra ship anything?** If a change to `apps/demo`, `apps/docs`, CI, or build infra is user-visible, add an entry to the root `CHANGELOG.md` under `## [Unreleased]`. Use Keep a Changelog conventions (Added / Changed / Fixed / Removed).
+
+3. **Did the architecture change?** Update the relevant section of this file (CLAUDE.md → Architecture). For meaningful technical decisions, add an ADR in `documentation/decisions/NNNN-short-title.md`.
+
+4. **Did public behaviour or setup change?** Update `README.md` (install, usage, env vars).
+
+5. **If working on a feature**, update the feature's `documentation/features/<NNNN-slug>/progress.md` to reflect which prompts have completed, which are in progress, and which are deferred. Append blockers to `deferred.md`.
+
+6. **Update `documentation/sync/STATUS.md`** — overwrite Current focus, Where I left off, Next up, Blockers, Notes. Be specific enough that another agent (or future me) could resume without re-reading code.
+
+7. **Append a new entry to `documentation/sync/SESSIONS.md`** at the top, dated today, with: Worked on, Shipped, Where I left off, Next up, Blockers.
+
+8. **Commit and push.** All sync files (STATUS, SESSIONS, CHANGELOG, progress, deferred) should be committed at end of session so the other machine can pull them.
+
+Steps 1–4 are the durable record; 5 is feature progress; 6–7 are the working log; 8 is what makes cross-machine sync work.
+
+### Where things live
+
+- `lidema.config.json` (root) — marker file with Notion Area ID, ports, stack, repo URL.
+- `documentation/sync/STATUS.md` — current focus and where I left off (overwritten frequently).
+- `documentation/sync/SESSIONS.md` — append-only daily session log, newest at top.
+- `CHANGELOG.md` (root) — project/app/site/infra changes.
+- `packages/bitmapped/CHANGELOG.md` — library changelog, managed by Changesets (do not hand-edit).
+- `documentation/decisions/` (optional) — ADRs.
+- `documentation/features/` (optional) — feature folders (spec.md, prompts/, progress.md, deferred.md).
+- `documentation/ai/` — gitignored personal AI working notes (existing pattern).
+

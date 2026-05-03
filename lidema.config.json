@@ -1,0 +1,23 @@
+{
+  "name": "Bitmapped",
+  "notionAreaId": "2c4fab39-efe9-8034-a381-d267f19926eb",
+  "notionAreaUrl": "https://www.notion.so/2c4fab39efe98034a381d267f19926eb",
+  "ports": {
+    "demo": 5173,
+    "docs": 3000
+  },
+  "stack": ["TypeScript", "React", "Vite", "Next.js"],
+  "repoUrl": "https://github.com/martink-rsa/bitmapped",
+  "productionUrl": "",
+  "changelogPath": "CHANGELOG.md",
+  "libraryChangelogPath": "packages/bitmapped/CHANGELOG.md",
+  "sync": {
+    "status": true,
+    "sessions": true,
+    "changelog": true,
+    "features": true,
+    "docsList": true,
+    "ports": true
+  },
+  "notes": "Pnpm monorepo (Turborepo). Workspaces: packages/bitmapped (library, npm), apps/demo (Vite, port 5173), apps/docs (Next.js + Nextra, port 3000). Library versioning is managed by changesets — packages/bitmapped/CHANGELOG.md is auto-generated; do not edit manually. Root CHANGELOG.md is for project/app-level changes."
+}
