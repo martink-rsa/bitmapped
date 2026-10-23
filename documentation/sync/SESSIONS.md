@@ -16,6 +16,7 @@ Format per entry:
 ---
 
 ## 2026-05-02
+
 **Worked on:** Lidema system initial scaffold for this project.
 **Shipped:** —
 **Where I left off:** Created `lidema.config.json`, `documentation/sync/STATUS.md`, `documentation/sync/SESSIONS.md`, root `CHANGELOG.md`. Appended end-of-session protocol to `CLAUDE.md`. Notion Bitmapped Area page metadata updated.

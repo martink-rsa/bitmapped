@@ -23,4 +23,5 @@ _"Implemented the new dithering option for blue noise; library tests pass; demo 
 _Free-form scratchpad. Cleared regularly._
 
 ---
+
 _Last updated: 2026-05-02 (initial scaffold by lidema setup)_
