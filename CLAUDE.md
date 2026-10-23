@@ -208,4 +208,3 @@ Steps 1–4 are the durable record; 5 is feature progress; 6–7 are the working
 - `documentation/decisions/` (optional) — ADRs.
 - `documentation/features/` (optional) — feature folders (spec.md, prompts/, progress.md, deferred.md).
 - `documentation/ai/` — gitignored personal AI working notes (existing pattern).
-
